@@ -14,7 +14,7 @@ class Config(object):
     def addSerie(cls, name, title, theTvDb, lang, path):
         config = ConfigParser.SafeConfigParser()
         name = str(name)
-        config.read(Config.CONFIG_FILE)
+        config.read(cls.CONFIG_FILE)
         config.add_section(name)
         config.set(name, 'videos', str(path))
         config.set(name, 'theTvDb', str(theTvDb))
@@ -24,6 +24,18 @@ class Config(object):
             config.write(configFile)
         
         cls.loadConfig()
+    
+    
+    @classmethod
+    def setOption(cls, key, value):
+        cls.config[key] = value
+        config = ConfigParser.SafeConfigParser()
+        config.read(cls.CONFIG_FILE)
+        if 'options' not in config.sections():
+            config.add_section('options')
+        config.set('options', str(key), str(value))
+        with open(Config.CONFIG_FILE, 'wb') as configFile:
+            config.write(configFile)
     
     
     @classmethod
