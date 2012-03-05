@@ -11,11 +11,13 @@ class UpdatesFile(object):
     @classmethod
     def loadUpdates(cls):
         # Open the updater PKL file
-        with open(cls.REFRESH_FILE, 'r+b') as f:
-            try:
+        try:
+            with open(cls.REFRESH_FILE, 'rb') as f:
                 cls.updates = pickle.load(f)
-            except EOFError:
-                cls.updates = {}
+        except IOError:
+            cls.updates = {}
+        except EOFError:
+            cls.updates = {}
     
     
     @classmethod

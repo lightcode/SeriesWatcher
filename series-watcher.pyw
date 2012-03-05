@@ -17,6 +17,8 @@ from lib.widgets import EpisodesViewer, VideoItem
 import desktop
 
 class Main(QtGui.QMainWindow):
+    currentSerie = None
+    
     def __init__(self):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher')
@@ -417,7 +419,7 @@ class Main(QtGui.QMainWindow):
     
     
     def refreshScreen(self):
-        if self.currentSerie.serie is None:
+        if not self.currentSerie:
             return
         
         serieLocalID = self.currentSerieId()
