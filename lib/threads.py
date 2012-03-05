@@ -8,6 +8,21 @@ from PyQt4.QtCore import Qt
 from theTvDb import TheTvDbSerie
 
 
+class CheckSerieUpdate(QtCore.QThread):
+    REFRESH_TIME = 7200
+    
+    def __init__(self, parent = None):
+        QtCore.QThread.__init__(self, parent)
+        
+        # Open the updater PKL file
+        with open('updates.pkl', 'rwb+') as f:
+            pickle.load(f)
+    
+    def run(self):
+        while True:
+            time.sleep(REFRESH_TIME)
+
+
 class RefreshSeriesThread(QtCore.QThread):
     # Signals :
     serieLoaded = QtCore.pyqtSignal(int)

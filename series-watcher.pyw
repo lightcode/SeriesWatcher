@@ -150,6 +150,7 @@ class Main(QtGui.QMainWindow):
         
         addSerie = seriesMenu.addAction(u'Nouvelle série')
         addSerie.triggered.connect(self.openAddSerie)
+        addSerie.setIcon(QtGui.QIcon('art/folder_plus.png'))
         addSerie.setShortcut('Ctrl+N')
         
         refresh = seriesMenu.addAction(u'Mettre à jour cette série')
