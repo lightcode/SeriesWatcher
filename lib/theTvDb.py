@@ -30,12 +30,24 @@ class TheTvDb:
 class TheTvDbSerie(TheTvDb):
     def __init__(self, serieInfos):
         self.serieInfos = serieInfos
-        serieID = self.serieInfos[3]
-        lang = self.serieInfos[4]
         self.URL_BANNER = 'http://thetvdb.com/banners/'
         self.URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
-        xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, serieID, lang)
+    
+    
+    def downloadFullSerie(self):
+        tvDbId = self.serieInfos[3]
+        lang = self.serieInfos[4]
+        xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, tvDbId, lang)
         self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
+    
+    
+    def getLastUpdate(self):
+        tvDbId = self.serieInfos[3]
+        lang = self.serieInfos[4]
+        xmlFile = '%s%s/%s.xml' % (self.URL_ROOT, tvDbId, lang)
+        self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
+        series = self.dom.getElementsByTagName('Series')[0]
+        return int(self._getData(series, 'lastupdated'))
     
     
     '''Return the serie informations'''
@@ -45,6 +57,7 @@ class TheTvDbSerie(TheTvDb):
         firstAired = self._getData(series, 'FirstAired')
         desc = self._getData(series, 'Overview')
         banner = self._getData(series, 'banner')
+        lastUpdated = int(self._getData(series, 'lastupdated'))
         bannerPath = 'banners/%s.jpg' % name
         if not os.path.isfile(bannerPath) and banner != '':
             try:
@@ -54,7 +67,9 @@ class TheTvDbSerie(TheTvDb):
                     f.write(img)
             except:
                 pass
-        return {'firstAired': firstAired, 'desc': desc}
+        return { 'firstAired': firstAired,
+                 'desc': desc,
+                 'lastUpdated': lastUpdated }
     
     
     def getEpisodes(self, imgDir):

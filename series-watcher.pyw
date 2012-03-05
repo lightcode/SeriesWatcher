@@ -9,6 +9,7 @@ from PyQt4.QtCore import Qt
 from lib.config import Config
 from lib.serie import Serie
 from lib.threads import EpisodesLoaderThread, SearchThread, RefreshSeriesThread
+from lib.threads import CheckSerieUpdate
 from lib.addSerie import AddSerie
 from lib.about import About
 from lib.options import Options
@@ -47,6 +48,10 @@ class Main(QtGui.QMainWindow):
         self.refreshSeries.serieLoadStarted.connect(self.serieLoadStarted)
         self.refreshSeries.serieLoaded.connect(self.serieLoaded)
         self.refreshSeries.start()
+        
+        self.checkSerieUpdate = CheckSerieUpdate()
+        self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
+        self.checkSerieUpdate.start()
     
     
     def currentSerieId(self):
@@ -196,6 +201,8 @@ class Main(QtGui.QMainWindow):
     #  Config Manager
     # =================
     def setup(self):
+        if not os.path.isdir('database'):
+            os.mkdir('database')
         if not os.path.isdir('banners'):
             os.mkdir('banners')
         if not os.path.isdir('img'):

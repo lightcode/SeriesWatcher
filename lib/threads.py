@@ -2,6 +2,7 @@ import os.path
 import time
 import cPickle as pickle
 from config import Config
+from updatesFile import UpdatesFile
 from search import search, decompose
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
@@ -9,18 +10,26 @@ from theTvDb import TheTvDbSerie
 
 
 class CheckSerieUpdate(QtCore.QThread):
+    # Signals :
+    updateRequired = QtCore.pyqtSignal(int)
+    
     REFRESH_TIME = 7200
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
-        
-        # Open the updater PKL file
-        with open('updates.pkl', 'rwb+') as f:
-            pickle.load(f)
+        UpdatesFile.loadUpdates()
+    
     
     def run(self):
-        while True:
-            time.sleep(REFRESH_TIME)
+        for localeID, serie in enumerate(Config.series):
+            serieName, tvDbId = serie[0], serie[3]
+            localTime = UpdatesFile.getLastUpdate(serieName)
+            
+            tvDb = TheTvDbSerie(serie)
+            remoteTime = tvDb.getLastUpdate()
+            
+            if localTime < remoteTime:
+                self.updateRequired.emit(localeID)
 
 
 class RefreshSeriesThread(QtCore.QThread):
@@ -35,16 +44,15 @@ class RefreshSeriesThread(QtCore.QThread):
     
     def downloadConfiguration(self, serieLocalID):
         serieInfos = Config.series[serieLocalID]
-        title = serieInfos[1]
-        serieID = serieInfos[3]
+        serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
         self.serieLoadStarted.emit(title)
         
-        imgDir = 'img/' + serieInfos[0]
+        imgDir = 'img/' + serieName
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
         tvDb = TheTvDbSerie(serieInfos)
-        
+        tvDb.downloadFullSerie()
         serieInfos = tvDb.getInfosSerie()
         episodeList = tvDb.getEpisodes(imgDir)
         
@@ -52,6 +60,8 @@ class RefreshSeriesThread(QtCore.QThread):
         serie = {'serieInfos': serieInfos, 'episodes': episodeList}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
+        
+        UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
 
 
     def addSerie(self, serieLocalID):
