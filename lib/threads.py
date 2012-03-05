@@ -13,8 +13,6 @@ class CheckSerieUpdate(QtCore.QThread):
     # Signals :
     updateRequired = QtCore.pyqtSignal(int)
     
-    REFRESH_TIME = 7200
-    
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
         UpdatesFile.loadUpdates()
@@ -32,6 +30,7 @@ class CheckSerieUpdate(QtCore.QThread):
                 self.updateRequired.emit(localeID)
 
 
+
 class RefreshSeriesThread(QtCore.QThread):
     # Signals :
     serieLoaded = QtCore.pyqtSignal(int)
@@ -47,7 +46,7 @@ class RefreshSeriesThread(QtCore.QThread):
         serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
         self.serieLoadStarted.emit(title)
         
-        imgDir = 'img/' + serieName
+        imgDir = 'database/img/%s' % serieName
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
@@ -56,8 +55,8 @@ class RefreshSeriesThread(QtCore.QThread):
         serieInfos = tvDb.getInfosSerie()
         episodeList = tvDb.getEpisodes(imgDir)
         
-        pkl = 'tmp/%s.pkl' % serieID
         serie = {'serieInfos': serieInfos, 'episodes': episodeList}
+        pkl = 'database/%s.pkl' % serieName
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
         

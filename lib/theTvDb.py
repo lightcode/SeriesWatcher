@@ -28,10 +28,11 @@ class TheTvDb:
 
 
 class TheTvDbSerie(TheTvDb):
+    URL_BANNER = 'http://thetvdb.com/banners/'
+    URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
+    
     def __init__(self, serieInfos):
         self.serieInfos = serieInfos
-        self.URL_BANNER = 'http://thetvdb.com/banners/'
-        self.URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
     
     
     def downloadFullSerie(self):
@@ -58,7 +59,7 @@ class TheTvDbSerie(TheTvDb):
         desc = self._getData(series, 'Overview')
         banner = self._getData(series, 'banner')
         lastUpdated = int(self._getData(series, 'lastupdated'))
-        bannerPath = 'banners/%s.jpg' % name
+        bannerPath = 'database/banners/%s.jpg' % name
         if not os.path.isfile(bannerPath) and banner != '':
             try:
                 o = urllib.urlopen(self.URL_BANNER + banner)

@@ -27,7 +27,7 @@ class Serie:
     
     
     def loadSerie(self):
-        pkl = 'tmp/%s.pkl' % self.tvDbId
+        pkl = 'database/%s.pkl' % self.name
         if os.path.isfile(pkl):
             pklFile = open(pkl, 'rb')
             serie = pickle.load(pklFile)
@@ -39,12 +39,13 @@ class Serie:
         else:
             raise ValueError()
     
+    
     # =========================
     #  Episode viewed manager
     # =========================
     def loadEpisodesViewed(self):
         self.episodesViewed = set()
-        pkl = 'tmp/dl-%s.pkl' % self.name
+        pkl = 'database/view-%s.pkl' % self.name
         try:
             with open(pkl, 'rb') as pklFile:
                 self.episodesViewed = set(pickle.load(pklFile))
@@ -53,7 +54,7 @@ class Serie:
     
     
     def episodesViewedSave(self):
-        pkl = 'tmp/dl-%s.pkl' % self.name
+        pkl = 'database/view-%s.pkl' % self.name
         try:
             with open(pkl, 'wb+') as pklFile:
                 pickle.dump(self.episodesViewed, pklFile)

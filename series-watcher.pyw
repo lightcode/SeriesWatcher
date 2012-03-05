@@ -205,12 +205,10 @@ class Main(QtGui.QMainWindow):
     def setup(self):
         if not os.path.isdir('database'):
             os.mkdir('database')
-        if not os.path.isdir('banners'):
-            os.mkdir('banners')
-        if not os.path.isdir('img'):
-            os.mkdir('img')
-        if not os.path.isdir('tmp'):
-            os.mkdir('tmp')
+        if not os.path.isdir('database/banners'):
+            os.mkdir('database/banners')
+        if not os.path.isdir('database/img'):
+            os.mkdir('database/img')
     
     
     # =================
@@ -378,7 +376,7 @@ class Main(QtGui.QMainWindow):
         serieName = Config.series[serieLocalID][0]
         nbRows = int(math.ceil(len(episodes) / float(self.episodes.nbColumn)))
         self.episodes.setRowCount(nbRows)
-        imgDir = 'img/' + serieName
+        imgDir = 'database/img/%s' % serieName
         for i, e in enumerate(episodes):
             (x, y) = (i // self.episodes.nbColumn, i % self.episodes.nbColumn)
             imgPath = '%s/%s.jpg' % (imgDir, e['number'])
@@ -450,7 +448,7 @@ class Main(QtGui.QMainWindow):
         
         # Show infos about the serie
         if 'serieInfos' in self.currentSerie.serie:
-            imgPath = 'banners/%s.jpg' % Config.series[serieLocalID][0]
+            imgPath = 'database/banners/%s.jpg' % Config.series[serieLocalID][0]
             image = QtGui.QPixmap(imgPath)
             self.imageSerie.setPixmap(image)
             
