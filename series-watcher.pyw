@@ -238,7 +238,7 @@ class Main(QtGui.QMainWindow):
     
     def reloadMenu(self):
         serieLocalID = self.currentSerieId()
-        self.currentSerie.loadDownloadedList(serieLocalID)
+        self.currentSerie.loadDownloadedList()
         self.loadSerie(serieLocalID)
         self.refreshScreen()
     
@@ -349,12 +349,10 @@ class Main(QtGui.QMainWindow):
     
     
     def searchChanged(self, textSearch):
-        if self.currentSerie.serie is None:
-            return
-        serie = self.currentSerie.serie
-        episodes = serie['episodes']
-        textSearch = unicode(self.searchBar.text())
-        self.searchThread.changeText(textSearch, episodes)
+        if self.currentSerie:
+            episodes = self.currentSerie.episodes
+            textSearch = unicode(self.searchBar.text())
+            self.searchThread.changeText(textSearch, episodes)
     
     
     def searchFinished(self, listEpisodes):
@@ -372,8 +370,7 @@ class Main(QtGui.QMainWindow):
         self.episodesLoader.newQuery()
         self.episodes.clear()
         self.map = {}
-        serieLocalID = self.currentSerieId()
-        serieName = Config.series[serieLocalID][0]
+        serieName = self.currentSerie.name
         nbRows = int(math.ceil(len(episodes) / float(self.episodes.nbColumn)))
         self.episodes.setRowCount(nbRows)
         imgDir = 'database/img/%s' % serieName
@@ -383,7 +380,7 @@ class Main(QtGui.QMainWindow):
             titleStr = '<b>%s</b><br/>%s' % (e['number'], e['title'])
             self.map[x, y] = e
             infos = 0
-            if e['path'] is not None:
+            if e['path']:
                 infos = 1
                 if e['number'] not in self.currentSerie.episodesViewed:
                     infos = 2
@@ -420,17 +417,15 @@ class Main(QtGui.QMainWindow):
         if not self.currentSerie:
             return
         
-        serieLocalID = self.currentSerieId()
-        episodes = self.currentSerie.serie['episodes']
         filterSeason = self.selectSeason.currentIndex()
         isFilterDL = self.filterDL.isChecked()
         isFilterNew = self.filterNew.isChecked()
         
         listEpisodes = []
-        for e in episodes:
+        for e in self.currentSerie.episodes:
             if (filterSeason == 0 or filterSeason == e['season']) \
-            and (not isFilterDL or e['path'] is not None) \
-            and (not isFilterNew or e['number'] not in self.currentSerie.episodesViewed):
+              and (not isFilterDL or e['path'] is not None) \
+              and (not isFilterNew or e['number'] not in self.currentSerie.episodesViewed):
                 listEpisodes.append(e)
         
         self.showEpisode(listEpisodes)
@@ -447,20 +442,16 @@ class Main(QtGui.QMainWindow):
         self.selectSeason.addItem('Toutes les saisons')
         
         # Show infos about the serie
-        if 'serieInfos' in self.currentSerie.serie:
-            imgPath = 'database/banners/%s.jpg' % Config.series[serieLocalID][0]
-            image = QtGui.QPixmap(imgPath)
+        if self.currentSerie.infos:
+            image = QtGui.QPixmap(self.currentSerie['bannerPath'])
             self.imageSerie.setPixmap(image)
-            
-            serieInfos = self.currentSerie.serie['serieInfos']
-            desc = serieInfos['desc'].replace("\n", '<br/>')
-            firstAired = serieInfos['firstAired']
+            desc = self.currentSerie['desc'].replace("\n", '<br/>')
+            firstAired = self.currentSerie['firstAired']
             self.description.setText('%s<hr/>%s' % (desc, firstAired))
             
             self.selectSeason.blockSignals(True)
-            episodes = self.currentSerie.serie['episodes']
-            nbSeasons = max([e['season'] for e in episodes])
-            listSeasons = ['Saison %d' % (x + 1) for x in xrange(nbSeasons)]
+            nbSeasons = self.currentSerie['nbSeason']
+            listSeasons = ['Saison %d' % x for x in xrange(1, nbSeasons + 1)]
             self.selectSeason.addItems(listSeasons)
             self.selectSeason.setCurrentIndex(0)
             self.selectSeason.blockSignals(False)
