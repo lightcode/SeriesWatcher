@@ -30,5 +30,5 @@ class Options(QtGui.QDialog):
     def save(self):
         cmdOpen = str(self.cmdOpen.text())
         Config.setOption('command_open', cmdOpen)
-        
+        Config.save()
         self.close()

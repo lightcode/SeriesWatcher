@@ -11,6 +11,7 @@ from lib.serie import Serie
 from lib.threads import EpisodesLoaderThread, SearchThread, RefreshSeriesThread
 from lib.threads import CheckSerieUpdate
 from lib.addSerie import AddSerie
+from lib.editSerie import EditSerie
 from lib.about import About
 from lib.options import Options
 from lib.widgets import EpisodesViewer, VideoItem
@@ -76,8 +77,7 @@ class Main(QtGui.QMainWindow):
         self.imageSerie.setFixedSize(758, 140)
         
         self.selectSerie = QtGui.QComboBox()
-        for e in Config.series:
-            self.selectSerie.addItem(e[1])
+        self.reloadSelectSerie()
         self.selectSerie.currentIndexChanged.connect(self.serieChanged)
         
         self.description = QtGui.QLabel()
@@ -160,6 +160,9 @@ class Main(QtGui.QMainWindow):
         addSerie.setIcon(QtGui.QIcon('art/folder_plus.png'))
         addSerie.setShortcut('Ctrl+N')
         
+        addSerie = seriesMenu.addAction(u'Editer la série')
+        addSerie.triggered.connect(self.openEditSerie)
+        
         refresh = seriesMenu.addAction(u'Mettre à jour cette série')
         refresh.triggered.connect(self.updateSerieMenu)
         refresh.setShortcut('Ctrl+U')
@@ -173,7 +176,7 @@ class Main(QtGui.QMainWindow):
         refresh = episodesMenu.addAction(u'Recharger')
         refresh.triggered.connect(self.reloadMenu)
         refresh.setIcon(QtGui.QIcon('art/refresh.png'))
-        refresh.setShortcut('Ctrl+R')        
+        refresh.setShortcut('Ctrl+R')
         
         view = episodesMenu.addAction(u'Marquer comme vue')
         view.triggered.connect(self.viewSelectEpisodeMenu)
@@ -247,11 +250,17 @@ class Main(QtGui.QMainWindow):
         self.status.showMessage('Chargement de %s' % title)
     
     
+    def openEditSerie(self):
+        editSerie = EditSerie(self)
+        editSerie.edited.connect(self.reloadSelectSerie)
+        editSerie.show()
+    
+    
     def openAbout(self):
         about = About(self)
         about.show()
-
-
+    
+    
     def openOptions(self):
         options = Options(self)
         options.show()
@@ -285,10 +294,16 @@ class Main(QtGui.QMainWindow):
     
     def serieAdded(self, name, title, theTvDb, lang, path):
         Config.addSerie(name, title, theTvDb, lang, path)
+        self.reloadSelectSerie()
+        self.selectSerie.setCurrentIndex(len(Config.series) - 1)
+    
+    
+    def reloadSelectSerie(self):
+        self.selectSerie.blockSignals(True)
         self.selectSerie.clear()
         for e in Config.series:
             self.selectSerie.addItem(e[1])
-        self.selectSerie.setCurrentIndex(len(Config.series) - 1)
+        self.selectSerie.blockSignals(False)
     
     
     def viewSelectEpisodeMenu(self):
@@ -379,12 +394,7 @@ class Main(QtGui.QMainWindow):
             imgPath = '%s/%s.jpg' % (imgDir, e['number'])
             titleStr = '<b>%s</b><br/>%s' % (e['number'], e['title'])
             self.map[x, y] = e
-            infos = 0
-            if e['path']:
-                infos = 1
-                if e['number'] not in self.currentSerie.episodesViewed:
-                    infos = 2
-            
+            infos = e['infos']
             self.episodesLoader.addEpisode(x, y, titleStr, infos, imgPath)
         self.episodesLoader.start()
         self.refreshCount()
@@ -408,27 +418,25 @@ class Main(QtGui.QMainWindow):
     def episodeLoaded(self, x, y, title, infos, image = None):
         item = VideoItem(title)
         item.setInfos(infos)
-        if image is not None:
+        if image:
             item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
     
     
     def refreshScreen(self):
-        if not self.currentSerie:
-            return
-        
-        filterSeason = self.selectSeason.currentIndex()
-        isFilterDL = self.filterDL.isChecked()
-        isFilterNew = self.filterNew.isChecked()
-        
-        listEpisodes = []
-        for e in self.currentSerie.episodes:
-            if (filterSeason == 0 or filterSeason == e['season']) \
-              and (not isFilterDL or e['path'] is not None) \
-              and (not isFilterNew or e['number'] not in self.currentSerie.episodesViewed):
-                listEpisodes.append(e)
-        
-        self.showEpisode(listEpisodes)
+        if self.currentSerie:
+            filterSeason = self.selectSeason.currentIndex()
+            isFilterDL = self.filterDL.isChecked()
+            isFilterNew = self.filterNew.isChecked()
+            episodesViewed = self.currentSerie.episodesViewed
+            listEpisodes = []
+            for e in self.currentSerie.episodes:
+                if (filterSeason == 0 or filterSeason == e['season']) \
+                  and (not isFilterDL or e['path'] is not None) \
+                  and (not isFilterNew or e['number'] not in episodesViewed):
+                    listEpisodes.append(e)
+            
+            self.showEpisode(listEpisodes)
     
     
     def serieChanged(self, serieLocalID = None, init = False):

@@ -1,5 +1,5 @@
-import glob
 import cPickle as pickle
+import glob
 import os.path
 import re
 
@@ -41,8 +41,13 @@ class Serie(object):
             for i, e in enumerate(self.episodes):
                 number = e['number']
                 nbSeason = max(nbSeason, e['season'])
+                infos = 0
                 if number in self.downloadedEpisode:
                     self.episodes[i]['path'] = self.downloadedEpisode[number]
+                    infos = 1
+                    if e['number'] not in self.episodesViewed:
+                        infos = 2
+                self.episodes[i]['infos'] = infos
             
             # Serie's informations
             self.infos.update(serie['serieInfos'])

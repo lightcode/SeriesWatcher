@@ -23,6 +23,10 @@ class SelectFolder(QtGui.QWidget):
     
     def path(self):
         return self.label.text()
+    
+    
+    def setPath(self, path):
+        self.label.setText(path)
 
 
 class EpisodesViewer(QtGui.QTableWidget):

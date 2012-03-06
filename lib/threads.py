@@ -1,33 +1,53 @@
+import cPickle as pickle
 import os.path
 import time
-import cPickle as pickle
+from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
 from config import Config
 from updatesFile import UpdatesFile
 from search import search, decompose
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
 from theTvDb import TheTvDbSerie
 
 
 class CheckSerieUpdate(QtCore.QThread):
     # Signals :
     updateRequired = QtCore.pyqtSignal(int)
+    TIME_BETWEEN_UPDATE = 86400 # a day
+    LATS_VERIF_PATH = 'database/lastVerif.txt'
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
         UpdatesFile.loadUpdates()
     
     
+    def getLastVerification(self):
+        try:
+            with open(self.LATS_VERIF_PATH, 'r') as f:
+                return int(''.join(f.readlines()).strip())
+        except IOError:
+            return 0
+        except ValueError:
+            return 0
+    
+    
+    def updateLastVerif(self):
+        with open(self.LATS_VERIF_PATH, 'w+') as f:
+            f.write("%d" % time.time())
+    
+    
     def run(self):
-        for localeID, serie in enumerate(Config.series):
-            serieName, tvDbId = serie[0], serie[3]
-            localTime = UpdatesFile.getLastUpdate(serieName)
-            
-            tvDb = TheTvDbSerie(serie)
-            remoteTime = tvDb.getLastUpdate()
-            
-            if localTime < remoteTime:
-                self.updateRequired.emit(localeID)
+        lastVerification = self.getLastVerification()
+        if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
+            for localeID, serie in enumerate(Config.series):
+                serieName, tvDbId = serie[0], serie[3]
+                localTime = UpdatesFile.getLastUpdate(serieName)
+                
+                tvDb = TheTvDbSerie(serie)
+                remoteTime = tvDb.getLastUpdate()
+                
+                if localTime < remoteTime:
+                    self.updateLastVerif()
+                    self.updateRequired.emit(localeID)
 
 
 

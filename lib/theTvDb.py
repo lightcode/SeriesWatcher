@@ -51,14 +51,15 @@ class TheTvDbSerie(TheTvDb):
         return int(self._getData(series, 'lastupdated'))
     
     
-    '''Return the serie informations'''
     def getInfosSerie(self):
+        '''Return the serie informations'''
+        infos = {}
         name = self.serieInfos[0]
         series = self.dom.getElementsByTagName('Series')[0]
-        firstAired = self._getData(series, 'FirstAired')
-        desc = self._getData(series, 'Overview')
+        infos['firstAired'] = self._getData(series, 'FirstAired')
+        infos['desc'] = self._getData(series, 'Overview')
         banner = self._getData(series, 'banner')
-        lastUpdated = int(self._getData(series, 'lastupdated'))
+        infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
         bannerPath = 'database/banners/%s.jpg' % name
         if not os.path.isfile(bannerPath) and banner != '':
             try:
@@ -68,9 +69,7 @@ class TheTvDbSerie(TheTvDb):
                     f.write(img)
             except:
                 pass
-        return { 'firstAired': firstAired,
-                 'desc': desc,
-                 'lastUpdated': lastUpdated }
+        return infos
     
     
     def getEpisodes(self, imgDir):
@@ -100,7 +99,5 @@ class TheTvDbSerie(TheTvDb):
                         f.write(img)
                 except:
                     pass
-            
             episodeList.append(entry)
-        
         return episodeList

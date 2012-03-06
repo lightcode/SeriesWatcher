@@ -11,7 +11,6 @@ class AddSerie(QtGui.QDialog):
     # Signals :
     serieAdded = QtCore.pyqtSignal('QString', 'QString', int, 'QString', 'QString')
     
-    
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'Ajouter une série')

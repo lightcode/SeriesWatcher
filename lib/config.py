@@ -22,19 +22,33 @@ class Config(object):
         config.set(name, 'title', str(title))
         with open(Config.CONFIG_FILE, 'wb') as configFile:
             config.write(configFile)
-        
         cls.loadConfig()
     
     
     @classmethod
     def setOption(cls, key, value):
         cls.config[key] = value
+    
+    
+    @classmethod
+    def save(cls):
         config = ConfigParser.SafeConfigParser()
-        config.read(cls.CONFIG_FILE)
-        if 'options' not in config.sections():
-            config.add_section('options')
-        config.set('options', str(key), str(value))
-        with open(Config.CONFIG_FILE, 'wb') as configFile:
+        
+        # Make option section
+        config.add_section('options')
+        for key, value in cls.config.iteritems():
+            config.set('options', str(key), str(value))
+        
+        # Make the series sections
+        for name, title, path, tvDbId, lang in cls.series:
+            config.add_section(name)
+            config.set(name, 'title', str(title))
+            config.set(name, 'theTvDb', str(tvDbId))
+            config.set(name, 'videos', str(path))
+            config.set(name, 'lang', str(lang))
+        
+        # Write the config
+        with open(Config.CONFIG_FILE, 'wb+') as configFile:
             config.write(configFile)
     
     
@@ -47,8 +61,11 @@ class Config(object):
             with open(cls.CONFIG_FILE, 'wb+') as configFile:
                 config.write(configFile)
         
+        # The default config
         cls.config = {}
         cls.config['command_open'] = None
+        
+        # Load the options
         config = ConfigParser.SafeConfigParser()
         config.read(cls.CONFIG_FILE)
         try:
@@ -59,6 +76,7 @@ class Config(object):
             with open(cls.CONFIG_FILE, 'wb+') as configFile:
                 config.write(configFile)
         
+        # Load the series
         cls.series = []
         for section in config.sections():
             if section != 'options':
