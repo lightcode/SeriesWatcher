@@ -17,6 +17,7 @@ class Serie(object):
     
     
     def loadDownloadedList(self):
+        self.downloadedEpisode = {}
         pattern = re.compile(r'(\d+)\D(\d+)')
         fileList = glob.glob(self.path)
         for f in fileList:
@@ -69,6 +70,7 @@ class Serie(object):
     #  Episode viewed manager
     # =========================
     def loadEpisodesViewed(self):
+        self.episodesViewed = set()
         pkl = 'database/view-%s.pkl' % self.name
         try:
             with open(pkl, 'rb') as pklFile:
