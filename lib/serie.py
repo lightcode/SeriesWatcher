@@ -29,31 +29,34 @@ class Serie(object):
                     self.downloadedEpisode[episodeID] = f
     
     
+    def loadEpisodes(self):
+        nbSeason = 0
+        for i, e in enumerate(self.episodes):
+            number = e['number']
+            nbSeason = max(nbSeason, e['season'])
+            infos = 0
+            if number in self.downloadedEpisode:
+                self.episodes[i]['path'] = self.downloadedEpisode[number]
+                infos = 1
+                if e['number'] not in self.episodesViewed:
+                    infos = 2
+            self.episodes[i]['infos'] = infos
+        self.infos['nbSeason'] = nbSeason
+    
+    
     def loadSerie(self):
         pkl = 'database/%s.pkl' % self.name
-        if os.path.isfile(pkl):
-            nbSeason = 0
-            
+        if os.path.isfile(pkl):            
             pklFile = open(pkl, 'rb')
             serie = pickle.load(pklFile)
             
             # Serie's episodes
             self.episodes = serie['episodes']
-            for i, e in enumerate(self.episodes):
-                number = e['number']
-                nbSeason = max(nbSeason, e['season'])
-                infos = 0
-                if number in self.downloadedEpisode:
-                    self.episodes[i]['path'] = self.downloadedEpisode[number]
-                    infos = 1
-                    if e['number'] not in self.episodesViewed:
-                        infos = 2
-                self.episodes[i]['infos'] = infos
+            self.loadEpisodes()
             
             # Serie's informations
             self.infos.update(serie['serieInfos'])
             self.infos['bannerPath'] = 'database/banners/%s.jpg' % self.name
-            self.infos['nbSeason'] = nbSeason
         else:
             raise ValueError()
     
@@ -84,5 +87,6 @@ class Serie(object):
         try:
             with open(pkl, 'wb+') as pklFile:
                 pickle.dump(self.episodesViewed, pklFile)
+            self.loadEpisodes()
         except IOError:
             pass

@@ -1,9 +1,7 @@
 # -*- coding: utf8 -*-
-import cPickle as pickle
 import math
 import os.path
 import sys
-import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from lib.config import Config
@@ -11,7 +9,7 @@ from lib.serie import Serie
 from lib.threads import EpisodesLoaderThread, SearchThread, RefreshSeriesThread
 from lib.threads import CheckSerieUpdate
 from lib.addSerie import AddSerie
-from lib.editSerie import EditSerie
+from lib.editSeries import EditSeries
 from lib.about import About
 from lib.options import Options
 from lib.widgets import EpisodesViewer, VideoItem
@@ -160,7 +158,7 @@ class Main(QtGui.QMainWindow):
         addSerie.setIcon(QtGui.QIcon('art/folder_plus.png'))
         addSerie.setShortcut('Ctrl+N')
         
-        addSerie = seriesMenu.addAction(u'Editer la série')
+        addSerie = seriesMenu.addAction(u'Editer les séries')
         addSerie.triggered.connect(self.openEditSerie)
         
         refresh = seriesMenu.addAction(u'Mettre à jour cette série')
@@ -237,14 +235,13 @@ class Main(QtGui.QMainWindow):
             episodesViewed.add(number)
         self.currentSerie.episodesViewed = episodesViewed
         self.currentSerie.episodesViewedSave()
-        self.currentSerie.loadSerie()
         self.refreshScreen()
     
     
     def reloadMenu(self):
         serieLocalID = self.currentSerieId()
         self.currentSerie.loadDownloadedList()
-        self.loadSerie(serieLocalID)
+        self.currentSerie.loadEpisodes()
         self.refreshScreen()
     
     
@@ -253,9 +250,14 @@ class Main(QtGui.QMainWindow):
     
     
     def openEditSerie(self):
-        editSerie = EditSerie(self)
-        editSerie.edited.connect(self.reloadSelectSerie)
-        editSerie.show()
+        editSeries = EditSeries(self)
+        editSeries.edited.connect(self.seriesEdited)
+        editSeries.show()
+    
+    
+    def seriesEdited(self):
+        self.reloadSelectSerie()
+        self.serieChanged()
     
     
     def openAbout(self):

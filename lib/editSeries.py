@@ -79,13 +79,13 @@ class ListSeries(QtGui.QWidget):
 
 
 
-class EditSerie(QtGui.QDialog):
+class EditSeries(QtGui.QDialog):
     # Signals :
     edited = QtCore.pyqtSignal()
 
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
-        self.setWindowTitle(u'Editer la série')
+        self.setWindowTitle(u'Editer les séries')
         
         # Select serie pannel
         self.listSeries = ListSeries()

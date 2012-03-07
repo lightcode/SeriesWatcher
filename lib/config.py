@@ -68,10 +68,10 @@ class Config(object):
         # Load the options
         config = ConfigParser.SafeConfigParser()
         config.read(cls.CONFIG_FILE)
-        try:
+        if config.has_section('options'):
             for key, value in config.items('options'):
                 cls.config[key] = value
-        except ConfigParser.NoSectionError:
+        else:
             config.add_section('options')
             with open(cls.CONFIG_FILE, 'wb+') as configFile:
                 config.write(configFile)

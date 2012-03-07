@@ -1,4 +1,4 @@
-# -*-coding: utf8-*-
+# -*- coding: utf8 -*-
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
