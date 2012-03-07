@@ -232,11 +232,13 @@ class Main(QtGui.QMainWindow):
     
     
     def allEpisodeView(self):
-        episodesViewed = []
+        episodesViewed = set()
         for number in self.currentSerie.downloadedEpisode.iterkeys():
-            episodesViewed.append(number)
+            episodesViewed.add(number)
         self.currentSerie.episodesViewed = episodesViewed
         self.currentSerie.episodesViewedSave()
+        self.currentSerie.loadSerie()
+        self.refreshScreen()
     
     
     def reloadMenu(self):
