@@ -1,5 +1,6 @@
-import ConfigParser
+from configparser import SafeConfigParser
 import os.path
+import codecs
 
 class Config(object):
     _instance = None
@@ -11,18 +12,11 @@ class Config(object):
     
     
     @classmethod
-    def addSerie(cls, name, title, theTvDb, lang, path):
-        config = ConfigParser.SafeConfigParser()
-        name = str(name)
-        config.read(cls.CONFIG_FILE)
-        config.add_section(name)
-        config.set(name, 'videos', str(path))
-        config.set(name, 'theTvDb', str(theTvDb))
-        config.set(name, 'lang', str(lang))
-        config.set(name, 'title', str(title))
-        with open(Config.CONFIG_FILE, 'wb') as configFile:
-            config.write(configFile)
-        cls.loadConfig()
+    def addSerie(cls, *serie):
+        serie = map(unicode, serie)
+        serie[0], serie[3] = str(serie[0]), str(serie[3])
+        cls.series.append(serie)
+        cls.save()
     
     
     @classmethod
@@ -32,49 +26,41 @@ class Config(object):
     
     @classmethod
     def save(cls):
-        config = ConfigParser.SafeConfigParser()
+        config = SafeConfigParser()
         
         # Make option section
         config.add_section('options')
         for key, value in cls.config.iteritems():
-            config.set('options', str(key), str(value))
+            config.set('options', str(key), unicode(value))
         
         # Make the series sections
         for name, title, path, tvDbId, lang in cls.series:
+            name = str(name)
             config.add_section(name)
-            config.set(name, 'title', str(title))
+            config.set(name, 'title', unicode(title))
             config.set(name, 'theTvDb', str(tvDbId))
-            config.set(name, 'videos', str(path))
-            config.set(name, 'lang', str(lang))
+            config.set(name, 'videos', unicode(path))
+            config.set(name, 'lang', unicode(lang))
         
         # Write the config
-        with open(Config.CONFIG_FILE, 'wb+') as configFile:
-            config.write(configFile)
+        with codecs.open(cls.CONFIG_FILE, 'w+', encoding='utf-8') as f:
+            config.write(f)
     
     
     @classmethod
     def loadConfig(cls):
-        # Add config file if not already exist
-        if not os.path.isfile(cls.CONFIG_FILE):
-            config = ConfigParser.SafeConfigParser()
-            config.add_section('options')
-            with open(cls.CONFIG_FILE, 'wb+') as configFile:
-                config.write(configFile)
+        config = SafeConfigParser()
+        if os.path.isfile(cls.CONFIG_FILE):
+            config.read_file(codecs.open(cls.CONFIG_FILE, encoding='utf-8'))
         
         # The default config
         cls.config = {}
         cls.config['command_open'] = None
         
         # Load the options
-        config = ConfigParser.SafeConfigParser()
-        config.read(cls.CONFIG_FILE)
         if config.has_section('options'):
             for key, value in config.items('options'):
                 cls.config[key] = value
-        else:
-            config.add_section('options')
-            with open(cls.CONFIG_FILE, 'wb+') as configFile:
-                config.write(configFile)
         
         # Load the series
         cls.series = []
@@ -85,3 +71,8 @@ class Config(object):
                 theTvDb = config.getint(section, 'theTvDb')
                 lang = config.get(section, 'lang')
                 cls.series.append([section, title, videos, theTvDb, lang])
+
+
+if __name__ == '__main__':
+    Config.loadConfig()
+    print Config.series

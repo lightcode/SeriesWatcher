@@ -297,7 +297,7 @@ class Main(QtGui.QMainWindow):
     
     
     def serieAdded(self, name, title, theTvDb, lang, path):
-        Config.addSerie(name, title, theTvDb, lang, path)
+        Config.addSerie(name, title, path, theTvDb, lang)
         self.reloadSelectSerie()
         self.selectSerie.setCurrentIndex(len(Config.series) - 1)
     

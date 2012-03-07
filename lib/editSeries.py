@@ -69,7 +69,7 @@ class ListSeries(QtGui.QWidget):
         nb = self.listWidget.count()
         items = []
         for i in xrange(nb):
-            title = str(self.listWidget.item(i).text())
+            title = unicode(self.listWidget.item(i).text())
             name = self.listWidget.item(i).name
             path = self.listWidget.item(i).path
             lang = self.listWidget.item(i).lang
