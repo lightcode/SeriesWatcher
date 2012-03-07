@@ -89,6 +89,12 @@ class ListSeries(QtGui.QWidget):
         currentItem.setText(title)
     
     
+    def setPath(self, path):
+        currentIndex = self.listWidget.currentIndex().row()
+        currentItem = self.listWidget.item(currentIndex)
+        currentItem.path = path
+    
+    
     def getItems(self):
         nb = self.listWidget.count()
         items = []
@@ -119,10 +125,17 @@ class EditSeries(QtGui.QDialog):
         self.title = QtGui.QLineEdit()
         self.title.textChanged.connect(self.listSeries.setTitle)
         self.path = SelectFolder()
+        self.path.label.textChanged.connect(self.listSeries.setPath)
         
+        groupSerie = QtGui.QGroupBox(u'Information de la série')
         form = QtGui.QFormLayout()
         form.addRow('Titre', self.title)
-        form.addRow(self.path)
+        groupSerie.setLayout(form)
+        
+        groupDownload = QtGui.QGroupBox(u'Vos téléchargements')
+        layoutDl = QtGui.QVBoxLayout()
+        layoutDl.addWidget(self.path)
+        groupDownload.setLayout(layoutDl)
         
         buttonBox = QtGui.QDialogButtonBox()
         buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
@@ -130,10 +143,14 @@ class EditSeries(QtGui.QDialog):
         buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
         buttonBox.rejected.connect(self.close)
         
+        editSeriePannel = QtGui.QVBoxLayout()
+        editSeriePannel.addWidget(groupSerie)
+        editSeriePannel.addWidget(groupDownload)
+        
         # Make a layout and go...
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.listSeries)
-        layout.addLayout(form)
+        layout.addLayout(editSeriePannel)
         
         bigLayout = QtGui.QVBoxLayout()
         bigLayout.addLayout(layout)
