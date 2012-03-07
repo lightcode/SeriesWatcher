@@ -5,6 +5,7 @@ from PyQt4.QtGui import QMessageBox
 from widgets import SelectFolder
 from theTvDb import TheTvDb
 from camelCase import getCamelCase
+from config import Config
 
 
 class AddSerie(QtGui.QDialog):
@@ -27,8 +28,6 @@ class AddSerie(QtGui.QDialog):
         
         self.theTvDb = QtGui.QLineEdit()
         self.lang = QtGui.QLineEdit()
-        ok = QtGui.QPushButton('OK')
-        ok.clicked.connect(self.validate)
         self.selectFolder = SelectFolder()
         
         groupSerie = QtGui.QGroupBox(u'Information de la série')
@@ -44,10 +43,16 @@ class AddSerie(QtGui.QDialog):
         layout.addWidget(self.selectFolder)
         groupDownload.setLayout(layout)
         
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox.accepted.connect(self.validate)
+        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        buttonBox.rejected.connect(self.close)
+        
         layout = QtGui.QVBoxLayout()
         layout.addWidget(groupSerie)
         layout.addWidget(groupDownload)
-        layout.addWidget(ok)
+        layout.addWidget(buttonBox)
         
         self.setLayout(layout)
     
@@ -114,5 +119,6 @@ class AddSerie(QtGui.QDialog):
             message = u"Certaines données sont erronées."
             QMessageBox.critical(self, title, message)
         else:
+            Config.addSerie(name, title, path, theTvDb, lang)
             self.serieAdded.emit(name, title, theTvDb, lang, path)
             self.close()

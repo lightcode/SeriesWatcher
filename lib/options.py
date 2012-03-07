@@ -16,13 +16,15 @@ class Options(QtGui.QDialog):
         form = QtGui.QFormLayout()
         form.addRow(u"Commande d'ouverture de vidéo", self.cmdOpen)
         
-        okBtn = QtGui.QPushButton('Sauvegarder')
-        okBtn.clicked.connect(self.save)
-        #okBtn.setFixedWidth(100)
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox.accepted.connect(self.save)
+        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        buttonBox.rejected.connect(self.close)
         
         layout = QtGui.QVBoxLayout()
         layout.addLayout(form)
-        layout.addWidget(okBtn)
+        layout.addWidget(buttonBox)
         
         self.setLayout(layout)
     

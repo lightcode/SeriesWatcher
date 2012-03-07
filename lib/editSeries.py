@@ -2,6 +2,7 @@
 from PyQt4 import QtCore, QtGui
 from config import Config
 from widgets import SelectFolder
+from addSerie import AddSerie
 
 class ListSeries(QtGui.QWidget):
     # Signals :
@@ -21,20 +22,43 @@ class ListSeries(QtGui.QWidget):
             self.listWidget.addItem(item)
         self.listWidget.itemSelectionChanged.connect(self._itemSelectionChanged)
         
-        btnUp = QtGui.QPushButton('Monter')
-        btnUp.clicked.connect(self.upItem)
-        btnDown = QtGui.QPushButton('Descendre')
-        btnDown.clicked.connect(self.downItem)
+        tool = QtGui.QToolBar()
+        tool.setStyleSheet('border:none')
+        tool.addAction(QtGui.QIcon('art/add.png'), u'Ajouter une série', self.add)
+        tool.addSeparator()
+        tool.addAction(QtGui.QIcon('art/up.png'), 'Monter', self.upItem)
+        tool.addAction(QtGui.QIcon('art/down.png'), 'Descendre', self.downItem)
+        tool.addAction(QtGui.QIcon('art/delete.png'), u'Supprimer cette série', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()
-        layoutButton.addWidget(btnUp)
-        layoutButton.addWidget(btnDown)
+        layoutButton.addWidget(tool)
         
         layoutList = QtGui.QVBoxLayout()
         layoutList.addWidget(self.listWidget)
         layoutList.addLayout(layoutButton)
         
         self.setLayout(layoutList)
+    
+    
+    def add(self):
+        addSerie = AddSerie(self)
+        addSerie.serieAdded.connect(self.serieAdded)
+        addSerie.open()
+    
+    
+    def delete(self):
+        currentIndex = self.listWidget.currentIndex().row()
+        item = self.listWidget.takeItem(currentIndex)
+        del item
+    
+    
+    def serieAdded(self, name, title, tvDbId, lang, path):
+        item = QtGui.QListWidgetItem(title)
+        setattr(item, 'name', name)
+        setattr(item, 'path', path)
+        setattr(item, 'lang', lang)
+        setattr(item, 'tvDbId', tvDbId)
+        self.listWidget.addItem(item)
     
     
     def _itemSelectionChanged(self):
@@ -95,20 +119,27 @@ class EditSeries(QtGui.QDialog):
         self.title = QtGui.QLineEdit()
         self.title.textChanged.connect(self.listSeries.setTitle)
         self.path = SelectFolder()
-        btnSave = QtGui.QPushButton('Sauvegarder')
-        btnSave.clicked.connect(self.save)
         
         form = QtGui.QFormLayout()
         form.addRow('Titre', self.title)
         form.addRow(self.path)
-        form.addRow(btnSave)
+        
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox.accepted.connect(self.save)
+        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        buttonBox.rejected.connect(self.close)
         
         # Make a layout and go...
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.listSeries)
         layout.addLayout(form)
         
-        self.setLayout(layout)
+        bigLayout = QtGui.QVBoxLayout()
+        bigLayout.addLayout(layout)
+        bigLayout.addWidget(buttonBox)
+        
+        self.setLayout(bigLayout)
     
     
     def itemSelectionChanged(self, title, path, lang):

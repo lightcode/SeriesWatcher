@@ -19,7 +19,7 @@ class Serie(object):
     def loadDownloadedList(self):
         self.downloadedEpisode = {}
         pattern = re.compile(r'(\d+)\D(\d+)')
-        fileList = glob.glob(self.path)
+        fileList = glob.glob(unicode(self.path))
         for f in fileList:
             if os.path.basename(f).split('.')[-1] in self.EXTENSION:
                 tst = re.search(pattern, os.path.basename(f))

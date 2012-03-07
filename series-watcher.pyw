@@ -153,13 +153,11 @@ class Main(QtGui.QMainWindow):
         ## MENU SERIES
         seriesMenu = self.menubar.addMenu('S\xE9ries')
         
-        addSerie = seriesMenu.addAction(u'Nouvelle série')
-        addSerie.triggered.connect(self.openAddSerie)
-        addSerie.setIcon(QtGui.QIcon('art/folder_plus.png'))
+        addSerie = seriesMenu.addAction(u'Nouvelle série', self.openAddSerie)
+        addSerie.setIcon(QtGui.QIcon('art/add.png'))
         addSerie.setShortcut('Ctrl+N')
         
-        addSerie = seriesMenu.addAction(u'Editer les séries')
-        addSerie.triggered.connect(self.openEditSerie)
+        seriesMenu.addAction(u'Editer les séries', self.openEditSerie)
         
         refresh = seriesMenu.addAction(u'Mettre à jour cette série')
         refresh.triggered.connect(self.updateSerieMenu)
@@ -185,13 +183,15 @@ class Main(QtGui.QMainWindow):
         view.setIcon(QtGui.QIcon('art/uncheck.png'))
         view.triggered.connect(self.notViewSelectEpisodeMenu)
         
-        view = episodesMenu.addAction(u'Marquer la série comme vue')
-        view.triggered.connect(self.allEpisodeView)
+        episodesMenu.addAction(u'Marquer la série comme vue', \
+                               self.allEpisodeView)
         
         ## MENU AIDE
         helpMenu = self.menubar.addMenu('Series Watcher')
-        helpMenu.addAction(u'Options', self.openOptions)
-        helpMenu.addAction(u'A propos', self.openAbout)
+        helpMenu.addAction(QtGui.QIcon('art/options.png'), \
+                           'Options', self.openOptions)
+        helpMenu.addAction(QtGui.QIcon('art/help.png'), \
+                           'A propos', self.openAbout)
     
     
     def clearSelectionInfos(self):
@@ -296,8 +296,7 @@ class Main(QtGui.QMainWindow):
             self.clearSelectionInfos()
     
     
-    def serieAdded(self, name, title, theTvDb, lang, path):
-        Config.addSerie(name, title, path, theTvDb, lang)
+    def serieAdded(self, *serie):
         self.reloadSelectSerie()
         self.selectSerie.setCurrentIndex(len(Config.series) - 1)
     
