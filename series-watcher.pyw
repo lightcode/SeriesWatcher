@@ -159,7 +159,8 @@ class Main(QtGui.QMainWindow):
         addSerie.setIcon(QtGui.QIcon('art/add.png'))
         addSerie.setShortcut('Ctrl+N')
         
-        seriesMenu.addAction(u'Editer les séries', self.openEditSerie)
+        edit = seriesMenu.addAction(u'Editer les séries', self.openEditSerie)
+        edit.setShortcut('Ctrl+E')
         
         refresh = seriesMenu.addAction(u'Mettre à jour cette série')
         refresh.triggered.connect(self.updateSerieMenu)
