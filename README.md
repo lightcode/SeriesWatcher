@@ -1,5 +1,4 @@
-Programme en version 1.0 bêta
-
+Programme en version 1.0
 
 Qu'est-ce que SeriesWatcher ?
 =============================
