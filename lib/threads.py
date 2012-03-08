@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import cPickle as pickle
 import os.path
 import time
@@ -7,7 +9,6 @@ from config import Config
 from updatesFile import UpdatesFile
 from search import search, decompose
 from theTvDb import TheTvDbSerie
-
 
 class CheckSerieUpdate(QtCore.QThread):
     # Signals :

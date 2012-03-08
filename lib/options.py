@@ -1,8 +1,9 @@
-# -*- coding: utf8 -*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
-
 
 class Options(QtGui.QDialog):
     def __init__(self, parent = None):

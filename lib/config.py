@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from configparser import SafeConfigParser
 import os.path
 import codecs

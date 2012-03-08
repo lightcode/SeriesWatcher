@@ -1,4 +1,6 @@
-# -*-coding: utf8-*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
@@ -6,7 +8,6 @@ from widgets import SelectFolder
 from theTvDb import TheTvDb
 from camelCase import getCamelCase
 from config import Config
-
 
 class AddSerie(QtGui.QDialog):
     # Signals :

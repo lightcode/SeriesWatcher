@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import unicodedata
 
 def remove_accents(input_str):

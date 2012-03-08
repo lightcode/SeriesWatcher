@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import cPickle as pickle
 import glob
 import os.path

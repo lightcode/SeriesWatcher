@@ -1,4 +1,6 @@
-# -*-coding: utf8-*-
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import os.path
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
