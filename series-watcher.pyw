@@ -163,8 +163,8 @@ class Main(QtGui.QMainWindow):
         refresh.triggered.connect(self.updateSerieMenu)
         refresh.setShortcut('Ctrl+U')
         
-        refreshAll = seriesMenu.addAction(u'Mettre à jour les séries')
-        refreshAll.triggered.connect(self.updateAllSeriesMenu)
+        seriesMenu.addAction(u'Mettre à jour les séries',
+                             self.updateAllSeriesMenu)
         
         ## MENU EPISODES
         episodesMenu = self.menubar.addMenu('Episodes')
@@ -179,18 +179,18 @@ class Main(QtGui.QMainWindow):
         view.setIcon(QtGui.QIcon('art/check.png'))
         view.setShortcut('Ctrl+K')
         
-        view = episodesMenu.addAction(u'Marquer comme non vue')
-        view.setIcon(QtGui.QIcon('art/uncheck.png'))
-        view.triggered.connect(self.notViewSelectEpisodeMenu)
+        episodesMenu.addAction(QtGui.QIcon('art/uncheck.png'),
+                               u'Marquer comme non vue',
+                               self.notViewSelectEpisodeMenu)
         
-        episodesMenu.addAction(u'Marquer la série comme vue', \
+        episodesMenu.addAction(u'Marquer la série comme vue',
                                self.allEpisodeView)
         
         ## MENU AIDE
         helpMenu = self.menubar.addMenu('Series Watcher')
-        helpMenu.addAction(QtGui.QIcon('art/options.png'), \
+        helpMenu.addAction(QtGui.QIcon('art/options.png'),
                            'Options', self.openOptions)
-        helpMenu.addAction(QtGui.QIcon('art/help.png'), \
+        helpMenu.addAction(QtGui.QIcon('art/help.png'),
                            'A propos', self.openAbout)
     
     

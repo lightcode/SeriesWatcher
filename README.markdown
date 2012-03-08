@@ -1,3 +1,6 @@
+Programme en version 1.0 bêta
+
+
 Qu'est-ce que SeriesWatcher ?
 =============================
 
@@ -7,7 +10,11 @@ SeriesWatcher permet de visualiser des séries TV présentes sur le disque dur en 
 Comment installer SeriesWatcher ?
 =================================
 
-Il faut d'abord installer :
+D'abord, veuillez extraire les fichiers du ZIP.
+
+Ensuite, il faut installer :
 
 - Python 2.7
 - PyQt 4.9 pour Python 2.7
+
+Enfin, vous pouvez ouvrir le fichier series-watcher.cfg.
