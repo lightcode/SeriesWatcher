@@ -1,4 +1,4 @@
-Programme en version 1.0
+Programme en version 1.0.
 
 Qu'est-ce que SeriesWatcher ?
 =============================
@@ -16,4 +16,4 @@ Ensuite, il faut installer :
 - Python 2.7
 - PyQt 4.9 pour Python 2.7
 
-Enfin, vous pouvez ouvrir le fichier series-watcher.cfg.
+Enfin, vous pouvez ouvrir le fichier series-watcher.pyw.
