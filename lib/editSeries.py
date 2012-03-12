@@ -25,7 +25,7 @@ class ListSeries(QtGui.QWidget):
         self.listWidget.itemSelectionChanged.connect(self._itemSelectionChanged)
         
         tool = QtGui.QToolBar()
-        tool.setStyleSheet('border:none')
+        tool.setStyleSheet('QToolBar { border:none; }')
         tool.addAction(QtGui.QIcon('art/add.png'), u'Ajouter une série', self.add)
         tool.addSeparator()
         tool.addAction(QtGui.QIcon('art/up.png'), 'Monter', self.upItem)
