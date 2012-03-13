@@ -15,6 +15,7 @@ from lib.editSeries import EditSeries
 from lib.about import About
 from lib.options import Options
 from lib.widgets import EpisodesViewer, VideoItem
+from lib.player import Player
 import desktop
 
 class Main(QtGui.QMainWindow):
@@ -35,6 +36,8 @@ class Main(QtGui.QMainWindow):
             self.serieChanged(0, True)
         else:
             self.openAddSerie()
+        
+        self.player = Player(self)
     
     
     def startTheads(self):
@@ -120,6 +123,7 @@ class Main(QtGui.QMainWindow):
         self.episodes.markedAsView.connect(self.viewSelectEpisodeMenu)
         self.episodes.markedAsNotView.connect(self.notViewSelectEpisodeMenu)
         self.episodes.doubleClicked.connect(self.episodesDblClicked)
+        self.episodes.playClicked.connect(self.playClicked)
         self.episodes.currentCellChanged.connect(self.episodeChanged)
         body = QtGui.QHBoxLayout()
         body.addWidget(self.episodes)
@@ -147,6 +151,25 @@ class Main(QtGui.QMainWindow):
         win = QtGui.QWidget()
         win.setLayout(window)
         self.setCentralWidget(win)
+    
+    
+    def playClicked(self):
+        if not self.player.isVisible():
+            self.player.show()
+        items = self.episodes.selectedIndexes()
+        for item in items:
+            r, c = coord = item.row(), item.column()
+            if coord in self.map:
+                episode = self.map[coord]
+                if episode['path'] is not None:
+                    video = self.episodes.cellWidget(r, c)
+                    video.setInfos(1)
+                    # Open the file
+                    path = os.path.normpath(episode['path'])
+                    self.player.addToPlayList(path)
+                    self.episodeViewed(episode['number'])
+        self.refreshCount()
+        self.player.tryToPlay()
     
     
     def createMenu(self):

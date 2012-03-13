@@ -37,6 +37,7 @@ class EpisodesViewer(QtGui.QTableWidget):
     refreshEpisodes = QtCore.pyqtSignal()
     markedAsView = QtCore.pyqtSignal()
     markedAsNotView = QtCore.pyqtSignal()
+    playClicked = QtCore.pyqtSignal()
     
     nbColumn = 3
     columnWidth = 260
@@ -73,6 +74,10 @@ class EpisodesViewer(QtGui.QTableWidget):
         markAsNotView = menu.addAction('Marquer comme non vu')
         markAsNotView.setIcon(QtGui.QIcon('art/uncheck.png'))
         markAsNotView.triggered.connect(self.markAsNotView)
+        
+        play = menu.addAction('Play')
+        play.setIcon(QtGui.QIcon('art/play.png'))
+        play.triggered.connect(self.playClicked)
         menu.exec_(globalPos)
     
     
