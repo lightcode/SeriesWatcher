@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtGui import QIcon
 from config import Config
 from widgets import SelectFolder
 from addSerie import AddSerie
@@ -26,11 +27,11 @@ class ListSeries(QtGui.QWidget):
         
         tool = QtGui.QToolBar()
         tool.setStyleSheet('QToolBar { border:none; }')
-        tool.addAction(QtGui.QIcon('art/add.png'), u'Ajouter une série', self.add)
+        tool.addAction(QIcon('art/add.png'), u'Ajouter une série', self.add)
         tool.addSeparator()
-        tool.addAction(QtGui.QIcon('art/up.png'), 'Monter', self.upItem)
-        tool.addAction(QtGui.QIcon('art/down.png'), 'Descendre', self.downItem)
-        tool.addAction(QtGui.QIcon('art/delete.png'), u'Supprimer cette série', self.delete)
+        tool.addAction(QIcon('art/up.png'), 'Monter', self.upItem)
+        tool.addAction(QIcon('art/down.png'), 'Descendre', self.downItem)
+        tool.addAction(QIcon('art/delete.png'), u'Supprimer', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()
         layoutButton.addWidget(tool)

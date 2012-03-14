@@ -58,6 +58,7 @@ class Config(object):
         # The default config
         cls.config = {}
         cls.config['command_open'] = None
+        cls.config['player'] = 1
         
         # Load the options
         if config.has_section('options'):

@@ -166,7 +166,7 @@ class Main(QtGui.QMainWindow):
                     video.setInfos(1)
                     # Open the file
                     path = os.path.normpath(episode['path'])
-                    self.player.addToPlayList(path)
+                    self.player.addToPlayList(episode['title'], path)
                     self.episodeViewed(episode['number'])
         self.refreshCount()
         self.player.tryToPlay()
@@ -368,12 +368,21 @@ class Main(QtGui.QMainWindow):
         if coord in self.map:
             episode = self.map[coord]
             if episode['path'] is not None:
-                # Open the file
                 path = os.path.normpath(episode['path'])
-                if command is None:
+                
+                player = int(Config.config['player'])
+                if player == 1:
                     desktop.open(path)
+                elif player == 2:
+                    self.playClicked()
+                elif player == 3:
+                    if command is None:
+                        desktop.open(path)
+                    else:
+                        self.commandOpen.startDetached(command, [path])
                 else:
-                    self.commandOpen.startDetached(command, [path])
+                    desktop.open(path)
+                
                 # Change the title
                 self.episodes.cellWidget(r, c).setInfos(1)
                 # Add the episode in the already view list

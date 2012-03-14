@@ -14,7 +14,20 @@ class Options(QtGui.QDialog):
         
         self.cmdOpen = QtGui.QLineEdit(Config.config['command_open'])
         
+        self.player1 = QtGui.QRadioButton(u'Utiliser le lecteur par défaut')
+        self.player2 = QtGui.QRadioButton(u'Utiliser le lecteur intégré')
+        self.player3 = QtGui.QRadioButton(u'Utiliser le lecteur suivant...')
+        self.setPlayer(int(Config.config['player']))
+        
+        buttonGroup = QtGui.QButtonGroup()
+        buttonGroup.addButton(self.player1)
+        buttonGroup.addButton(self.player2)
+        buttonGroup.addButton(self.player3)
+        
         form = QtGui.QFormLayout()
+        form.addRow(self.player1)
+        form.addRow(self.player2)
+        form.addRow(self.player3)
         form.addRow(u"Commande d'ouverture de vidéo", self.cmdOpen)
         
         buttonBox = QtGui.QDialogButtonBox()
@@ -30,8 +43,29 @@ class Options(QtGui.QDialog):
         self.setLayout(layout)
     
     
+    def setPlayer(self, value):
+        if 4 > value > 0:
+            self.__dict__['player%s' % value].setChecked(True)
+    
+    
+    def player(self):
+        for n in range(1, 4):
+            if self.__dict__['player%s' % n].isChecked():
+                return n
+    
+    
     def save(self):
         cmdOpen = str(self.cmdOpen.text())
         Config.setOption('command_open', cmdOpen)
+        Config.setOption('player', self.player())
         Config.save()
         self.close()
+
+
+if __name__ == "__main__":
+    import sys
+    Config.loadConfig()
+    app = QtGui.QApplication(sys.argv)
+    options = Options()
+    options.show()
+    sys.exit(app.exec_())

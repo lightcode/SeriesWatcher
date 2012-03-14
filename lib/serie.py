@@ -63,12 +63,12 @@ class Serie(object):
             raise ValueError()
     
     
-    def __getitem__(self, key):
-        return self.infos[key]
+    def __getitem__(cls, key):
+        return cls.infos[key]
     
     
-    def __setitem__(self, key, value):
-        self.infos[key] = value
+    def __setitem__(cls, key, value):
+        cls.infos[key] = value
     
     
     # =========================
