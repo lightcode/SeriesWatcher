@@ -16,7 +16,7 @@ from lib.about import About
 from lib.options import Options
 from lib.widgets import EpisodesViewer, VideoItem
 from lib.player import Player
-import desktop
+from lib import desktop
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
