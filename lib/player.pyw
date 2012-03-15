@@ -11,33 +11,20 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPalette
 
 class VLCWidget(QtGui.QFrame):
-    mouseMoveHover = QtCore.pyqtSignal()
-    _oldMousePos = QtCore.QPoint()
+    mouseMoved = QtCore.pyqtSignal()
     
     def __init__(self, parent=None):
         QtGui.QFrame.__init__(self, parent)
+        self.setMouseTracking(True)
         # the UI player
         self._palette = self.palette()
         self._palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.setPalette(self._palette)
-        self.setAutoFillBackground(True)
-        
-        self.timerInput = QtCore.QTimer(self)
-        self.timerInput.setInterval(200)
-        self.timerInput.timeout.connect(self.checkMouse)
-        self.timerInput.start()
+        self.setAutoFillBackground(True)    
     
     
-    def checkMouse(self):
-        newCursor = QtGui.QCursor()
-        newMousePos = newCursor.pos()
-        point = self.mapFromGlobal(newMousePos)
-        x, y = point.x(), point.y()
-        if x < 0 or y < 0 or y > self.height() or x > self.width():
-            return
-        if newMousePos != self._oldMousePos:
-            self.mouseMoveHover.emit()
-            self._oldMousePos = newMousePos
+    def mouseMoveEvent(self, e):
+        self.mouseMoved.emit()
 
 
 
@@ -49,9 +36,11 @@ class Player(QtGui.QMainWindow):
     _playList = []
     TIME_HIDE_BAR = 2000
     currentEpisode = 0
-    isPaused = False
     VLC_PARAM = "-I dummy --ignore-config --verbose=0 \
                 --no-video-title-show --no-plugins-cache"
+    
+    PLAY, PAUSE, STOP, USER_STOP = 0, 1, 2, 3
+    _playerState = STOP
     
     def __init__(self, master=None):
         QtGui.QMainWindow.__init__(self, master)
@@ -77,99 +66,6 @@ class Player(QtGui.QMainWindow):
         if totalTime >= self.TIME_HIDE_BAR:
             self.bar.hide()
             self.videoFrame.setCursor(Qt.BlankCursor)
-    
-    
-    def createUI(self):        
-        self.videoFrame = VLCWidget()
-        self.videoFrame.mouseMoveHover.connect(self.showBar)
-        
-        self.currentTime = QtGui.QLabel('--:--')
-        
-        self.positionSlider = QtGui.QSlider(Qt.Horizontal)
-        self.positionSlider.setToolTip("Position")
-        self.positionSlider.setMaximum(1000)
-        self.positionSlider.sliderMoved.connect(self.setPosition)
-        
-        self.totalTime = QtGui.QLabel('--:--')
-        
-        timeLayout = QtGui.QHBoxLayout()
-        timeLayout.addWidget(self.currentTime)
-        timeLayout.addWidget(self.positionSlider)
-        timeLayout.addWidget(self.totalTime)
-        
-        tool = QtGui.QToolBar()
-        tool.setStyleSheet('QToolBar { border:none; }')
-        self.playButton = tool.addAction(QIcon('art/play.png'),
-                                         'Play', self.playPause)
-        tool.addAction(QIcon('art/previous.png'), u'Précédent',
-                       self.previousEpisode)
-        tool.addAction(QIcon('art/stop.png'), 'Stop', self.stop)
-        tool.addAction(QIcon('art/next.png'), u'Suivant', self.nextEpisode)
-        self.screenBtn = tool.addAction(QIcon('art/fullscreen.png'),
-                                        u"Plein écran", self.fullScreen)
-        self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
-                                          u"Afficher la playlist",
-                                          self.showPlayList)
-        self.playListBtn.setCheckable(True)
-        
-        self.volumeSlider = QtGui.QSlider(Qt.Horizontal)
-        self.volumeSlider.setMaximum(100)
-        self.volumeSlider.setValue(self.mediaPlayer.audio_get_volume())
-        self.volumeSlider.setToolTip("Volume")
-        self.volumeSlider.valueChanged.connect(self.setVolume)
-        
-        hButtonBox = QtGui.QHBoxLayout()
-        hButtonBox.addWidget(tool)
-        hButtonBox.addStretch(1)
-        hButtonBox.addWidget(self.volumeSlider)
-        
-        vBoxLayout = QtGui.QVBoxLayout()
-        vBoxLayout.addLayout(timeLayout)
-        vBoxLayout.addLayout(hButtonBox)
-        
-        self.playList = PlayList()
-        self.playList.itemClicked.connect(self.changeEpisode)
-        self.playList.resize(240, 200)
-        self.playList.hide()
-        
-        self.bar = QtGui.QWidget()
-        palette = QPalette()
-        palette.setColor(QPalette.Window, palette.color(QPalette.Window))
-        self.bar.setPalette(palette)
-        self.bar.setAutoFillBackground(True)
-        self.bar.hide()
-        self.drawBar()
-        self.bar.setLayout(vBoxLayout)
-        
-        mainLayout = QtGui.QVBoxLayout()
-        mainLayout.addWidget(self.videoFrame)
-        mainLayout.setContentsMargins(0, 0, 0, 0)
-        
-        widget = QtGui.QWidget()
-        widget.setLayout(mainLayout)
-        self.setCentralWidget(widget)
-        self.bar.setParent(widget)
-        self.playList.setParent(widget)
-        
-        self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(200)
-        self.timer.timeout.connect(self.updateUI)
-        
-        s1 = QtGui.QShortcut(Qt.Key_Escape, self)
-        s1.activated.connect(self.fullScreen)
-        s2 = QtGui.QShortcut(Qt.Key_Space, self)
-        s2.activated.connect(self.playPause)
-        s3 = QtGui.QShortcut(Qt.Key_MediaPlay, self)
-        s3.activated.connect(self.playPause)
-        s4 = QtGui.QShortcut(Qt.Key_MediaStop, self)
-        s4.activated.connect(self.stop)
-        
-        if sys.platform == "linux2":   # For Linux
-            self.mediaPlayer.set_xwindow(self.videoFrame.winId())
-        elif sys.platform == "win32":  # For Windows
-            self.mediaPlayer.set_hwnd(self.videoFrame.winId())
-        elif sys.platform == "darwin": # For Mac OS
-            self.mediaPlayer.set_agl(self.videoFrame.windId())
     
     
     def nextEpisode(self):
@@ -215,6 +111,7 @@ class Player(QtGui.QMainWindow):
         self._playList = []
         self.stop()
         self.playList.clear()
+        self._playerState = self.STOP
         QtGui.QMainWindow.closeEvent(self, e)
     
     
@@ -225,22 +122,29 @@ class Player(QtGui.QMainWindow):
     
     
     def drawBar(self):
-        w = self.videoFrame.width() - 60
+        totalWidth = self.videoFrame.width()
+        w = totalWidth - 60 if totalWidth < 750 else 750
         self.bar.resize(w, 100)
         y = self.videoFrame.y() + self.videoFrame.height()
-        y = y - self.bar.height() - 40
-        self.bar.move(30, y)
+        y = y - self.bar.height()
+        x = (totalWidth - w) / 2
+        self.bar.move(x, y)
+        
+        # Playlist
+        x = totalWidth - 240 - 30
+        self.playList.move(x, 30)
+        self.playList.resize(240, 200)
     
     
     def volumeUp(self):
-        volume = self.volumeSlider.value() + 10
+        volume = self.volumeSlider.value() + 5
         if volume > 100:
             volume = 100
         self.volumeSlider.setValue(volume)
     
     
     def volumeDown(self):
-        volume = self.volumeSlider.value() - 10
+        volume = self.volumeSlider.value() - 5
         if volume < 0:
             volume = 0
         self.volumeSlider.setValue(volume)
@@ -261,7 +165,7 @@ class Player(QtGui.QMainWindow):
             self.mediaPlayer.pause()
             self.playButton.setText("Play")
             self.playButton.setIcon(QIcon("art/play.png"))
-            self.isPaused = True
+            self._playerState = self.PAUSE
         else:
             if self.mediaPlayer.play() == -1:
                 self.playFile()
@@ -270,16 +174,18 @@ class Player(QtGui.QMainWindow):
             self.playButton.setText("Pause")
             self.playButton.setIcon(QIcon("art/pause.png"))
             self.timer.start()
-            self.isPaused = False
+            self._playerState = self.PLAY
     
     
-    def stop(self):
+    def stop(self, state=USER_STOP):
+        self._playerState = state
         self.mediaPlayer.stop()
         self.playButton.setText("Play")
+        self.playButton.setIcon(QIcon("art/play.png"))
     
     
     def playFile(self):
-        if len(self._playList) > self.currentEpisode:
+        try:
             path = self._playList[self.currentEpisode]
             self.showPlayListTimed()
             self.openFile(path)
@@ -287,10 +193,12 @@ class Player(QtGui.QMainWindow):
             self.playList.setCurrentRow(self.currentEpisode)
             self.currentEpisode += 1
             return True
-        return False
+        except IndexError:
+            return False
     
     
     def openFile(self, fileName):
+        self.showBar()
         fileName = 'file:///' + fileName
         media = self.instance.media_new(unicode(fileName))
         self.mediaPlayer.set_media(media)
@@ -310,12 +218,31 @@ class Player(QtGui.QMainWindow):
     
     
     def tryToPlay(self):
-        if not self.mediaPlayer.is_playing() and not self.isPaused:
+        if self._playerState == self.STOP:
             self.playFile()
+    
+    
+    def setBtnVolume(self, volume):
+        if volume == 0:
+            self.volumeBtn.setIcon(QIcon('art/mute.png'))
+        elif volume < 50:
+            self.volumeBtn.setIcon(QIcon('art/volume_down.png'))
+        else:
+            self.volumeBtn.setIcon(QIcon('art/volume_up.png'))
+    
+    
+    def toggleVolume(self):
+        volume = self.volumeSlider.value()
+        if volume == 0:
+            volume = 100
+        else:
+            volume = 0
+        self.volumeSlider.setValue(volume)
     
     
     def setVolume(self, volume):
         self.mediaPlayer.audio_set_volume(volume)
+        self.setBtnVolume(volume)
     
     
     def setPosition(self, position):
@@ -337,16 +264,122 @@ class Player(QtGui.QMainWindow):
         percent = self.mediaPlayer.get_position() * 1000
         self.positionSlider.setValue(percent)
         
-        time = int(self.mediaPlayer.get_time()) // 1000
-        textTime = self._timeToText(time)
-        self.currentTime.setText(textTime)
+        time = int(self.mediaPlayer.get_time())
+        if time > 0:
+            time //= 1000
+            textTime = self._timeToText(time)
+            self.currentTime.setText(textTime)
+        else:
+            self.currentTime.setText('--:--')
         
         if not self.mediaPlayer.is_playing():
             self.timer.stop()
-            if not self.isPaused:
-                self.stop()
-                if not self.playFile():
-                    self.close()
+            if self._playerState != self.PAUSE:
+                if self._playerState != self.USER_STOP:
+                    self.stop(self.STOP)
+                elif self._playerState == self.STOP:
+                    if not self.playFile():
+                        self.close()
+    
+    
+    def createUI(self):        
+        self.videoFrame = VLCWidget()
+        self.videoFrame.mouseMoved.connect(self.showBar)
+        
+        self.currentTime = QtGui.QLabel('--:--')
+        
+        self.positionSlider = QtGui.QSlider(Qt.Horizontal)
+        self.positionSlider.setToolTip("Position")
+        self.positionSlider.setMaximum(1000)
+        self.positionSlider.sliderMoved.connect(self.setPosition)
+        
+        self.totalTime = QtGui.QLabel('--:--')
+        
+        timeLayout = QtGui.QHBoxLayout()
+        timeLayout.addWidget(self.currentTime)
+        timeLayout.addWidget(self.positionSlider)
+        timeLayout.addWidget(self.totalTime)
+        
+        self.setStyleSheet('QToolBar { border:none; }')
+        tool = QtGui.QToolBar()
+        self.playButton = tool.addAction(QIcon('art/play.png'), 'Play',
+                                         self.playPause)
+        tool.addAction(QIcon('art/previous.png'), u'Précédent',
+                       self.previousEpisode)
+        tool.addAction(QIcon('art/stop.png'), 'Stop', self.stop)
+        tool.addAction(QIcon('art/next.png'), 'Suivant', self.nextEpisode)
+        self.screenBtn = tool.addAction(QIcon('art/fullscreen.png'),
+                                        u"Plein écran", self.fullScreen)
+        self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
+                                          "Afficher la playlist",
+                                          self.showPlayList)
+        self.playListBtn.setCheckable(True)
+        
+        
+        toolRight = QtGui.QToolBar()
+        self.volumeBtn = toolRight.addAction(QIcon('art/mute.png'), 'Volume',
+                                             self.toggleVolume)
+        
+        volume = self.mediaPlayer.audio_get_volume()
+        self.volumeSlider = QtGui.QSlider(Qt.Horizontal)
+        self.volumeSlider.setMaximum(100)
+        self.volumeSlider.setValue(volume)
+        self.volumeSlider.setToolTip("Volume")
+        self.volumeSlider.valueChanged.connect(self.setVolume)
+        self.setBtnVolume(volume)
+        
+        hButtonBox = QtGui.QHBoxLayout()
+        hButtonBox.addWidget(tool)
+        hButtonBox.addStretch(1)
+        hButtonBox.addWidget(toolRight)
+        hButtonBox.addWidget(self.volumeSlider)
+        
+        vBoxLayout = QtGui.QVBoxLayout()
+        vBoxLayout.addLayout(timeLayout)
+        vBoxLayout.addLayout(hButtonBox)
+        
+        self.playList = PlayList()
+        self.playList.currentRowChanged.connect(self.changeEpisode)
+        self.playList.hide()
+        
+        self.bar = QtGui.QWidget()
+        palette = QPalette()
+        palette.setColor(QPalette.Window, palette.color(QPalette.Window))
+        self.bar.setPalette(palette)
+        self.bar.setAutoFillBackground(True)
+        self.bar.hide()
+        self.drawBar()
+        self.bar.setLayout(vBoxLayout)
+        
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addWidget(self.videoFrame)
+        mainLayout.setContentsMargins(0, 0, 0, 0)
+        
+        widget = QtGui.QWidget()
+        widget.setLayout(mainLayout)
+        self.setCentralWidget(widget)
+        self.bar.setParent(widget)
+        self.playList.setParent(widget)
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(200)
+        self.timer.timeout.connect(self.updateUI)
+        
+        s1 = QtGui.QShortcut(Qt.Key_Escape, self)
+        s1.activated.connect(self.fullScreen)
+        s2 = QtGui.QShortcut(Qt.Key_Space, self)
+        s2.activated.connect(self.playPause)
+        s3 = QtGui.QShortcut(Qt.Key_MediaPlay, self)
+        s3.activated.connect(self.playPause)
+        s4 = QtGui.QShortcut(Qt.Key_MediaStop, self)
+        s4.activated.connect(self.stop)
+        
+        if sys.platform == "linux2":   # For Linux
+            self.mediaPlayer.set_xwindow(self.videoFrame.winId())
+        elif sys.platform == "win32":  # For Windows
+            self.mediaPlayer.set_hwnd(self.videoFrame.winId())
+        elif sys.platform == "darwin": # For Mac OS
+            self.mediaPlayer.set_agl(self.videoFrame.windId())
 
 
 

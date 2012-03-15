@@ -161,7 +161,7 @@ class Main(QtGui.QMainWindow):
             r, c = coord = item.row(), item.column()
             if coord in self.map:
                 episode = self.map[coord]
-                if episode['path'] is not None:
+                if episode['path']:
                     video = self.episodes.cellWidget(r, c)
                     video.setInfos(1)
                     # Open the file
@@ -471,7 +471,7 @@ class Main(QtGui.QMainWindow):
             listEpisodes = []
             for e in self.currentSerie.episodes:
                 if (filterSeason == 0 or filterSeason == e['season']) \
-                  and (not isFilterDL or e['path'] is not None) \
+                  and (not isFilterDL or e['path']) \
                   and (not isFilterNew or e['number'] not in episodesViewed):
                     listEpisodes.append(e)
             
