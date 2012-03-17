@@ -6,9 +6,12 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
-from updatesFile import UpdatesFile
+from updatesfile import UpdatesFile
 from search import search, decompose
-from theTvDb import TheTvDbSerie
+from thetvdb import TheTVDBSerie
+
+__all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
+           'CheckSerieUpdate']
 
 class CheckSerieUpdate(QtCore.QThread):
     # Signals :
@@ -40,10 +43,10 @@ class CheckSerieUpdate(QtCore.QThread):
         lastVerification = self.getLastVerification()
         if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
             for localeID, serie in enumerate(Config.series):
-                serieName, tvDbId = serie[0], serie[3]
+                serieName, TVDBID = serie[0], serie[3]
                 localTime = UpdatesFile.getLastUpdate(serieName)
                 
-                tvDb = TheTvDbSerie(serie)
+                tvDb = TheTVDBSerie(serie)
                 remoteTime = tvDb.getLastUpdate()
                 
                 if localTime < remoteTime:
@@ -71,7 +74,7 @@ class RefreshSeriesThread(QtCore.QThread):
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
-        tvDb = TheTvDbSerie(serieInfos)
+        tvDb = TheTVDBSerie(serieInfos)
         tvDb.downloadFullSerie()
         serieInfos = tvDb.getInfosSerie()
         episodeList = tvDb.getEpisodes(imgDir)
@@ -129,12 +132,11 @@ class SearchThread(QtCore.QThread):
 class EpisodesLoaderThread(QtCore.QThread):
     # Signals :
     episodeLoaded = QtCore.pyqtSignal(int, int, 'QString', int, 'QImage')
+    episodes = []
+    lastLine = lastQuery = 0
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
-        self.episodes = []
-        self.lastLine = 0
-        self.lastQuery = 0
     
     
     def run(self):

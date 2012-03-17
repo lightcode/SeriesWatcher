@@ -6,17 +6,8 @@ import os.path
 import sys
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
-from lib.config import Config
-from lib.serie import Serie
-from lib.threads import EpisodesLoaderThread, SearchThread, RefreshSeriesThread
-from lib.threads import CheckSerieUpdate
-from lib.addSerie import AddSerie
-from lib.editSeries import EditSeries
-from lib.about import About
-from lib.options import Options
-from lib.widgets import EpisodesViewer, VideoItem
-from lib.player import Player
-from lib import desktop
+from lib import *
+
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -105,10 +96,10 @@ class Main(QtGui.QMainWindow):
         
         self.filterDL = QtGui.QCheckBox(u'Episodes téléchargés')
         self.filterDL.setChecked(True)
-        self.filterDL.toggled.connect(self.filterDL_toggled)
+        self.filterDL.toggled.connect(self.filterDLToggled)
         
         self.filterNew = QtGui.QCheckBox(u'Nouveaux')
-        self.filterNew.toggled.connect(self.filterNew_toggled)
+        self.filterNew.toggled.connect(self.filterNewToggled)
         
         filterBar = QtGui.QHBoxLayout()
         filterBar.addWidget(self.searchBar)
@@ -242,14 +233,14 @@ class Main(QtGui.QMainWindow):
     # =================
     #  Slots
     # =================
-    def filterNew_toggled(self):
+    def filterNewToggled(self):
         self.filterDL.blockSignals(True)
         self.filterDL.setChecked(True)
         self.refreshScreen()
         self.filterDL.blockSignals(False)
     
     
-    def filterDL_toggled(self):
+    def filterDLToggled(self):
         self.filterNew.blockSignals(True)
         self.filterNew.setChecked(False)
         self.refreshScreen()
@@ -369,7 +360,6 @@ class Main(QtGui.QMainWindow):
             episode = self.map[coord]
             if episode['path'] is not None:
                 path = os.path.normpath(episode['path'])
-                
                 player = int(Config.config['player'])
                 if player == 1:
                     desktop.open(path)
@@ -454,7 +444,7 @@ class Main(QtGui.QMainWindow):
         self.nbEpisodes.setText(count)
     
     
-    def episodeLoaded(self, x, y, title, infos, image = None):
+    def episodeLoaded(self, x, y, title, infos, image=None):
         item = VideoItem(title)
         item.setInfos(infos)
         if image:
@@ -478,7 +468,7 @@ class Main(QtGui.QMainWindow):
             self.showEpisode(listEpisodes)
     
     
-    def serieChanged(self, serieLocalID = None, init = False):
+    def serieChanged(self, serieLocalID=None, init=False):
         if not isinstance(serieLocalID, int):
             serieLocalID = self.currentSerieId()
         

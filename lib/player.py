@@ -28,10 +28,6 @@ class VLCWidget(QtGui.QFrame):
 
 
 
-class PlayList(QtGui.QListWidget):
-    pass
-
-    
 class Player(QtGui.QMainWindow):
     _playList = []
     TIME_HIDE_BAR = 2000
@@ -44,7 +40,7 @@ class Player(QtGui.QMainWindow):
     
     def __init__(self, master=None):
         QtGui.QMainWindow.__init__(self, master)
-        self.setWindowTitle("Media Player")
+        self.setWindowTitle("Series Player")
         self.resize(640, 480)
         
         self.instance = vlc.Instance(self.VLC_PARAM)
@@ -69,12 +65,13 @@ class Player(QtGui.QMainWindow):
     
     
     def nextEpisode(self):
-        self.playFile()
+        self.currentEpisode += 1
+        return self.playFile()
     
     
     def previousEpisode(self):
-        self.currentEpisode -= 2
-        self.playFile()
+        self.currentEpisode -= 1
+        return self.playFile()
     
     
     def resizeEvent(self, e):
@@ -191,7 +188,6 @@ class Player(QtGui.QMainWindow):
             self.openFile(path)
             self.playPause()
             self.playList.setCurrentRow(self.currentEpisode)
-            self.currentEpisode += 1
             return True
         except IndexError:
             return False
@@ -277,8 +273,8 @@ class Player(QtGui.QMainWindow):
             if self._playerState != self.PAUSE:
                 if self._playerState != self.USER_STOP:
                     self.stop(self.STOP)
-                elif self._playerState == self.STOP:
-                    if not self.playFile():
+                if self._playerState == self.STOP:
+                    if not self.nextEpisode():
                         self.close()
     
     
@@ -338,7 +334,7 @@ class Player(QtGui.QMainWindow):
         vBoxLayout.addLayout(timeLayout)
         vBoxLayout.addLayout(hButtonBox)
         
-        self.playList = PlayList()
+        self.playList = QtGui.QListWidget()
         self.playList.currentRowChanged.connect(self.changeEpisode)
         self.playList.hide()
         

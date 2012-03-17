@@ -13,7 +13,7 @@ class Serie(object):
     infos = {}
     
     def __init__(self, param):
-        self.name, self.title, self.path, self.tvDbId, self.lang = param
+        self.name, self.title, self.path, self.TVDBID, self.lang = param
         self.loadDownloadedList()
         self.loadEpisodesViewed()
     

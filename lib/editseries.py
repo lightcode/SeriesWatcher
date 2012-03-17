@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon
 from config import Config
 from widgets import SelectFolder
-from addSerie import AddSerie
+from addserie import AddSerie
 
 class ListSeries(QtGui.QWidget):
     # Signals :
@@ -16,12 +16,12 @@ class ListSeries(QtGui.QWidget):
         
         self.listWidget = QtGui.QListWidget()
         for serie in Config.series:
-            name, title, path, tvDbId, lang = serie
+            name, title, path, TVDBID, lang = serie
             item = QtGui.QListWidgetItem(title)
             setattr(item, 'name', name)
             setattr(item, 'path', path)
             setattr(item, 'lang', lang)
-            setattr(item, 'tvDbId', tvDbId)
+            setattr(item, 'TVDBID', TVDBID)
             self.listWidget.addItem(item)
         self.listWidget.itemSelectionChanged.connect(self._itemSelectionChanged)
         
@@ -55,12 +55,12 @@ class ListSeries(QtGui.QWidget):
         del item
     
     
-    def serieAdded(self, name, title, tvDbId, lang, path):
+    def serieAdded(self, name, title, TVDBID, lang, path):
         item = QtGui.QListWidgetItem(title)
         setattr(item, 'name', name)
         setattr(item, 'path', path)
         setattr(item, 'lang', lang)
-        setattr(item, 'tvDbId', tvDbId)
+        setattr(item, 'TVDBID', TVDBID)
         self.listWidget.addItem(item)
     
     
@@ -106,8 +106,8 @@ class ListSeries(QtGui.QWidget):
             name = self.listWidget.item(i).name
             path = self.listWidget.item(i).path
             lang = self.listWidget.item(i).lang
-            tvDbId = self.listWidget.item(i).tvDbId
-            items.append([name, title, path, tvDbId, lang])
+            TVDBID = self.listWidget.item(i).TVDBID
+            items.append([name, title, path, TVDBID, lang])
         return items
 
 

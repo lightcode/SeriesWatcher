@@ -5,8 +5,8 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
 from widgets import SelectFolder
-from theTvDb import TheTvDb
-from camelCase import getCamelCase
+from thetvdb import TheTVDB
+from camelcase import getCamelCase
 from config import Config
 
 class AddSerie(QtGui.QDialog):
@@ -27,7 +27,7 @@ class AddSerie(QtGui.QDialog):
         title.addWidget(self.title)
         title.addWidget(search)
         
-        self.theTvDb = QtGui.QLineEdit()
+        self.theTVDB = QtGui.QLineEdit()
         self.lang = QtGui.QLineEdit()
         self.selectFolder = SelectFolder()
         
@@ -35,7 +35,7 @@ class AddSerie(QtGui.QDialog):
         form = QtGui.QFormLayout()
         form.addRow('Titre', title)
         form.addRow('Nom', self.name)
-        form.addRow('ID OpenTV', self.theTvDb)
+        form.addRow('ID OpenTV', self.theTVDB)
         form.addRow('Langue', self.lang)
         groupSerie.setLayout(form)
         
@@ -60,7 +60,7 @@ class AddSerie(QtGui.QDialog):
     
     def search(self):
         userInput = self.title.text()
-        bdd = TheTvDb()
+        bdd = TheTVDB()
         seriesFound = bdd.searchSearie(userInput)
         self.choiceSerie(seriesFound)
     
@@ -84,7 +84,7 @@ class AddSerie(QtGui.QDialog):
             serieId, serieName, lang = infos
             self.lang.setText(lang)
             self.title.setText(serieName)
-            self.theTvDb.setText(serieId)
+            self.theTVDB.setText(serieId)
             self.name.setText(getCamelCase(serieName))
         else:
             title = 'Erreur'
@@ -103,7 +103,7 @@ class AddSerie(QtGui.QDialog):
             nbErrors += 1
         
         try:
-            theTvDb = int(self.theTvDb.text())
+            theTVDB = int(self.theTVDB.text())
         except ValueError:
             nbErrors += 1
         
@@ -120,6 +120,6 @@ class AddSerie(QtGui.QDialog):
             message = u"Certaines données sont erronées."
             QMessageBox.critical(self, title, message)
         else:
-            Config.addSerie(name, title, path, theTvDb, lang)
-            self.serieAdded.emit(name, title, theTvDb, lang, path)
+            Config.addSerie(name, title, path, theTVDB, lang)
+            self.serieAdded.emit(name, title, theTVDB, lang, path)
             self.close()

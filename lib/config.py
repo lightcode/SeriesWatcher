@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from configparser import SafeConfigParser
 import os.path
 import codecs
+import sys
+from configparser import SafeConfigParser
 
 class Config(object):
     _instance = None
@@ -36,11 +37,11 @@ class Config(object):
             config.set('options', str(key), unicode(value))
         
         # Make the series sections
-        for name, title, path, tvDbId, lang in cls.series:
+        for name, title, path, TVDBID, lang in cls.series:
             name = str(name)
             config.add_section(name)
             config.set(name, 'title', unicode(title))
-            config.set(name, 'theTvDb', str(tvDbId))
+            config.set(name, 'theTvDb', str(TVDBID))
             config.set(name, 'videos', unicode(path))
             config.set(name, 'lang', unicode(lang))
         

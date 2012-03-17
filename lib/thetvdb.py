@@ -4,7 +4,7 @@ import os
 import urllib
 import xml.dom.minidom
 
-class TheTvDb:
+class TheTVDB:
     URL_ROOT = 'http://www.thetvdb.com/api/'
     
     def searchSearie(self, userInput):
@@ -29,7 +29,7 @@ class TheTvDb:
 
 
 
-class TheTvDbSerie(TheTvDb):
+class TheTVDBSerie(TheTVDB):
     URL_BANNER = 'http://thetvdb.com/banners/'
     URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
     
@@ -38,16 +38,16 @@ class TheTvDbSerie(TheTvDb):
     
     
     def downloadFullSerie(self):
-        tvDbId = self.serieInfos[3]
+        TVDBID = self.serieInfos[3]
         lang = self.serieInfos[4]
-        xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, tvDbId, lang)
+        xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, TVDBID, lang)
         self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
     
     
     def getLastUpdate(self):
-        tvDbId = self.serieInfos[3]
+        TVDBID = self.serieInfos[3]
         lang = self.serieInfos[4]
-        xmlFile = '%s%s/%s.xml' % (self.URL_ROOT, tvDbId, lang)
+        xmlFile = '%s%s/%s.xml' % (self.URL_ROOT, TVDBID, lang)
         self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
         series = self.dom.getElementsByTagName('Series')[0]
         return int(self._getData(series, 'lastupdated'))
