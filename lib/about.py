@@ -8,7 +8,7 @@ class About(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle('A propos')
         
-        ABOUT = [u"Series Watcher 1.0 Mars 2012<br/>",
+        ABOUT = [u"Series Watcher 1.1 Mars 2012<br/>",
                  u'Créé par <a href="http://lightcode.fr">LightCode.fr</a> ',
                  'sous licence Creative Commons BY-NC-SA.',
                  "<hr/>",
