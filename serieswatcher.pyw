@@ -157,7 +157,9 @@ class Main(QtGui.QMainWindow):
                     video.setInfos(1)
                     # Open the file
                     path = os.path.normpath(episode['path'])
-                    self.player.addToPlayList(episode['title'], path)
+                    serieName = self.currentSerie.name
+                    imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
+                    self.player.addToPlayList(episode['title'], path, imgPath)
                     self.episodeViewed(episode['number'])
         self.refreshCount()
         self.player.tryToPlay()
