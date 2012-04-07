@@ -20,7 +20,7 @@ class VLCWidget(QtGui.QFrame):
         self._palette = self.palette()
         self._palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.setPalette(self._palette)
-        self.setAutoFillBackground(True)    
+        self.setAutoFillBackground(True)
     
     
     def mouseMoveEvent(self, e):
@@ -35,7 +35,9 @@ class Episode(QtGui.QWidget):
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
         
-        self.title = QtGui.QLabel("Titre de l'episode")
+        self.title = QtGui.QLabel()
+        self.title.setWordWrap(True)
+        self.title.setStyleSheet('font-size:14pt')
         
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.img)
@@ -44,9 +46,9 @@ class Episode(QtGui.QWidget):
     
     
     def setImage(self, path):
-        pixmap = QtGui.QPixmap(path)
-        pixmap = pixmap.scaled(120, 90, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        self.img.setPixmap(pixmap)
+        pix = QtGui.QPixmap(path)
+        pix = pix.scaled(120, 90, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.img.setPixmap(pix)
     
     
     def setTitle(self, title):
@@ -72,7 +74,7 @@ class Player(QtGui.QMainWindow):
         self.instance = vlc.Instance(self.VLC_PARAM)
         self.mediaPlayer = self.instance.media_player_new()
         self.mediaPlayer.video_set_mouse_input(False)
-        self.mediaPlayer.video_set_key_input(False) 
+        self.mediaPlayer.video_set_key_input(False)
         self.createUI()
     
     
@@ -90,6 +92,8 @@ class Player(QtGui.QMainWindow):
             self.bar.hide()
             self.currentEpisodeWidget.hide()
             self.videoFrame.setCursor(Qt.BlankCursor)
+        else:
+            QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, self.tryHide)
     
     
     def nextEpisode(self):
@@ -127,8 +131,8 @@ class Player(QtGui.QMainWindow):
     
     def showCurrentEpisode(self):
         self.currentEpisodeWidget.show()
-        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR,
-                                 self.currentEpisodeWidget.hide)
+        hideAction = self.currentEpisodeWidget.hide
+        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, hideAction)
     
     
     def closeEvent(self, e):
@@ -141,12 +145,6 @@ class Player(QtGui.QMainWindow):
         QtGui.QMainWindow.closeEvent(self, e)
     
     
-    def changeEpisode(self):
-        newItem = self.playList.currentRow()
-        self.currentEpisode = newItem
-        self.playFile()
-    
-    
     def drawBar(self):
         totalWidth = self.videoFrame.width()
         w = totalWidth - 60 if totalWidth < 750 else 750
@@ -157,14 +155,13 @@ class Player(QtGui.QMainWindow):
         self.bar.move(x, y)
         
         # Playlist
-        x = totalWidth - 240 - 30
-        self.playList.move(x, 30)
+        self.playList.move(30, 30)
         self.playList.resize(240, 200)
         
         # Current Episode
-        self.currentEpisodeWidget.resize(300, 100)
-        x = totalWidth - 300 - 30
-        self.currentEpisodeWidget.move(x, 50)
+        self.currentEpisodeWidget.resize(320, 100)
+        x = totalWidth - 320 - 25
+        self.currentEpisodeWidget.move(x, 25)
     
     
     def volumeUp(self):
@@ -218,15 +215,18 @@ class Player(QtGui.QMainWindow):
     def playFile(self):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
+        except IndexError:
+            return False
+        else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
             self.currentEpisodeWidget.setTitle(title)
             self.openFile(path)
             self.playPause()
+            self.playList.blockSignals(True)
             self.playList.setCurrentRow(self.currentEpisode)
+            self.playList.blockSignals(False)
             return True
-        except IndexError:
-            return False
     
     
     def openFile(self, fileName):
@@ -314,7 +314,13 @@ class Player(QtGui.QMainWindow):
                         self.close()
     
     
-    def createUI(self):        
+    def changeEpisode(self):
+        newItem = self.playList.currentRow()
+        self.currentEpisode = newItem
+        self.playFile()
+    
+    
+    def createUI(self):
         self.videoFrame = VLCWidget()
         self.videoFrame.mouseMoved.connect(self.showBar)
         
@@ -371,14 +377,8 @@ class Player(QtGui.QMainWindow):
         vBoxLayout.addLayout(hButtonBox)
         
         self.playList = QtGui.QListWidget()
-        #self.playList.setStyleSheet('''
-        #    QListWidget::item:selected {
-        #        background-color:#1979FF; color:white;
-        #    }
-        #''')
         self.playList.currentRowChanged.connect(self.changeEpisode)
         self.playList.hide()
-        
         
         self.currentEpisodeWidget = Episode()
         self.currentEpisodeWidget.hide()
@@ -386,9 +386,7 @@ class Player(QtGui.QMainWindow):
         palette.setColor(QPalette.Window, palette.color(QPalette.Window))
         self.currentEpisodeWidget.setPalette(palette)
         self.currentEpisodeWidget.setAutoFillBackground(True)
-        #self.currentEpisode.hide()
-        
-        
+        self.currentEpisodeWidget.hide()
         
         self.bar = QtGui.QWidget()
         palette = QPalette()

@@ -127,7 +127,7 @@ class Main(QtGui.QMainWindow):
         self.selectionDescription.setFixedHeight(100)
         self.selectionDescription.setWordWrap(True)
         self.selectionDescription.setAlignment(Qt.AlignTop)
-        footerLayout = QtGui.QHBoxLayout()
+        footerLayout = QtGui.QVBoxLayout()
         footerLayout.addWidget(self.selectionTitle)
         footerLayout.addWidget(self.selectionDescription)
         self.footer = QtGui.QWidget()
