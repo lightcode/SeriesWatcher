@@ -74,13 +74,21 @@ class Main(QtGui.QMainWindow):
         self.reloadSelectSerie()
         self.selectSerie.currentIndexChanged.connect(self.serieChanged)
         
+        play = QtGui.QPushButton(QtGui.QIcon('art/play.png'), '')
+        play.setFlat(True)
+        play.clicked.connect(self.playFirstEpisode)
+        
+        layoutSerie = QtGui.QHBoxLayout()
+        layoutSerie.addWidget(self.selectSerie, 2)
+        layoutSerie.addWidget(play)
+        
         self.description = QtGui.QLabel()
         self.description.setMinimumWidth(350)
         self.description.setWordWrap(True)
         self.description.setAlignment(Qt.AlignTop)
         
         infos = QtGui.QVBoxLayout()
-        infos.addWidget(self.selectSerie)
+        infos.addLayout(layoutSerie)
         infos.addWidget(self.description)
         
         header = QtGui.QHBoxLayout()
@@ -145,24 +153,11 @@ class Main(QtGui.QMainWindow):
     
     
     def playClicked(self):
-        if not self.player.isVisible():
-            self.player.show()
         items = self.episodes.selectedIndexes()
         for item in items:
-            r, c = coord = item.row(), item.column()
+            coord = item.row(), item.column()
             if coord in self.map:
-                episode = self.map[coord]
-                if episode['path']:
-                    video = self.episodes.cellWidget(r, c)
-                    video.setInfos(1)
-                    # Open the file
-                    path = os.path.normpath(episode['path'])
-                    serieName = self.currentSerie.name
-                    imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
-                    self.player.addToPlayList(episode['title'], path, imgPath)
-                    self.episodeViewed(episode['number'])
-        self.refreshCount()
-        self.player.tryToPlay()
+                self.playIntegratedPlayer(coord, self.map[coord])
     
     
     def createMenu(self):
@@ -235,6 +230,25 @@ class Main(QtGui.QMainWindow):
     # =================
     #  Slots
     # =================
+    def playFirstEpisode(self):
+        episodes = {i:e for i, e in self.map.iteritems() if e['infos'] == 2}
+        firstNewEpisode = []
+        pos = None
+        minSeason = minEpisode = 0
+        for i, e in episodes.iteritems():
+            season, episode = e['season'], e['episode']
+            if (minSeason > season)\
+             or (minSeason == season and minEpisode > episode) \
+             or (minSeason == 0 and minEpisode == 0):
+                firstNewEpisode = e
+                pos = i
+                minSeason = season
+                minEpisode = episode
+        
+        if firstNewEpisode:
+            self.playIntegratedPlayer(pos, firstNewEpisode)
+    
+    
     def filterNewToggled(self):
         self.filterDL.blockSignals(True)
         self.filterDL.setChecked(True)
@@ -356,30 +370,10 @@ class Main(QtGui.QMainWindow):
     
     
     def episodesDblClicked(self, n):
-        command = Config.config['command_open']
-        r, c = coord = n.row(), n.column()
+        coord = n.row(), n.column()
         if coord in self.map:
             episode = self.map[coord]
-            if episode['path'] is not None:
-                path = os.path.normpath(episode['path'])
-                player = int(Config.config['player'])
-                if player == 1:
-                    desktop.open(path)
-                elif player == 2:
-                    self.playClicked()
-                elif player == 3:
-                    if command is None:
-                        desktop.open(path)
-                    else:
-                        self.commandOpen.startDetached(command, [path])
-                else:
-                    desktop.open(path)
-                
-                # Change the title
-                self.episodes.cellWidget(r, c).setInfos(1)
-                # Add the episode in the already view list
-                self.episodeViewed(episode['number'])
-                self.refreshCount()
+            self.playEpisode(coord, episode)
     
     
     def episodeViewed(self, number):
@@ -407,7 +401,46 @@ class Main(QtGui.QMainWindow):
         else:
             self.showEpisode(listEpisodes)
     
+    # ===============
+    #  Episode play
+    # ===============
+    def playEpisode(self, pos, episode):
+        command = Config.config['command_open']
+        if episode['path']:
+            path = os.path.normpath(episode['path'])
+            player = int(Config.config['player'])
+            if player == 1:
+                desktop.open(path)
+            elif player == 2:
+                self.playIntegratedPlayer(pos, episode)
+            elif player == 3:
+                if command is None:
+                    desktop.open(path)
+                else:
+                    self.commandOpen.startDetached(command, [path])
+            else:
+                desktop.open(path)
+            
+            # Change the title
+            self.episodes.cellWidget(*pos).setInfos(1)
+            # Add the episode in the already view list
+            self.episodeViewed(episode['number'])
+            self.refreshCount()
     
+    
+    def playIntegratedPlayer(self, pos, episode):
+        if episode['path']:
+            self.episodes.cellWidget(*pos).setInfos(1)
+            path = os.path.normpath(episode['path'])
+            serieName = self.currentSerie.name
+            imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
+            self.player.addToPlayList(episode['title'], path, imgPath)
+            self.episodeViewed(episode['number'])
+            self.refreshCount()
+            if not self.player.isVisible():
+                self.player.show()
+            self.player.tryToPlay()
+
     # ===============
     #  Episode view
     # ===============
