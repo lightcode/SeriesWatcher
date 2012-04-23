@@ -59,7 +59,7 @@ class Episode(QtGui.QWidget):
 class Player(QtGui.QMainWindow):
     _playList = []
     TIME_HIDE_BAR = 2000
-    currentEpisode = 0
+    currentEpisode = -1
     VLC_PARAM = "-I dummy --ignore-config --verbose=0 \
                 --no-video-title-show --no-plugins-cache"
     
@@ -97,13 +97,20 @@ class Player(QtGui.QMainWindow):
     
     
     def nextEpisode(self):
-        self.currentEpisode += 1
-        return self.playFile()
+        if self.currentEpisode < (len(self._playList) - 1):
+            #print "nextEpisode", self.currentEpisode
+            self.currentEpisode += 1
+            #print "nextEpisode +1", self.currentEpisode
+            self.playFile()
+            return True
+        else:
+            return False
     
     
     def previousEpisode(self):
-        self.currentEpisode -= 1
-        return self.playFile()
+        if self.currentEpisode > 0:
+            self.currentEpisode -= 1
+            return self.playFile()
     
     
     def resizeEvent(self, e):
@@ -137,7 +144,7 @@ class Player(QtGui.QMainWindow):
     
     def closeEvent(self, e):
         self.timer.stop()
-        self.currentEpisode = 0
+        self.currentEpisode = -1
         self._playList = []
         self.stop()
         self.playList.clear()
@@ -216,7 +223,9 @@ class Player(QtGui.QMainWindow):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
-            return False
+            #print self._playList
+            #print self.currentEpisode
+            pass
         else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
@@ -226,7 +235,6 @@ class Player(QtGui.QMainWindow):
             self.playList.blockSignals(True)
             self.playList.setCurrentRow(self.currentEpisode)
             self.playList.blockSignals(False)
-            return True
     
     
     def openFile(self, fileName):
@@ -251,7 +259,8 @@ class Player(QtGui.QMainWindow):
     
     def tryToPlay(self):
         if self._playerState == self.STOP:
-            self.playFile()
+            #print "tryToplay", self.currentEpisode
+            self.nextEpisode()
     
     
     def setBtnVolume(self, volume):

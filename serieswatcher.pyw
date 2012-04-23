@@ -310,7 +310,7 @@ class Main(QtGui.QMainWindow):
         if (r, c) in self.map and nbItemSelect <= 1:
             episode = self.map[r, c]
             self.footer.show()
-            self.selectionTitle.setText(episode['title'])
+            self.selectionTitle.setText('<b>%s</b>' % episode['title'])
             self.selectionDescription.setText(episode['desc'])
         else:
             self.clearSelectionInfos()
