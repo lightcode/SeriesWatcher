@@ -115,28 +115,6 @@ class EpisodesViewer(QtGui.QTableWidget):
         if oldNbColumn != self.nbColumn:
             self.setColumnCount(self.nbColumn)
             self.refreshEpisodes.emit()
-    
-    """
-    def dragEnterEvent(self, event):
-        QtGui.QTableWidget.dragEnterEvent(self, event)
-        authorizedExt = ('mp4', 'avi', 'wmv', 'flv', 'mkv')
-        for url in event.mimeData().urls():
-            path = unicode(url.toLocalFile())
-            ext = path.split('.')[-1].lower()
-            if ext not in authorizedExt:
-                return
-        event.acceptProposedAction()
-    
-    
-    def dragMoveEvent(self, event):
-        event.acceptProposedAction()
-    
-    
-    def dropEvent(self, event):
-        for url in event.mimeData().urls():
-            path = unicode(url.toLocalFile())
-            print path
-    """
 
 
 
@@ -150,6 +128,7 @@ class VideoItem(QtGui.QWidget):
         self.title = QtGui.QLabel(titleStr)
         self.title.setAlignment(Qt.AlignTop)
         self.title.setStyleSheet('padding-top:10px')
+        self.title.setMaximumHeight(55)
         self.title.setWordWrap(True)
         
         self.infos = QtGui.QLabel()

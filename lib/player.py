@@ -9,6 +9,10 @@ import vlc
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPalette, QShortcut
+from logs import Logs
+
+# Uncomment for enable logs
+# Logs.enable = True
 
 class VLCWidget(QtGui.QFrame):
     mouseMoved = QtCore.pyqtSignal()
@@ -98,12 +102,13 @@ class Player(QtGui.QMainWindow):
     
     def nextEpisode(self):
         if self.currentEpisode < (len(self._playList) - 1):
-            #print "nextEpisode", self.currentEpisode
+            Logs.add('nextEpisode')
             self.currentEpisode += 1
-            #print "nextEpisode +1", self.currentEpisode
             self.playFile()
             return True
         else:
+            Logs.add('nextEpisode : self._playList = ', self._playList)
+            Logs.add('nextEpisode : self.currentEpisode = ', self.currentEpisode)
             return False
     
     
@@ -145,9 +150,11 @@ class Player(QtGui.QMainWindow):
     def closeEvent(self, e):
         self.timer.stop()
         self.currentEpisode = -1
-        self._playList = []
         self.stop()
+        self._playList = []
+        self.playList.blockSignals(True)
         self.playList.clear()
+        self.playList.blockSignals(False)
         self._playerState = self.STOP
         QtGui.QMainWindow.closeEvent(self, e)
     
@@ -157,7 +164,7 @@ class Player(QtGui.QMainWindow):
         w = totalWidth - 60 if totalWidth < 750 else 750
         self.bar.resize(w, 100)
         y = self.videoFrame.y() + self.videoFrame.height()
-        y = y - self.bar.height()
+        y -= self.bar.height()
         x = (totalWidth - w) / 2
         self.bar.move(x, y)
         
@@ -223,9 +230,8 @@ class Player(QtGui.QMainWindow):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
-            #print self._playList
-            #print self.currentEpisode
-            pass
+            Logs.add('playFile : self._playList = ', self._playList)
+            Logs.add('playFile : self.currentEpisode = ', self.currentEpisode)
         else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
@@ -255,11 +261,13 @@ class Player(QtGui.QMainWindow):
         self._playList.append([title, path, imgPath])
         item = QtGui.QListWidgetItem(title)
         self.playList.addItem(item)
-    
+        Logs.add('addToPlayList : self._playList = ', self._playList)
+        Logs.add('addToPlayList : self.currentEpisode = ', self.currentEpisode)
+
     
     def tryToPlay(self):
         if self._playerState == self.STOP:
-            #print "tryToplay", self.currentEpisode
+            Logs.add('tryToPlay')
             self.nextEpisode()
     
     
@@ -319,8 +327,10 @@ class Player(QtGui.QMainWindow):
                 if self._playerState != self.USER_STOP:
                     self.stop(self.STOP)
                 if self._playerState == self.STOP:
-                    if not self.nextEpisode():
-                        self.close()
+                    Logs.add('updateUI : nextEpisode()')
+                    if percent > 98: # video is at the end
+                        if not self.nextEpisode():
+                            self.close()
     
     
     def changeEpisode(self):

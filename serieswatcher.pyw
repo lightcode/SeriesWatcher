@@ -240,10 +240,8 @@ class Main(QtGui.QMainWindow):
             if (minSeason > season)\
              or (minSeason == season and minEpisode > episode) \
              or (minSeason == 0 and minEpisode == 0):
-                firstNewEpisode = e
-                pos = i
-                minSeason = season
-                minEpisode = episode
+                pos, firstNewEpisode = i, e
+                minSeason, minEpisode = season, episode
         
         if firstNewEpisode:
             self.playIntegratedPlayer(pos, firstNewEpisode)
