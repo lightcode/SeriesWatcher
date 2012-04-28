@@ -31,6 +31,65 @@ class SelectFolder(QtGui.QWidget):
         self.label.setText(path)
 
 
+class FilterMenu(QtGui.QWidget):
+    filterChanged = QtCore.pyqtSignal()
+    def __init__(self, parent = None):
+        super(FilterMenu, self).__init__(parent)
+        
+        self.button = QtGui.QPushButton('Filtrer')
+        self.button.setFlat(True)
+        self.button.setMenu(self.menu())
+        self.button.setFixedWidth(150)
+        
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.button)
+        
+        self.setLayout(layout)
+    
+    
+    def menu(self):
+        self.a = QtGui.QAction(u'Episodes téléchargés', self)
+        setattr(self.a, 'filterID', 0)
+        self.a.setCheckable(True)
+        self.a.setChecked(True)
+        self.b = QtGui.QAction('Nouveau', self)
+        setattr(self.b, 'filterID', 1)
+        self.b.setCheckable(True)
+        self.c = QtGui.QAction(u'Episodes non téléchargés', self)
+        setattr(self.c, 'filterID', 2)
+        self.c.setCheckable(True)
+        self.d = QtGui.QAction(u'Tous', self)
+        setattr(self.d, 'filterID', 3)
+        self.d.setCheckable(True)
+        
+        filters = QtGui.QActionGroup(self)
+        filters.addAction(self.a)
+        filters.addAction(self.b)
+        filters.addAction(self.c)
+        filters.addAction(self.d)
+        filters.triggered.connect(self.filterTriggered)
+        
+        menu = QtGui.QMenu(self)
+        menu.addActions(filters.actions())
+        return menu
+    
+    
+    def filterTriggered(self, action):
+        self.button.setText(action.text())
+        self.filterChanged.emit()
+    
+    
+    def getFilterID(self):
+        if self.a.isChecked():
+            return 0
+        if self.b.isChecked():
+            return 1
+        if self.c.isChecked():
+            return 2
+        if self.d.isChecked():
+            return 3
+
+
 class EpisodesViewer(QtGui.QTableWidget):
     # Signals :
     pressEnter = QtCore.pyqtSignal('QModelIndex')
@@ -52,7 +111,6 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
-        #self.setAcceptDrops(True)
     
     
     def contextMenu(self, pos):

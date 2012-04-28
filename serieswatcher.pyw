@@ -102,18 +102,13 @@ class Main(QtGui.QMainWindow):
         self.selectSeason = QtGui.QComboBox()
         self.selectSeason.currentIndexChanged.connect(self.refreshScreen)
         
-        self.filterDL = QtGui.QCheckBox(u'Episodes téléchargés')
-        self.filterDL.setChecked(True)
-        self.filterDL.toggled.connect(self.filterDLToggled)
-        
-        self.filterNew = QtGui.QCheckBox(u'Nouveaux')
-        self.filterNew.toggled.connect(self.filterNewToggled)
+        self.filter = FilterMenu()
+        self.filter.filterChanged.connect(self.refreshScreen)
         
         filterBar = QtGui.QHBoxLayout()
         filterBar.addWidget(self.searchBar)
         filterBar.addWidget(self.selectSeason)
-        filterBar.addWidget(self.filterDL)
-        filterBar.addWidget(self.filterNew)
+        filterBar.addWidget(self.filter)
         
         # BODY
         self.episodes = EpisodesViewer()
@@ -245,20 +240,6 @@ class Main(QtGui.QMainWindow):
         
         if firstNewEpisode:
             self.playIntegratedPlayer(pos, firstNewEpisode)
-    
-    
-    def filterNewToggled(self):
-        self.filterDL.blockSignals(True)
-        self.filterDL.setChecked(True)
-        self.refreshScreen()
-        self.filterDL.blockSignals(False)
-    
-    
-    def filterDLToggled(self):
-        self.filterNew.blockSignals(True)
-        self.filterNew.setChecked(False)
-        self.refreshScreen()
-        self.filterNew.blockSignals(False)
     
     
     def allEpisodeView(self):
@@ -488,15 +469,16 @@ class Main(QtGui.QMainWindow):
     def refreshScreen(self):
         if self.currentSerie:
             filterSeason = self.selectSeason.currentIndex()
-            isFilterDL = self.filterDL.isChecked()
-            isFilterNew = self.filterNew.isChecked()
-            episodesViewed = self.currentSerie.episodesViewed
+            filterID = self.filter.getFilterID()
             listEpisodes = []
+            
             for e in self.currentSerie.episodes:
-                if (filterSeason == 0 or filterSeason == e['season']) \
-                  and (not isFilterDL or e['path']) \
-                  and (not isFilterNew or e['number'] not in episodesViewed):
-                    listEpisodes.append(e)
+                if (filterSeason == 0 or filterSeason == e['season']):
+                    if (filterID == 0 and e['infos'] == 1) \
+                      or (filterID == 1 and e['infos'] == 2) \
+                      or (filterID == 2 and e['infos'] == 0) \
+                      or filterID == 3:
+                        listEpisodes.append(e)
             
             self.showEpisode(listEpisodes)
     
