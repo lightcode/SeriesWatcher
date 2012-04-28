@@ -474,7 +474,7 @@ class Main(QtGui.QMainWindow):
             
             for e in self.currentSerie.episodes:
                 if (filterSeason == 0 or filterSeason == e['season']):
-                    if (filterID == 0 and e['infos'] == 1) \
+                    if (filterID == 0 and (e['infos'] == 1 or e['infos'] == 2)) \
                       or (filterID == 1 and e['infos'] == 2) \
                       or (filterID == 2 and e['infos'] == 0) \
                       or filterID == 3:

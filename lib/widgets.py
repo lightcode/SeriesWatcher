@@ -51,6 +51,7 @@ class FilterMenu(QtGui.QWidget):
         self.a = QtGui.QAction(u'Episodes téléchargés', self)
         setattr(self.a, 'filterID', 0)
         self.a.setCheckable(True)
+        self.button.setText(self.a.text())
         self.a.setChecked(True)
         self.b = QtGui.QAction('Nouveau', self)
         setattr(self.b, 'filterID', 1)
