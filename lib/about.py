@@ -15,7 +15,7 @@ class About(QtGui.QDialog):
                  u'Base de donnée : '
                  '<a href="http://thetvdb.com">TheTVDB.com</a><br/>'
                  u"Librairie Python externe : desktop, PyQt4, ",
-                 "ConfigParser3.2<br/>",
+                 "ConfigParser3.2, LibVLC<br/>",
                  u'Icônes : Glyphicons']
                 
         text = QtGui.QLabel(''.join(ABOUT))
