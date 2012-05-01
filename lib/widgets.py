@@ -31,43 +31,40 @@ class SelectFolder(QtGui.QWidget):
         self.label.setText(path)
 
 
-class FilterMenu(QtGui.QWidget):
+class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
     def __init__(self, parent = None):
-        super(FilterMenu, self).__init__(parent)
+        super(FilterMenu, self).__init__('Filtrer', parent)
         
-        self.button = QtGui.QPushButton('Filtrer')
-        self.button.setFlat(True)
-        self.button.setMenu(self.menu())
-        self.button.setFixedWidth(150)
-        
-        layout = QtGui.QHBoxLayout()
-        layout.addWidget(self.button)
-        
-        self.setLayout(layout)
+        self.setFlat(True)
+        self.setMenu(self.menu())
+        self.setFixedWidth(180)
     
     
     def menu(self):
-        self.a = QtGui.QAction(u'Episodes téléchargés', self)
-        setattr(self.a, 'filterID', 0)
-        self.a.setCheckable(True)
-        self.button.setText(self.a.text())
-        self.a.setChecked(True)
-        self.b = QtGui.QAction('Nouveau', self)
-        setattr(self.b, 'filterID', 1)
-        self.b.setCheckable(True)
-        self.c = QtGui.QAction(u'Episodes non téléchargés', self)
-        setattr(self.c, 'filterID', 2)
-        self.c.setCheckable(True)
-        self.d = QtGui.QAction(u'Tous', self)
-        setattr(self.d, 'filterID', 3)
-        self.d.setCheckable(True)
+        self.dl = QtGui.QAction(u'Episodes téléchargés', self)
+        setattr(self.dl, 'filterID', 0)
+        self.dl.setCheckable(True)
+        self.setText(self.dl.text())
+        self.dl.setChecked(True)
+        
+        self.new = QtGui.QAction('Nouveau', self)
+        setattr(self.new, 'filterID', 1)
+        self.new.setCheckable(True)
+        
+        self.notDL = QtGui.QAction(u'Episodes non téléchargés', self)
+        setattr(self.notDL, 'filterID', 2)
+        self.notDL.setCheckable(True)
+        
+        self.total = QtGui.QAction(u'Tous', self)
+        setattr(self.total, 'filterID', 3)
+        self.total.setCheckable(True)
         
         filters = QtGui.QActionGroup(self)
-        filters.addAction(self.a)
-        filters.addAction(self.b)
-        filters.addAction(self.c)
-        filters.addAction(self.d)
+        filters.addAction(self.dl)
+        filters.addAction(self.new)
+        filters.addAction(self.notDL)
+        filters.addAction(self.total)
         filters.triggered.connect(self.filterTriggered)
         
         menu = QtGui.QMenu(self)
@@ -76,19 +73,38 @@ class FilterMenu(QtGui.QWidget):
     
     
     def filterTriggered(self, action):
-        self.button.setText(action.text())
+        self.setText(action.text())
         self.filterChanged.emit()
     
     
     def getFilterID(self):
-        if self.a.isChecked():
+        if self.dl.isChecked():
             return 0
-        if self.b.isChecked():
+        if self.new.isChecked():
             return 1
-        if self.c.isChecked():
+        if self.notDL.isChecked():
             return 2
-        if self.d.isChecked():
+        if self.total.isChecked():
             return 3
+    
+    
+    def getFilterAction(self):
+        if self.dl.isChecked():
+            return self.dl
+        if self.new.isChecked():
+            return self.new
+        if self.notDL.isChecked():
+            return self.notDL
+        if self.total.isChecked():
+            return self.total
+    
+    
+    def setCounters(self, nbTotal, nbNotDL, nbDL, nbNew):
+        self.dl.setText(u'Episodes téléchargés (%d)' % nbDL)
+        self.new.setText(u'Nouveaux (%d)' % nbNew)
+        self.notDL.setText(u'Episodes non téléchargés (%d)' % nbNotDL)
+        self.total.setText(u'Tous (%d)' % nbTotal)
+        self.setText(self.getFilterAction().text())
 
 
 class EpisodesViewer(QtGui.QTableWidget):

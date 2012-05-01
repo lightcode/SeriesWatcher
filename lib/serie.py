@@ -32,18 +32,25 @@ class Serie(object):
     
     
     def loadEpisodes(self):
-        nbSeason = 0
+        nbSeason = nbEpisodeDL = nbEpisodeNew = nbEpisodeTotal = 0
         for i, e in enumerate(self.episodes):
             number = e['number']
             nbSeason = max(nbSeason, e['season'])
             infos = 0
+            nbEpisodeTotal += 1
             if number in self.downloadedEpisode:
                 self.episodes[i]['path'] = self.downloadedEpisode[number]
                 infos = 1
+                nbEpisodeDL += 1
                 if e['number'] not in self.episodesViewed:
                     infos = 2
+                    nbEpisodeNew += 1
             self.episodes[i]['infos'] = infos
         self.infos['nbSeason'] = nbSeason
+        self.infos['nbEpisodeNotDL'] = nbEpisodeTotal - nbEpisodeDL
+        self.infos['nbEpisodeNew'] = nbEpisodeNew
+        self.infos['nbEpisodeDL'] = nbEpisodeDL
+        self.infos['nbEpisodeTotal'] = nbEpisodeTotal
     
     
     def loadSerie(self):

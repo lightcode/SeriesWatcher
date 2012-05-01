@@ -444,18 +444,21 @@ class Main(QtGui.QMainWindow):
     
     
     def refreshCount(self):
-        allDl = {e['number'] for e in self.map.itervalues() if e['path']}
-        nbShow = len(self.map)
-        nbNew = len(allDl - set(self.currentSerie.episodesViewed))
-        if nbShow > 1:
-            count = u'%d épisodes affichés' % nbShow
-        else:
-            count = u'%d épisode affiché' % nbShow
-        if nbNew == 1:
-            count += ' dont un nouveau'
-        elif nbNew > 1:
-            count += ' dont %d nouveaux' % nbNew
-        self.nbEpisodes.setText(count)
+        nbDL = self.currentSerie['nbEpisodeDL']
+        nbNew = nbDL - len(set(self.currentSerie.episodesViewed))
+        
+        counters = (self.currentSerie['nbEpisodeTotal'],
+                    self.currentSerie['nbEpisodeNotDL'],
+                    nbDL, nbNew)
+        self.filter.setCounters(*counters)
+        
+        percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
+        percentageView = ((nbDL - nbNew) /\
+            float(self.currentSerie['nbEpisodeTotal'])) * 100
+        
+        c = u'Série vue à %d %% | %d %% de la série téléchargé' \
+                % (percentageView, percentageDL)
+        self.nbEpisodes.setText(c)
     
     
     def episodeLoaded(self, x, y, title, infos, image=None):
