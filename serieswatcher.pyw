@@ -232,7 +232,7 @@ class Main(QtGui.QMainWindow):
         minSeason = minEpisode = 0
         for i, e in episodes.iteritems():
             season, episode = e['season'], e['episode']
-            if (minSeason > season)\
+            if (minSeason > season) \
              or (minSeason == season and minEpisode > episode) \
              or (minSeason == 0 and minEpisode == 0):
                 pos, firstNewEpisode = i, e
@@ -445,7 +445,8 @@ class Main(QtGui.QMainWindow):
     
     def refreshCount(self):
         nbDL = self.currentSerie['nbEpisodeDL']
-        nbNew = nbDL - len(set(self.currentSerie.episodesViewed))
+        nbNew = len(set(self.currentSerie.downloadedEpisode) \
+                    - set(self.currentSerie.episodesViewed))
         
         counters = (self.currentSerie['nbEpisodeTotal'],
                     self.currentSerie['nbEpisodeNotDL'],
@@ -477,7 +478,7 @@ class Main(QtGui.QMainWindow):
             
             for e in self.currentSerie.episodes:
                 if (filterSeason == 0 or filterSeason == e['season']):
-                    if (filterID == 0 and (e['infos'] == 1 or e['infos'] == 2)) \
+                    if (filterID == 0 and (e['infos'] == 1 or e['infos'] == 2))\
                       or (filterID == 1 and e['infos'] == 2) \
                       or (filterID == 2 and e['infos'] == 0) \
                       or filterID == 3:

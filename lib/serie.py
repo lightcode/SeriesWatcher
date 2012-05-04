@@ -5,8 +5,10 @@ import glob
 import os.path
 import re
 
+import time
+
 class Serie(object):
-    EXTENSION = ('mp4', 'avi', 'wmv', 'flv', 'mkv')
+    EXTENSION = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
     downloadedEpisode = {}
     episodesViewed = set()
     episodes = []
@@ -20,19 +22,22 @@ class Serie(object):
     
     def loadDownloadedList(self):
         self.downloadedEpisode = {}
-        pattern = re.compile(r'(\d+)\D(\d+)')
-        fileList = glob.glob(unicode(self.path))
-        for f in fileList:
-            if os.path.basename(f).split('.')[-1] in self.EXTENSION:
+        pattern = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
+        for f in glob.iglob(unicode(self.path)):
+            if os.path.splitext(f)[1] in self.EXTENSION:
                 tst = re.search(pattern, os.path.basename(f))
                 if tst:
-                    episodeID = ['%02d' % int(x) for x in tst.groups()][0:2]
-                    episodeID = '-'.join(episodeID)
+                    numbers = tst.groups()
+                    episodeID = '-'.join(['%02d' % int(x) for x in numbers[0:2]])
                     self.downloadedEpisode[episodeID] = f
+                    if numbers[2]:
+                        n = (numbers[0], numbers[2])
+                        episodeID = '-'.join(['%02d' % int(x) for x in n])
+                        self.downloadedEpisode[episodeID] = f
     
     
     def loadEpisodes(self):
-        nbSeason = nbEpisodeDL = nbEpisodeNew = nbEpisodeTotal = 0
+        nbSeason = nbEpisodeDL = nbEpisodeTotal = 0
         for i, e in enumerate(self.episodes):
             number = e['number']
             nbSeason = max(nbSeason, e['season'])
@@ -44,11 +49,9 @@ class Serie(object):
                 nbEpisodeDL += 1
                 if e['number'] not in self.episodesViewed:
                     infos = 2
-                    nbEpisodeNew += 1
             self.episodes[i]['infos'] = infos
         self.infos['nbSeason'] = nbSeason
         self.infos['nbEpisodeNotDL'] = nbEpisodeTotal - nbEpisodeDL
-        self.infos['nbEpisodeNew'] = nbEpisodeNew
         self.infos['nbEpisodeDL'] = nbEpisodeDL
         self.infos['nbEpisodeTotal'] = nbEpisodeTotal
     
