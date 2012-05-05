@@ -41,7 +41,7 @@ class Episode(QtGui.QWidget):
         
         self.title = QtGui.QLabel()
         self.title.setWordWrap(True)
-        self.title.setStyleSheet('font-size:14pt')
+        self.title.setStyleSheet('font-size:14pt;')
         
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.img)

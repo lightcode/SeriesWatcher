@@ -8,6 +8,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from lib import *
 
+import time
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -380,6 +381,7 @@ class Main(QtGui.QMainWindow):
         else:
             self.showEpisode(listEpisodes)
     
+    
     # ===============
     #  Episode play
     # ===============
@@ -413,13 +415,15 @@ class Main(QtGui.QMainWindow):
             path = os.path.normpath(episode['path'])
             serieName = self.currentSerie.name
             imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
-            self.player.addToPlayList(episode['title'], path, imgPath)
+            title = '<b>%s</b> %s' % (episode['number'], episode['title'])
+            self.player.addToPlayList(title, path, imgPath)
             self.episodeViewed(episode['number'])
             self.refreshCount()
             if not self.player.isVisible():
                 self.player.show()
             self.player.tryToPlay()
-
+    
+    
     # ===============
     #  Episode view
     # ===============
@@ -431,22 +435,22 @@ class Main(QtGui.QMainWindow):
         serieName = self.currentSerie.name
         nbRows = int(math.ceil(len(episodes) / float(self.episodes.nbColumn)))
         self.episodes.setRowCount(nbRows)
-        imgDir = 'database/img/%s' % serieName
+        imgDir = 'database/img/%s/%s.jpg' % (serieName, '%s')
+        nbColumn = self.episodes.nbColumn
         for i, e in enumerate(episodes):
-            (x, y) = (i // self.episodes.nbColumn, i % self.episodes.nbColumn)
-            imgPath = '%s/%s.jpg' % (imgDir, e['number'])
+            (x, y) = (i // nbColumn, i % nbColumn)
+            imgPath = imgDir % e['number']
             titleStr = '<b>%s</b><br/>%s' % (e['number'], e['title'])
             self.map[x, y] = e
-            infos = e['infos']
-            self.episodesLoader.addEpisode(x, y, titleStr, infos, imgPath)
+            self.episodesLoader.addEpisode(x, y, titleStr, e['infos'], imgPath)
         self.episodesLoader.start()
         self.refreshCount()
     
     
     def refreshCount(self):
         nbDL = self.currentSerie['nbEpisodeDL']
-        nbNew = len(set(self.currentSerie.downloadedEpisode) \
-                    - set(self.currentSerie.episodesViewed))
+        allDl = {e['number'] for e in self.currentSerie.episodes if e['path']}
+        nbNew = len(allDl - set(self.currentSerie.episodesViewed))
         
         counters = (self.currentSerie['nbEpisodeTotal'],
                     self.currentSerie['nbEpisodeNotDL'],
@@ -494,6 +498,7 @@ class Main(QtGui.QMainWindow):
         self.currentSerie = Serie(Config.series[serieLocalID])
         self.loadSerie(serieLocalID)
         
+        self.selectSeason.blockSignals(True)
         self.selectSeason.clear()
         self.selectSeason.addItem('Toutes les saisons')
         
@@ -505,12 +510,12 @@ class Main(QtGui.QMainWindow):
             firstAired = self.currentSerie['firstAired']
             self.description.setText('%s<hr/>%s' % (desc, firstAired))
             
-            self.selectSeason.blockSignals(True)
             nbSeasons = self.currentSerie['nbSeason']
             listSeasons = ['Saison %d' % x for x in xrange(1, nbSeasons + 1)]
             self.selectSeason.addItems(listSeasons)
             self.selectSeason.setCurrentIndex(0)
-            self.selectSeason.blockSignals(False)
+        
+        self.selectSeason.blockSignals(False)
         
         if not init:
             self.refreshScreen()

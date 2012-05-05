@@ -5,8 +5,6 @@ import glob
 import os.path
 import re
 
-import time
-
 class Serie(object):
     EXTENSION = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
     downloadedEpisode = {}
@@ -20,12 +18,12 @@ class Serie(object):
         self.loadEpisodesViewed()
     
     
+    PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
     def loadDownloadedList(self):
         self.downloadedEpisode = {}
-        pattern = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
         for f in glob.iglob(unicode(self.path)):
             if os.path.splitext(f)[1] in self.EXTENSION:
-                tst = re.search(pattern, os.path.basename(f))
+                tst = re.search(self.PATTERN_FILE, os.path.basename(f))
                 if tst:
                     numbers = tst.groups()
                     episodeID = '-'.join(['%02d' % int(x) for x in numbers[0:2]])
@@ -59,8 +57,7 @@ class Serie(object):
     def loadSerie(self):
         pkl = 'database/%s.pkl' % self.name
         if os.path.isfile(pkl):            
-            pklFile = open(pkl, 'rb')
-            serie = pickle.load(pklFile)
+            serie = pickle.load(open(pkl, 'rb'))
             
             # Serie's episodes
             self.episodes = serie['episodes']
