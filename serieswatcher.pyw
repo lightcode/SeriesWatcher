@@ -71,7 +71,8 @@ class Main(QtGui.QMainWindow):
         
         # HEADER
         self.imageSerie = QtGui.QLabel()
-        self.imageSerie.setFixedSize(758, 140)
+        self.imageSerie.setFixedHeight(140)
+        self.imageSerie.setMaximumWidth(758)
         self.imageSerie.setAlignment(Qt.AlignTop)
         
         self.selectSerie = QtGui.QComboBox()
