@@ -153,6 +153,10 @@ class Main(QtGui.QMainWindow):
         win = QtGui.QWidget()
         win.setLayout(window)
         self.setCentralWidget(win)
+        
+        # Shortcut
+        shortSearch = QtGui.QShortcut('Ctrl+F', self)
+        shortSearch.activated.connect(self.searchBar.setFocus)
     
     
     def playClicked(self):
