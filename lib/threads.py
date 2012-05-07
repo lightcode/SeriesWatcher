@@ -97,7 +97,7 @@ class RefreshSeriesThread(QtCore.QThread):
                 self.downloadConfiguration(serieLocalID)
                 self.serieLoaded.emit(serieLocalID)
                 del self.toRefresh[0]
-            time.sleep(0.01)
+            self.msleep(10)
 
 
 
@@ -120,7 +120,7 @@ class SearchThread(QtCore.QThread):
                     if search(textSearch, decompose(e['title'])):
                         listEpisodes.append(e)
                 self.searchFinished.emit(listEpisodes)
-            time.sleep(0.01)
+            self.msleep(10)
     
     
     def changeText(self, search, episodes):

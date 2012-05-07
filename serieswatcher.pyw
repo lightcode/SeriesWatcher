@@ -8,7 +8,6 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from lib import *
 
-
 class Main(QtGui.QMainWindow):
     currentSerie = None
     
@@ -480,8 +479,7 @@ class Main(QtGui.QMainWindow):
         x, y, title, infos, image = episode
         item = VideoItem(title)
         item.setInfos(infos)
-        if image:
-            item.setImage(image)
+        item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
     
     

@@ -2,7 +2,7 @@ Programme en version 1.1.
 
 # Qu'est-ce que Series Watcher ?
 
-Series Watcher permet de visualiser des séries TV présentes sur le disque dur en y ajoutant des informations telles que le titre de chaque épisodes, une image et la description de l'épisode. Il permet de naviguer facilement entre les saisons d'une série et permet de rechercher un épisode en fonction de son titre.
+Series Watcher permet de visualiser des sÃ©ries TV prÃ©sentes sur le disque dur en y ajoutant des informations telles que le titre de chaque Ã©pisode, une image et la description de l'Ã©pisode. Il permet de naviguer facilement entre les saisons d'une sÃ©rie et permet de rechercher un Ã©pisode en fonction de son titre.
 
 
 # Comment installer Series Watcher ?
@@ -22,9 +22,13 @@ Enfin, vous pouvez ouvrir le fichier serieswatcher.pyw.
 
 ## Pour Linux
 
-Si PyQt4 n'est pas installé, vous pouvez faire : `sudo apt-get install python-qt4`
+Si PyQt4 n'est pas installÃ©, vous pouvez faire : `sudo apt-get install python-qt4`
 
 
-# Fonctionnalités additionnelles
+# Mise Ã  jour depuis la version 1.0
 
-Series Watcher contient un lecteur vidéo intégré basé sur VLC 2. Il faut donc avoir installé celui-ci pour pouvoir en profiter.
+Pour mettre Ã  jour Series Watcher, il faut se rendre dans le dossier de Series Watcher 1.0, et de copier le dossier `database` et le fichier `series-watcher.cfg` dans le dossier de Series Watcher 1.1.
+
+# FonctionnalitÃ©s additionnelles
+
+Series Watcher contient un lecteur vidÃ©o intÃ©grÃ© basÃ© sur VLC 2. Il faut donc avoir installÃ© celui-ci pour pouvoir en profiter.
