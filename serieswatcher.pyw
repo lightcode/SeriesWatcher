@@ -339,7 +339,7 @@ class Main(QtGui.QMainWindow):
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
-            if not video:
+            if video is not None:
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setInfos(1)
@@ -352,7 +352,7 @@ class Main(QtGui.QMainWindow):
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
-            if not video:
+            if video is not None:
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setInfos(2)
