@@ -70,27 +70,36 @@ class Main(QtGui.QMainWindow):
         # HEADER
         self.imageSerie = QtGui.QLabel()
         self.imageSerie.setFixedSize(758, 140)
+        self.imageSerie.setAlignment(Qt.AlignTop)
         
         self.selectSerie = QtGui.QComboBox()
         self.reloadSelectSerie()
         self.selectSerie.currentIndexChanged.connect(self.serieChanged)
         
-        play = QtGui.QPushButton(QtGui.QIcon('art/play.png'), '')
-        play.setFlat(True)
-        play.clicked.connect(self.playFirstEpisode)
+        self.btnPlay = QtGui.QPushButton(QtGui.QIcon('art/play.png'), '')
+        self.btnPlay.setFlat(True)
+        self.btnPlay.setToolTip(u"Jouer le premier épisode non vu")
+        self.btnPlay.clicked.connect(self.playFirstEpisode)
         
         layoutSerie = QtGui.QHBoxLayout()
         layoutSerie.addWidget(self.selectSerie, 2)
-        layoutSerie.addWidget(play)
+        layoutSerie.addWidget(self.btnPlay)
         
         self.description = QtGui.QLabel()
-        self.description.setMinimumWidth(350)
         self.description.setWordWrap(True)
         self.description.setAlignment(Qt.AlignTop)
+        self.description.setScaledContents(True)
+        self.description.setStyleSheet('padding:2px')
+        
+        scrollArea = QtGui.QScrollArea()
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setWidget(self.description)
+        scrollArea.setMinimumWidth(350)
+        scrollArea.setFixedHeight(120)
         
         infos = QtGui.QVBoxLayout()
         infos.addLayout(layoutSerie)
-        infos.addWidget(self.description)
+        infos.addWidget(scrollArea)
         
         header = QtGui.QHBoxLayout()
         header.addLayout(infos)
@@ -453,8 +462,7 @@ class Main(QtGui.QMainWindow):
         nbNew = len(allDl - set(self.currentSerie.episodesViewed))
         
         counters = (self.currentSerie['nbEpisodeTotal'],
-                    self.currentSerie['nbEpisodeNotDL'],
-                    nbDL, nbNew)
+                    self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)
         self.filter.setCounters(*counters)
         
         percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
@@ -464,6 +472,11 @@ class Main(QtGui.QMainWindow):
         c = u'Série vue à %d %% | %d %% de la série téléchargé' \
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
+        
+        if nbNew > 0:
+            self.btnPlay.setEnabled(True)
+        else:
+            self.btnPlay.setEnabled(False)    
     
     
     def episodeLoaded(self, x, y, title, infos, image=None):
@@ -481,11 +494,10 @@ class Main(QtGui.QMainWindow):
             listEpisodes = []
             
             for e in self.currentSerie.episodes:
-                if (filterSeason == 0 or filterSeason == e['season']):
-                    if (filterID == 0 and (e['infos'] == 1 or e['infos'] == 2))\
+                if filterSeason == 0 or filterSeason == e['season']:
+                    if (filterID == 0 and e['infos'] >= 1) \
                       or (filterID == 1 and e['infos'] == 2) \
-                      or (filterID == 2 and e['infos'] == 0) \
-                      or filterID == 3:
+                      or (filterID == 2 and e['infos'] == 0) or filterID == 3:
                         listEpisodes.append(e)
             
             self.showEpisode(listEpisodes)
