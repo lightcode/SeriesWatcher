@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
 import math
 import os.path
 import sys
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from lib import *
+
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -59,6 +61,8 @@ class Main(QtGui.QMainWindow):
     # =========================
     def createWindow(self):
         self.createMenu()
+        
+        self.setStyleSheet('QScrollArea { border:none; }')
         
         # StatusBar
         self.status = self.statusBar()
@@ -134,14 +138,18 @@ class Main(QtGui.QMainWindow):
         self.selectionTitle = QtGui.QLabel()
         self.selectionTitle.setAlignment(Qt.AlignTop)
         self.selectionDescription = QtGui.QLabel()
-        self.selectionDescription.setMinimumWidth(350)
-        self.selectionDescription.setFixedHeight(100)
         self.selectionDescription.setWordWrap(True)
         self.selectionDescription.setAlignment(Qt.AlignTop)
+        
+        scrollArea = QtGui.QScrollArea()
+        scrollArea.setWidgetResizable(True)
+        scrollArea.setWidget(self.selectionDescription)
+        
         footerLayout = QtGui.QVBoxLayout()
         footerLayout.addWidget(self.selectionTitle)
-        footerLayout.addWidget(self.selectionDescription)
+        footerLayout.addWidget(scrollArea)
         self.footer = QtGui.QWidget()
+        self.footer.setFixedHeight(130)
         self.footer.setLayout(footerLayout)
         
         window = QtGui.QVBoxLayout()
@@ -520,7 +528,10 @@ class Main(QtGui.QMainWindow):
             self.imageSerie.setPixmap(image)
             desc = self.currentSerie['desc'].replace("\n", '<br/>')
             firstAired = self.currentSerie['firstAired']
-            self.description.setText('%s<hr/>%s' % (desc, firstAired))
+            firstAired = datetime.strptime(firstAired, '%Y-%m-%d')\
+                                          .strftime('%d/%m/%Y')
+            self.description.setText(u'%s<hr/>Date de création : %s' \
+                                                    % (desc, firstAired))
             
             nbSeasons = self.currentSerie['nbSeason']
             listSeasons = ['Saison %d' % x for x in xrange(1, nbSeasons + 1)]
