@@ -131,28 +131,22 @@ class SearchThread(QtCore.QThread):
 
 class EpisodesLoaderThread(QtCore.QThread):
     # Signals :
-    episodeLoaded = QtCore.pyqtSignal(int, int, 'QString', int, 'QImage')
+    episodeLoaded = QtCore.pyqtSignal(tuple)
     episodes = []
-    lastLine = lastQuery = 0
+    lastQuery = 0
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
     
     
     def run(self):
-        self.episodeInLastLine = {}
         param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
         for qId, x, y, title, infos, imgPath in self.episodes:
             if qId == self.lastQuery:
-                image = QtGui.QImage()
-                if os.path.isfile(imgPath):
-                    image.load(imgPath)
+                image = QtGui.QImage(imgPath)
+                if image != QtGui.QImage():
                     image = image.scaled(120, 90, *param)
-                self.episodeLoaded.emit(x, y, title, infos, image)
-                if self.lastLine == x:
-                    if qId not in self.episodeInLastLine:
-                        self.episodeInLastLine[qId] = 0
-                    self.episodeInLastLine[qId] += 1
+                self.episodeLoaded.emit((x, y, title, infos, image))
     
     
     def newQuery(self):
@@ -160,5 +154,4 @@ class EpisodesLoaderThread(QtCore.QThread):
     
     
     def addEpisode(self, x, y, title, infos, imgPath):
-        self.lastLine = max(self.lastLine, x)
         self.episodes.append((self.lastQuery, x, y, title, infos, imgPath))

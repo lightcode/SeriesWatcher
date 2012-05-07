@@ -8,7 +8,6 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from lib import *
 
-import time
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -337,7 +336,7 @@ class Main(QtGui.QMainWindow):
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
-            if video is not None:
+            if not video:
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setInfos(1)
@@ -350,7 +349,7 @@ class Main(QtGui.QMainWindow):
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
-            if video is not None:
+            if not video:
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setInfos(2)
@@ -460,10 +459,8 @@ class Main(QtGui.QMainWindow):
         nbDL = self.currentSerie['nbEpisodeDL']
         allDl = {e['number'] for e in self.currentSerie.episodes if e['path']}
         nbNew = len(allDl - set(self.currentSerie.episodesViewed))
-        
-        counters = (self.currentSerie['nbEpisodeTotal'],
-                    self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)
-        self.filter.setCounters(*counters)
+        self.filter.setCounters(self.currentSerie['nbEpisodeTotal'],
+                               self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)
         
         percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
         percentageView = ((nbDL - nbNew) /\
@@ -479,7 +476,8 @@ class Main(QtGui.QMainWindow):
             self.btnPlay.setEnabled(False)    
     
     
-    def episodeLoaded(self, x, y, title, infos, image=None):
+    def episodeLoaded(self, episode):
+        x, y, title, infos, image = episode
         item = VideoItem(title)
         item.setInfos(infos)
         if image:
