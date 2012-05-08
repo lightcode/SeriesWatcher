@@ -16,10 +16,10 @@ def decompose(string):
 
 def search(user, entry):
     user = decompose(user)
-    isUFind = True
     for u in user:
-        isEFind = False
         for e in entry:
-            isEFind |= (e[0:len(u)] == u)
-        isUFind &= isEFind
-    return isUFind
+            if e[0:len(u)] == u:
+                break
+        else:
+            return False
+    return True

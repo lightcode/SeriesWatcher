@@ -110,6 +110,7 @@ class Main(QtGui.QMainWindow):
         
         # FILTER
         self.searchBar = QtGui.QLineEdit()
+        self.searchBar.setPlaceholderText('Rechercher')
         self.searchBar.textChanged.connect(self.searchChanged)
         
         self.selectSeason = QtGui.QComboBox()
@@ -180,7 +181,7 @@ class Main(QtGui.QMainWindow):
         self.menubar = self.menuBar()
         
         ## MENU SERIES
-        seriesMenu = self.menubar.addMenu('S\xE9ries')
+        seriesMenu = self.menubar.addMenu(u'Séries')
         
         addSerie = seriesMenu.addAction(u'Nouvelle série', self.openAddSerie)
         addSerie.setIcon(QtGui.QIcon('art/add.png'))
