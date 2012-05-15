@@ -5,11 +5,18 @@ import os
 import user
 import sys
 import time
-import vlc
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPalette, QShortcut
 from logs import Logs
+
+# Import VLC
+path = os.getcwd()
+try:
+    import vlc
+except:
+    vlc = None
+os.chdir(path)
 
 # Uncomment for enable logs
 # Logs.enable = True
@@ -61,6 +68,7 @@ class Episode(QtGui.QWidget):
 
 
 class Player(QtGui.QMainWindow):
+    VLCLoaded = False
     _playList = []
     TIME_HIDE_BAR = 2000
     currentEpisode = -1
@@ -75,11 +83,13 @@ class Player(QtGui.QMainWindow):
         self.setWindowTitle("Series Player")
         self.resize(640, 480)
         
-        self.instance = vlc.Instance(self.VLC_PARAM)
-        self.mediaPlayer = self.instance.media_player_new()
-        self.mediaPlayer.video_set_mouse_input(False)
-        self.mediaPlayer.video_set_key_input(False)
-        self.createUI()
+        if vlc:
+            self.VLCLoaded = True
+            self.instance = vlc.Instance(self.VLC_PARAM)
+            self.mediaPlayer = self.instance.media_player_new()
+            self.mediaPlayer.video_set_mouse_input(False)
+            self.mediaPlayer.video_set_key_input(False)
+            self.createUI()
     
     
     def showBar(self):

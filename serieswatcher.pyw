@@ -7,6 +7,7 @@ import os.path
 import sys
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QMessageBox
 from lib import *
 
 
@@ -431,6 +432,13 @@ class Main(QtGui.QMainWindow):
     
     
     def playIntegratedPlayer(self, pos, episode):
+        if not self.player.VLCLoaded:
+            title = 'Erreur lors du chargement de VLC'
+            message = u"Le lecteur intégré ne peut pas être démarrer car la" \
+                      + u"bibliothèque VLC ne s'est pas correctement chargée"
+            QMessageBox.critical(self, title, message)
+            return
+        
         if episode['path']:
             self.episodes.cellWidget(*pos).setInfos(1)
             path = os.path.normpath(episode['path'])
