@@ -444,8 +444,8 @@ class Main(QtGui.QMainWindow):
             path = os.path.normpath(episode['path'])
             serieName = self.currentSerie.name
             imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
-            title = '<b>%s</b> %s' % (episode['number'], episode['title'])
-            self.player.addToPlayList(title, path, imgPath)
+            title = episode['title']
+            self.player.addToPlayList(episode['number'], title, path, imgPath)
             self.episodeViewed(episode['number'])
             self.refreshCount()
             if not self.player.isVisible():

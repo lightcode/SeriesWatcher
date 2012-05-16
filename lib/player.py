@@ -267,8 +267,9 @@ class Player(QtGui.QMainWindow):
             self.totalTime.setText(textTime)
     
     
-    def addToPlayList(self, title, path, imgPath):
-        self._playList.append([title, path, imgPath])
+    def addToPlayList(self, number, title, path, imgPath):
+        fullTitle = '<b>%s</b> %s' % (number, title)
+        self._playList.append([fullTitle, path, imgPath])
         item = QtGui.QListWidgetItem(title)
         self.playList.addItem(item)
         Logs.add('addToPlayList : self._playList = ', self._playList)
