@@ -516,7 +516,8 @@ class Main(QtGui.QMainWindow):
                     if (filterID == 0 and e['infos'] >= 1) \
                       or (filterID == 1 and e['infos'] == 2) \
                       or (filterID == 2 and e['infos'] == 0) or filterID == 3:
-                        listEpisodes.append(e)
+                        if e['season'] != 0:
+                            listEpisodes.append(e)
             
             self.showEpisode(listEpisodes)
     
