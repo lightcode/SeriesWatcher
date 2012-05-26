@@ -30,7 +30,10 @@ class Main(QtGui.QMainWindow):
         else:
             self.openAddSerie()
         
-        self.player = Player(self)
+        try:
+            self.player = Player(self)
+        except:
+            self.player = None
     
     
     def startTheads(self):
@@ -432,7 +435,7 @@ class Main(QtGui.QMainWindow):
     
     
     def playIntegratedPlayer(self, pos, episode):
-        if not self.player.VLCLoaded:
+        if not self.player or not self.player.VLCLoaded:
             title = 'Erreur lors du chargement de VLC'
             message = u"Le lecteur intégré ne peut pas être démarrer car la" \
                       + u"bibliothèque VLC ne s'est pas correctement chargée"
