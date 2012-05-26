@@ -67,6 +67,42 @@ class Episode(QtGui.QWidget):
 
 
 
+class Options(QtGui.QDialog):
+    def __init__(self, parent = None):
+        QtGui.QDialog.__init__(self, parent)
+        self.setWindowTitle('Options')
+        self.parent = parent
+        
+        audioList = parent.mediaPlayer.audio_get_track_description()
+        stList = parent.mediaPlayer.video_get_spu_description()
+        
+        self.st = QtGui.QComboBox()
+        for id, text in stList:
+            self.st.addItem(text.decode('utf8'))
+        self.st.setCurrentIndex(self.parent.mediaPlayer.video_get_spu())
+        self.st.currentIndexChanged.connect(self.changeST)
+        
+        self.audio = QtGui.QComboBox()
+        for id, text in audioList:
+            self.audio.addItem(text.decode('utf8'))
+        self.audio.setCurrentIndex(self.parent.mediaPlayer.audio_get_track())
+        self.audio.currentIndexChanged.connect(self.changeAudio)
+        
+        layout = QtGui.QFormLayout()
+        layout.addRow('Sous-titres', self.st)
+        layout.addRow('Audio', self.audio)
+        
+        self.setLayout(layout)
+    
+    
+    def changeST(self, new):
+        self.parent.mediaPlayer.video_set_spu(new)
+    
+    def changeAudio(self, new):
+        self.parent.mediaPlayer.audio_set_track(new)
+
+
+
 class Player(QtGui.QMainWindow):
     VLCLoaded = False
     _playList = []
@@ -78,8 +114,8 @@ class Player(QtGui.QMainWindow):
     PLAY, PAUSE, STOP, USER_STOP = 0, 1, 2, 3
     _playerState = STOP
     
-    def __init__(self, master=None):
-        QtGui.QMainWindow.__init__(self, master)
+    def __init__(self, parent=None):
+        QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle("Series Player")
         self.resize(640, 480)
         
@@ -341,13 +377,22 @@ class Player(QtGui.QMainWindow):
                     Logs.add('updateUI : nextEpisode()')
                     if percent > 98: # video is at the end
                         if not self.nextEpisode():
-                            self.close()
+                            if self.autoPlay.isChecked():
+                                if not self.parent().playFirstEpisode():
+                                    self.close()
+                            else:
+                                self.close()
     
     
     def changeEpisode(self):
         newItem = self.playList.currentRow()
         self.currentEpisode = newItem
         self.playFile()
+    
+    
+    def showOptions(self):
+        self.options = Options(self)
+        self.options.show()
     
     
     def createUI(self):
@@ -379,9 +424,12 @@ class Player(QtGui.QMainWindow):
         self.screenBtn = tool.addAction(QIcon('art/fullscreen.png'),
                                         u"Plein écran", self.fullScreen)
         self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
-                                          "Afficher la playlist",
-                                          self.showPlayList)
+                                          "Playlist", self.showPlayList)
         self.playListBtn.setCheckable(True)
+        tool.addAction(QIcon('art/options.png'), "Options", self.showOptions)
+        self.autoPlay = tool.addAction(QIcon('art/refresh.png'), \
+                                       "Activer la lecture automatique")
+        self.autoPlay.setCheckable(True)
         
         
         toolRight = QtGui.QToolBar()

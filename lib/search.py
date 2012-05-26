@@ -3,6 +3,8 @@
 import unicodedata
 import re
 
+__all__ = ['decompose', 'search', 'search2']
+
 def remove_accents(input_str):
     nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
@@ -23,3 +25,7 @@ def search(user, entry):
         else:
             return False
     return True
+
+def search2(user, entry):
+    user = decompose(user)
+    return len(set(user) & set(entry))

@@ -135,7 +135,7 @@ class EditSeries(QtGui.QDialog):
         form.addRow('Titre', self.title)
         groupSerie.setLayout(form)
         
-        groupDownload = QtGui.QGroupBox(u'Vos téléchargements')
+        groupDownload = QtGui.QGroupBox(u'Répertoire')
         layoutDl = QtGui.QVBoxLayout()
         layoutDl.addWidget(self.path)
         groupDownload.setLayout(layoutDl)

@@ -39,7 +39,7 @@ class AddSerie(QtGui.QDialog):
         form.addRow('Langue', self.lang)
         groupSerie.setLayout(form)
         
-        groupDownload = QtGui.QGroupBox(u'Vos téléchargements')
+        groupDownload = QtGui.QGroupBox(u"Répertoire d'épisodes")
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.selectFolder)
         groupDownload.setLayout(layout)

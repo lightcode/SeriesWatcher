@@ -31,6 +31,7 @@ class SelectFolder(QtGui.QWidget):
         self.label.setText(path)
 
 
+
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
     def __init__(self, parent = None):
@@ -42,7 +43,7 @@ class FilterMenu(QtGui.QPushButton):
     
     
     def menu(self):
-        self.dl = QtGui.QAction(u'Episodes téléchargés', self)
+        self.dl = QtGui.QAction(u'Episodes disponibles', self)
         setattr(self.dl, 'filterID', 0)
         self.dl.setCheckable(True)
         self.setText(self.dl.text())
@@ -52,7 +53,7 @@ class FilterMenu(QtGui.QPushButton):
         setattr(self.new, 'filterID', 1)
         self.new.setCheckable(True)
         
-        self.notDL = QtGui.QAction(u'Episodes non téléchargés', self)
+        self.notDL = QtGui.QAction(u'Episodes non disponibles', self)
         setattr(self.notDL, 'filterID', 2)
         self.notDL.setCheckable(True)
         
@@ -100,11 +101,12 @@ class FilterMenu(QtGui.QPushButton):
     
     
     def setCounters(self, nbTotal, nbNotDL, nbDL, nbNew):
-        self.dl.setText(u'Episodes téléchargés (%d)' % nbDL)
+        self.dl.setText(u'Episodes disponibles (%d)' % nbDL)
         self.new.setText(u'Nouveaux (%d)' % nbNew)
-        self.notDL.setText(u'Episodes non téléchargés (%d)' % nbNotDL)
+        self.notDL.setText(u'Episodes non disponibles (%d)' % nbNotDL)
         self.total.setText(u'Tous (%d)' % nbTotal)
         self.setText(self.getFilterAction().text())
+
 
 
 class EpisodesViewer(QtGui.QTableWidget):
@@ -118,7 +120,6 @@ class EpisodesViewer(QtGui.QTableWidget):
     nbColumn = 3
     columnWidth = 260
     rowHeight = 100
-    
     
     def __init__(self, parent = None):
         super(EpisodesViewer, self).__init__(parent)
@@ -230,13 +231,16 @@ class VideoItem(QtGui.QWidget):
         self.title.setText(titleStr)
     
     
-    def setInfos(self, infos):
+    def setStatus(self, status):
         text = ''
         commonStyle = 'padding-left:1px;padding-bottom:5px'
-        if infos == 1:
+        if status == 1:
             self.infos.setStyleSheet('color:#777;' + commonStyle)
-            text = u'Téléchargé'
-        elif infos == 2:
+            text = u'Disponible'
+        elif status == 2:
             self.infos.setStyleSheet('color:red;' + commonStyle)
-            text = u'Téléchargé <sup>Nouveau</sup>'
+            text = u'Disponible <sup>Nouveau</sup>'
+        elif status == 3:
+            self.infos.setStyleSheet('color:#777;' + commonStyle)
+            text = u'Inédit'
         self.infos.setText(text)

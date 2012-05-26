@@ -7,11 +7,13 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
 from updatesfile import UpdatesFile
-from search import search, decompose
+from search import *
 from thetvdb import TheTVDBSerie
+from serie import Serie
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdate']
+           'CheckSerieUpdate', 'LoaderThread']
+
 
 class CheckSerieUpdate(QtCore.QThread):
     # Signals :
@@ -57,7 +59,7 @@ class CheckSerieUpdate(QtCore.QThread):
 
 class RefreshSeriesThread(QtCore.QThread):
     # Signals :
-    serieLoaded = QtCore.pyqtSignal(int)
+    serieUpdated = QtCore.pyqtSignal(int)
     serieLoadStarted = QtCore.pyqtSignal('QString')
     
     def __init__(self, parent = None):
@@ -95,9 +97,25 @@ class RefreshSeriesThread(QtCore.QThread):
         while True:
             for serieLocalID in self.toRefresh[:]:
                 self.downloadConfiguration(serieLocalID)
-                self.serieLoaded.emit(serieLocalID)
+                self.serieUpdated.emit(serieLocalID)
                 del self.toRefresh[0]
             self.msleep(10)
+
+
+
+class LoaderThread(QtCore.QThread):
+    # Signals :
+    serieLoaded = QtCore.pyqtSignal(Serie)
+    
+    lastCurrentSerieID = -1
+    
+    def run(self):
+        while True:
+            currentSerieID = self.parent().currentSerieID
+            if currentSerieID != self.lastCurrentSerieID:
+                self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                self.lastCurrentSerieID = currentSerieID
+            self.msleep(100)
 
 
 
@@ -105,7 +123,7 @@ class SearchThread(QtCore.QThread):
     # Signals :
     searchFinished = QtCore.pyqtSignal(list)
     
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.textSearch = ""
     
@@ -117,8 +135,14 @@ class SearchThread(QtCore.QThread):
                 textSearch = self.textSearch
                 listEpisodes = []
                 for e in self.episodes:
-                    if search(textSearch, decompose(e['title'])):
-                        listEpisodes.append(e)
+                    score = int(search(textSearch, decompose(e['title']))) * 100
+                    score += search2(textSearch, decompose(e['desc']))
+                    if score > 0:
+                        listEpisodes.append((score, e))
+                
+                listEpisodes = sorted(listEpisodes, \
+                                      key=lambda x: x[0], reverse=True)
+                listEpisodes = [e for t, e in listEpisodes]
                 self.searchFinished.emit(listEpisodes)
             self.msleep(10)
     
@@ -135,18 +159,14 @@ class EpisodesLoaderThread(QtCore.QThread):
     episodes = []
     lastQuery = 0
     
-    def __init__(self, parent = None):
-        QtCore.QThread.__init__(self, parent)
-    
-    
     def run(self):
         param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        for qId, x, y, title, infos, imgPath in self.episodes:
+        for qId, x, y, title, status, imgPath in self.episodes:
             if qId == self.lastQuery:
                 image = QtGui.QImage(imgPath)
                 if image != QtGui.QImage():
                     image = image.scaled(120, 90, *param)
-                self.episodeLoaded.emit((x, y, title, infos, image))
+                self.episodeLoaded.emit((x, y, title, status, image))
     
     
     def newQuery(self):

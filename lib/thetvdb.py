@@ -60,6 +60,7 @@ class TheTVDBSerie(TheTVDB):
         series = self.dom.getElementsByTagName('Series')[0]
         infos['firstAired'] = self._getData(series, 'FirstAired')
         infos['desc'] = self._getData(series, 'Overview')
+        infos['status'] = self._getData(series, 'Status')
         banner = self._getData(series, 'banner')
         infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
         bannerPath = 'database/banners/%s.jpg' % name
@@ -81,8 +82,6 @@ class TheTVDBSerie(TheTVDB):
         for e in episodes:
             entry = {}
             entry['season'] = int(self._getData(e, 'SeasonNumber', 0))
-            if entry['season'] == 0:
-                continue
             
             entry['episode'] = int(self._getData(e, 'EpisodeNumber', 0))
             entry['number'] = "%02d-%02d" % (entry['season'], entry['episode'])
@@ -90,6 +89,7 @@ class TheTVDBSerie(TheTVDB):
             if entry['title'] == '':
                 continue
             entry['desc'] = self._getData(e, 'Overview')
+            entry['firstAired'] = self._getData(e, 'FirstAired', None)
             entry['path'] = None
             imgPath = '%s/%s.jpg' % (imgDir, entry['number'])
             filename = self._getData(e, 'filename', None)

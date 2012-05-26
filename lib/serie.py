@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cPickle as pickle
+from datetime import datetime
 import glob
 import os.path
 import re
@@ -23,31 +24,46 @@ class Serie(object):
         self.downloadedEpisode = {}
         for f in glob.iglob(unicode(self.path)):
             if os.path.splitext(f)[1] in self.EXTENSION:
-                tst = re.search(self.PATTERN_FILE, os.path.basename(f))
-                if tst:
-                    numbers = tst.groups()
-                    episodeID = '-'.join(['%02d' % int(x) for x in numbers[0:2]])
+                numbers = re.findall(self.PATTERN_FILE, os.path.basename(f))
+                if numbers:
+                    numbers = numbers[0]
+                    episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
                     self.downloadedEpisode[episodeID] = f
                     if numbers[2]:
-                        n = (numbers[0], numbers[2])
-                        episodeID = '-'.join(['%02d' % int(x) for x in n])
+                        episodeID = '%02d-%02d' % \
+                                    (int(numbers[0]), int(numbers[2]))
                         self.downloadedEpisode[episodeID] = f
     
     
     def loadEpisodes(self):
-        nbSeason = nbEpisodeDL = nbEpisodeTotal = 0
+        nbSeason = nbEpisodeDL = nbEpisodeNew = nbEpisodeTotal = 0
+        now = datetime.now()
         for i, e in enumerate(self.episodes):
             number = e['number']
             nbSeason = max(nbSeason, e['season'])
-            infos = 0
-            nbEpisodeTotal += 1
+            status = 0
+            if e['season'] > 0:
+                nbEpisodeTotal += 1
+            if 'firstAired' in e:
+                firstAired = e['firstAired']
+                if isinstance(firstAired, unicode):
+                    firstAired = datetime.strptime(firstAired, '%Y-%m-%d')
+                    self.episodes[i]['firstAired'] = firstAired
+                    if now < firstAired:
+                        status = 3
+                        nbEpisodeNew += 1
+            else:
+                self.episodes[i]['firstAired'] = None
             if number in self.downloadedEpisode:
                 self.episodes[i]['path'] = self.downloadedEpisode[number]
-                infos = 1
-                nbEpisodeDL += 1
+                status = 1
+                if e['season'] > 0:
+                    nbEpisodeDL += 1
                 if e['number'] not in self.episodesViewed:
-                    infos = 2
-            self.episodes[i]['infos'] = infos
+                    status = 2
+            self.episodes[i]['status'] = status
+        
+        nbEpisodeTotal -= nbEpisodeNew
         self.infos['nbSeason'] = nbSeason
         self.infos['nbEpisodeNotDL'] = nbEpisodeTotal - nbEpisodeDL
         self.infos['nbEpisodeDL'] = nbEpisodeDL
@@ -56,7 +72,7 @@ class Serie(object):
     
     def loadSerie(self):
         pkl = 'database/%s.pkl' % self.name
-        if os.path.isfile(pkl):            
+        if os.path.isfile(pkl):
             serie = pickle.load(open(pkl, 'rb'))
             
             # Serie's episodes
@@ -66,6 +82,8 @@ class Serie(object):
             # Serie's informations
             self.infos.update(serie['serieInfos'])
             self.infos['bannerPath'] = 'database/banners/%s.jpg' % self.name
+            self.infos['firstAired'] = datetime.strptime(\
+                                        self.infos['firstAired'], '%Y-%m-%d')
         else:
             raise ValueError()
     
