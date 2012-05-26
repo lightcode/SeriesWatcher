@@ -31,10 +31,7 @@ class Main(QtGui.QMainWindow):
         else:
             self.openAddSerie()
         
-        try:
-            self.player = Player(self)
-        except:
-            self.player = None
+        self.player = None
     
     
     def startTheads(self):
