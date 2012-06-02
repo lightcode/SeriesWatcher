@@ -199,7 +199,7 @@ class VideoItem(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         
         self.img = QtGui.QLabel()
-        self.img.setMaximumWidth(120)
+        self.img.setFixedWidth(120)
         
         self.title = QtGui.QLabel(titleStr)
         self.title.setAlignment(Qt.AlignTop)

@@ -372,7 +372,8 @@ class Main(QtGui.QMainWindow):
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setStatus(1)
-                    self.episodeViewed(number)
+                    self.currentSerie.episodesViewed.add(number)
+        self.currentSerie.episodesViewedSave()
         self.refreshCount()
     
     
@@ -385,7 +386,8 @@ class Main(QtGui.QMainWindow):
                 number = self.map[coord]['number']
                 if number in self.currentSerie.downloadedEpisode:
                     video.setStatus(2)
-                    self.episodeNotViewed(self.map[coord]['number'])
+                    self.currentSerie.episodesViewed.remove(number)
+        self.currentSerie.episodesViewedSave()
         self.refreshCount()
     
     
@@ -399,12 +401,6 @@ class Main(QtGui.QMainWindow):
     def episodeViewed(self, number):
         if number not in self.currentSerie.episodesViewed:
             self.currentSerie.episodesViewed.add(number)
-            self.currentSerie.episodesViewedSave()
-    
-    
-    def episodeNotViewed(self, number):
-        if number in self.currentSerie.episodesViewed:
-            self.currentSerie.episodesViewed.remove(number)
             self.currentSerie.episodesViewedSave()
     
     
