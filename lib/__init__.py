@@ -8,3 +8,4 @@ from lib.about import About
 from lib.options import Options
 from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
 from lib import desktop
+from lib.player import Player

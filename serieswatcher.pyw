@@ -266,10 +266,7 @@ class Main(QtGui.QMainWindow):
                 minSeason, minEpisode = season, episode
         
         if firstNewEpisode:
-            self.playIntegratedPlayer(pos, firstNewEpisode)
-            return True
-        else:
-            return False
+            self.playEpisode(pos, firstNewEpisode)
     
     
     def allEpisodeView(self):
@@ -340,7 +337,7 @@ class Main(QtGui.QMainWindow):
                 if episode['firstAired']:
                     firstAired = datetime.strftime(episode['firstAired'], \
                                                    '%d/%m/%Y')
-                    title += ('  -  %s' % (firstAired))
+                    title += '  -  %s' % firstAired
                 
                 self.selectionTitle.setText(title)
                 self.selectionDescription.setText(episode['desc'])
@@ -384,7 +381,7 @@ class Main(QtGui.QMainWindow):
             video = self.episodes.cellWidget(r, c)
             if video is not None:
                 number = self.map[coord]['number']
-                if number in self.currentSerie.downloadedEpisode:
+                if number in self.currentSerie.episodesViewed:
                     video.setStatus(2)
                     self.currentSerie.episodesViewed.remove(number)
         self.currentSerie.episodesViewedSave()
@@ -447,7 +444,6 @@ class Main(QtGui.QMainWindow):
     
     def playIntegratedPlayer(self, pos, episode):
         if not self.player:
-            from lib.player import Player
             try:
                 self.player = Player(self)
             except:
@@ -554,6 +550,7 @@ class Main(QtGui.QMainWindow):
     
     def serieLoaded(self, serie):
         self.currentSerie = serie
+        serieLocalID = self.currentSerieId()
         try:
             self.currentSerie.loadSerie()
         except ValueError:
