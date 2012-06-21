@@ -4,6 +4,7 @@
 from datetime import datetime
 import math
 import os.path
+import random
 import sys
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
@@ -31,7 +32,13 @@ class Main(QtGui.QMainWindow):
         else:
             self.openAddSerie()
         
+        # Load the player
         self.player = None
+        if not self.player:
+            try:
+                self.player = Player(self)
+            except:
+                self.player = None    
     
     
     def startTheads(self):
@@ -90,9 +97,15 @@ class Main(QtGui.QMainWindow):
         self.btnPlay.setToolTip(u"Jouer le premier épisode disponible non vu")
         self.btnPlay.clicked.connect(self.playFirstEpisode)
         
+        btnRand = QtGui.QPushButton(QtGui.QIcon('art/random.png'), '')
+        btnRand.setFlat(True)
+        btnRand.setToolTip(u"Jouer un épisode au hasard")
+        btnRand.clicked.connect(self.playRandomEpisode)
+        
         layoutSerie = QtGui.QHBoxLayout()
         layoutSerie.addWidget(self.selectSerie, 2)
         layoutSerie.addWidget(self.btnPlay)
+        layoutSerie.addWidget(btnRand)
         
         self.description = QtGui.QLabel()
         self.description.setWordWrap(True)
@@ -116,7 +129,7 @@ class Main(QtGui.QMainWindow):
         
         # Filters
         self.searchBar = QtGui.QLineEdit()
-        self.searchBar.setPlaceholderText('Rechercher')
+        self.searchBar.setPlaceholderText('Rechercher...')
         self.searchBar.textChanged.connect(self.searchChanged)
         
         self.selectSeason = QtGui.QComboBox()
@@ -181,7 +194,8 @@ class Main(QtGui.QMainWindow):
         for item in items:
             coord = item.row(), item.column()
             if coord in self.map:
-                self.playIntegratedPlayer(coord, self.map[coord])
+                self.playIntegratedPlayer(self.map[coord])
+                self.markAsView(episode)
     
     
     def createMenu(self):
@@ -266,7 +280,18 @@ class Main(QtGui.QMainWindow):
                 minSeason, minEpisode = season, episode
         
         if firstNewEpisode:
-            self.playEpisode(pos, firstNewEpisode)
+            self.playEpisode(firstNewEpisode)
+            return True
+        return False
+    
+    
+    def playRandomEpisode(self):
+        episodes = [e for i, e in self.map.iteritems() if e['status'] == 1]
+        if episodes:
+            self.playEpisode(random.choice(episodes))
+            self.player.btnRandom.setChecked(True)
+            return True
+        return False
     
     
     def allEpisodeView(self):
@@ -308,8 +333,8 @@ class Main(QtGui.QMainWindow):
     def openOptions(self):
         options = Options(self)
         options.show()
-
-
+    
+    
     def openAddSerie(self):
         s = AddSerie(self)
         s.serieAdded.connect(self.serieAdded)
@@ -392,7 +417,7 @@ class Main(QtGui.QMainWindow):
         coord = n.row(), n.column()
         if coord in self.map:
             episode = self.map[coord]
-            self.playEpisode(coord, episode)
+            self.playEpisode(episode)
     
     
     def episodeViewed(self, number):
@@ -418,7 +443,19 @@ class Main(QtGui.QMainWindow):
     # ===============
     #  Episode play
     # ===============
-    def playEpisode(self, pos, episode):
+    def markAsView(self, episode):
+        for i, e in self.map.iteritems():
+            if e == episode:
+                try:
+                    self.episodes.cellWidget(*i).setStatus(1)
+                except AttributeError:
+                    pass
+                self.episodeViewed(episode['number'])
+                return True
+        return False
+    
+    
+    def playEpisode(self, episode):
         command = Config.config['command_open']
         if episode['path']:
             path = os.path.normpath(episode['path'])
@@ -426,7 +463,7 @@ class Main(QtGui.QMainWindow):
             if player == 1:
                 desktop.open(path)
             elif player == 2:
-                self.playIntegratedPlayer(pos, episode)
+                self.playIntegratedPlayer(episode)
             elif player == 3:
                 if command is None:
                     desktop.open(path)
@@ -435,20 +472,11 @@ class Main(QtGui.QMainWindow):
             else:
                 desktop.open(path)
             
-            # Change the title
-            self.episodes.cellWidget(*pos).setStatus(1)
-            # Add the episode in the already view list
-            self.episodeViewed(episode['number'])
+            self.markAsView(episode)
             self.refreshCount()
     
     
-    def playIntegratedPlayer(self, pos, episode):
-        if not self.player:
-            try:
-                self.player = Player(self)
-            except:
-                self.player = None
-        
+    def playIntegratedPlayer(self, episode):
         if episode['path']:
             if not self.player or not self.player.VLCLoaded:
                 title = 'Erreur lors du chargement de VLC'
@@ -457,11 +485,6 @@ class Main(QtGui.QMainWindow):
                           + u" correctement."
                 QMessageBox.critical(self, title, message)
                 return
-            
-            try:
-                self.episodes.cellWidget(*pos).setStatus(1)
-            except:
-                pass
             
             path = os.path.normpath(episode['path'])
             serieName = self.currentSerie.name
@@ -519,7 +542,7 @@ class Main(QtGui.QMainWindow):
         if nbNew > 0:
             self.btnPlay.setEnabled(True)
         else:
-            self.btnPlay.setEnabled(False)    
+            self.btnPlay.setEnabled(False)
     
     
     def episodeLoaded(self, episode):
@@ -571,7 +594,7 @@ class Main(QtGui.QMainWindow):
                                                     % (desc, firstAired))
             
             nbSeasons = self.currentSerie['nbSeason']
-            listSeasons = ['Saison %d' % x for x in xrange(1, nbSeasons + 1)]
+            listSeasons = ['Saison %d' % x for x in range(1, nbSeasons + 1)]
             self.selectSeason.addItems(listSeasons)
             self.selectSeason.setCurrentIndex(0)
         
@@ -582,16 +605,16 @@ class Main(QtGui.QMainWindow):
     def serieChanged(self, serieLocalID=None):
         if not isinstance(serieLocalID, int):
             serieLocalID = self.currentSerieId()
-        self.currentSerieID = serieLocalID    
+        self.currentSerieID = serieLocalID
     
     
     def serieUpdated(self, serieLocalID):
         self.status.showMessage('')
         if self.currentSerieId() == serieLocalID:
             self.serieChanged()
-    
 
-    
+
+
 app = QtGui.QApplication(sys.argv)
 window = Main()
 window.show()

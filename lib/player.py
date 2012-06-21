@@ -151,11 +151,21 @@ class Player(QtGui.QMainWindow):
             Logs.add('nextEpisode')
             self.currentEpisode += 1
             self.playFile()
-            return True
+        elif self.autoPlay.isChecked():
+            if self.parent().playFirstEpisode():
+                self.playFile()
+            else:
+                return False
+        elif self.btnRandom.isChecked():
+            if self.parent().playRandomEpisode():
+                self.playFile()
+            else:
+                return False
         else:
             Logs.add('nextEpisode : self._playList = ', self._playList)
             Logs.add('nextEpisode : self.currentEpisode = ', self.currentEpisode)
             return False
+        return True
     
     
     def previousEpisode(self):
@@ -376,12 +386,12 @@ class Player(QtGui.QMainWindow):
                 if self._playerState == self.STOP:
                     Logs.add('updateUI : nextEpisode()')
                     if percent > 98: # video is at the end
-                        if not self.nextEpisode():
-                            if self.autoPlay.isChecked():
-                                if not self.parent().playFirstEpisode():
-                                    self.close()
-                            else:
-                                self.close()
+                        self.videoFinished()
+    
+    
+    def videoFinished(self):
+        if not self.nextEpisode():
+            self.close()
     
     
     def changeEpisode(self):
@@ -431,6 +441,9 @@ class Player(QtGui.QMainWindow):
                                        "Activer la lecture automatique")
         self.autoPlay.setCheckable(True)
         
+        self.btnRandom = tool.addAction(QIcon('art/random.png'), \
+                                       u"Jouer aléatoirement un autre épisode")
+        self.btnRandom.setCheckable(True)
         
         toolRight = QtGui.QToolBar()
         self.volumeBtn = toolRight.addAction(QIcon('art/mute.png'), 'Volume',

@@ -77,7 +77,11 @@ class RefreshSeriesThread(QtCore.QThread):
             os.mkdir(imgDir)
         
         tvDb = TheTVDBSerie(serieInfos)
-        tvDb.downloadFullSerie()
+        try:
+            tvDb.downloadFullSerie()
+        except xml.parsers.expat.ExpatError:
+            print "Error download"
+            return False
         serieInfos = tvDb.getInfosSerie()
         episodeList = tvDb.getEpisodes(imgDir)
         
