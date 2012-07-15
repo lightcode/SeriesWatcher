@@ -153,11 +153,13 @@ class Player(QtGui.QMainWindow):
             self.playFile()
         elif self.autoPlay.isChecked():
             if self.parent().playFirstEpisode():
+                self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
         elif self.btnRandom.isChecked():
             if self.parent().playRandomEpisode():
+                self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
@@ -431,12 +433,11 @@ class Player(QtGui.QMainWindow):
                        self.previousEpisode)
         tool.addAction(QIcon('art/stop.png'), 'Stop', self.stop)
         tool.addAction(QIcon('art/next.png'), 'Suivant', self.nextEpisode)
-        self.screenBtn = tool.addAction(QIcon('art/fullscreen.png'),
-                                        u"Plein écran", self.fullScreen)
+        tool.addSeparator()
+        
         self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
                                           "Playlist", self.showPlayList)
         self.playListBtn.setCheckable(True)
-        tool.addAction(QIcon('art/options.png'), "Options", self.showOptions)
         self.autoPlay = tool.addAction(QIcon('art/refresh.png'), \
                                        "Activer la lecture automatique")
         self.autoPlay.setCheckable(True)
@@ -448,6 +449,11 @@ class Player(QtGui.QMainWindow):
         toolRight = QtGui.QToolBar()
         self.volumeBtn = toolRight.addAction(QIcon('art/mute.png'), 'Volume',
                                              self.toggleVolume)
+        tool.addSeparator()
+        
+        self.screenBtn = tool.addAction(QIcon('art/fullscreen.png'),
+                                        u"Plein écran", self.fullScreen)
+        tool.addAction(QIcon('art/options.png'), "Options", self.showOptions)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)

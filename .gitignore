@@ -1,0 +1,10 @@
+*.pyc
+*.pyo
+database/*
+tests/*
+/series-watcher.cfg
+/todo.txt
+*.komodoproject
+setup.py
+/build
+/setup
