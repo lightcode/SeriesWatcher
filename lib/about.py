@@ -3,12 +3,14 @@
 
 from PyQt4 import QtCore, QtGui
 
+__VERSION__ = '1.2'
+
 class About(QtGui.QDialog):
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle('A propos')
         
-        ABOUT = [u"Series Watcher 1.2 Juin 2012<br/>",
+        ABOUT = [u"Series Watcher %s Juin 2012<br/>" % __VERSION__,
                  u'Créé par <a href="http://lightcode.fr">LightCode.fr</a> ',
                  'sous licence Creative Commons BY-NC-SA.',
                  "<hr/>",

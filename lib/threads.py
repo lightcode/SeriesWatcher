@@ -139,7 +139,7 @@ class SearchThread(QtCore.QThread):
                 textSearch = self.textSearch
                 listEpisodes = []
                 for e in self.episodes:
-                    score = int(search(textSearch, decompose(e['title']))) * 100
+                    score = int(search(textSearch, decompose(e['title']))) * 1000
                     score += search2(textSearch, decompose(e['desc']))
                     if score > 0:
                         listEpisodes.append((score, e))

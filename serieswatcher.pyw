@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
 from lib import *
-
+from lib.about import __VERSION__
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -18,9 +18,9 @@ class Main(QtGui.QMainWindow):
     
     def __init__(self):
         super(Main, self).__init__()
-        self.setWindowTitle('Series Watcher')
+        self.setWindowTitle('Series Watcher %s' % __VERSION__)
         self.setMinimumSize(820, 600)
-        self.resize(1150, 780)
+        self.resize(1150, 660)
         self.setWindowIcon(QtGui.QIcon('art/film.png'))
         
         self.setup()
@@ -33,12 +33,10 @@ class Main(QtGui.QMainWindow):
             self.openAddSerie()
         
         # Load the player
-        self.player = None
-        if not self.player:
-            try:
-                self.player = Player(self)
-            except:
-                self.player = None    
+        try:
+            self.player = Player(self)
+        except:
+            self.player = None
     
     
     def startTheads(self):
@@ -203,39 +201,23 @@ class Main(QtGui.QMainWindow):
         
         # Menu "Series"
         seriesMenu = self.menubar.addMenu(u'Séries')
-        
-        addSerie = seriesMenu.addAction(u'Nouvelle série', self.openAddSerie)
-        addSerie.setIcon(QtGui.QIcon('art/add.png'))
-        addSerie.setShortcut('Ctrl+N')
-        
-        edit = seriesMenu.addAction(QtGui.QIcon('art/edit.png'),
-                                    u'Editer les séries', self.openEditSerie)
-        edit.setShortcut('Ctrl+E')
-        
-        refresh = seriesMenu.addAction(u'Mettre à jour cette série')
-        refresh.triggered.connect(self.updateSerieMenu)
-        refresh.setShortcut('Ctrl+U')
-        
+        seriesMenu.addAction(QIcon('art/add.png'), u'Nouvelle série',
+                             self.openAddSerie).setShortcut('Ctrl+N')
+        seriesMenu.addAction(QIcon('art/edit.png'), u'Editer les séries',
+                             self.openEditSerie).setShortcut('Ctrl+E')
+        seriesMenu.addAction(u'Mettre à jour cette série',
+                             self.updateSerieMenu).setShortcut('Ctrl+U')
         seriesMenu.addAction(u'Mettre à jour les séries',
                              self.updateAllSeriesMenu)
         
         # Menu "Episodes"
         episodesMenu = self.menubar.addMenu('Episodes')
-        
-        refresh = episodesMenu.addAction(u'Recharger')
-        refresh.triggered.connect(self.reloadMenu)
-        refresh.setIcon(QIcon('art/refresh.png'))
-        refresh.setShortcut('Ctrl+R')
-        
-        view = episodesMenu.addAction(u'Marquer comme vue')
-        view.triggered.connect(self.viewSelectEpisodeMenu)
-        view.setIcon(QIcon('art/check.png'))
-        view.setShortcut('Ctrl+K')
-        
-        episodesMenu.addAction(QIcon('art/uncheck.png'),
-                               u'Marquer comme non vue',
+        episodesMenu.addAction(QIcon('art/refresh.png'), u'Recharger',
+                               self.reloadMenu).setShortcut('Ctrl+R')
+        episodesMenu.addAction(QIcon('art/check.png'), u'Marquer comme vue',
+                               self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
+        episodesMenu.addAction(QIcon('art/uncheck.png'), u'Marquer comme non vue',
                                self.notViewSelectEpisodeMenu)
-        
         episodesMenu.addAction(u'Marquer la série comme vue',
                                self.allEpisodeView)
         
@@ -372,7 +354,7 @@ class Main(QtGui.QMainWindow):
             self.clearSelectionInfos()
     
     
-    def serieAdded(self, *serie):
+    def serieAdded(self, *serie):  ## TODO : ajouter une condition
         self.reloadSelectSerie()
         self.selectSerie.setCurrentIndex(len(Config.series) - 1)
     
@@ -567,6 +549,7 @@ class Main(QtGui.QMainWindow):
     
     
     def refreshScreen(self):
+        self.searchBar.clear()
         if self.currentSerie:
             self.showEpisode(self.episodesGenerator())
     

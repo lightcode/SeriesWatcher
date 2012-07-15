@@ -4,6 +4,7 @@
 import os.path
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QIcon
 
 class SelectFolder(QtGui.QWidget):
     def __init__(self, parent = None):
@@ -19,7 +20,6 @@ class SelectFolder(QtGui.QWidget):
     
     def selectFolder(self):
         path = QtGui.QFileDialog.getExistingDirectory()
-        path = '%s/*' % path
         self.label.setText(path)
     
     
@@ -132,8 +132,6 @@ class EpisodesViewer(QtGui.QTableWidget):
     
     
     def contextMenu(self, pos):
-        globalPos = self.mapToGlobal(pos)
-        
         nbNone = 0
         for item in self.selectedIndexes():
             (r, c) = (item.row(), item.column())
@@ -143,18 +141,11 @@ class EpisodesViewer(QtGui.QTableWidget):
             return
         
         menu = QtGui.QMenu()
-        markAsView = menu.addAction('Marquer comme vu')
-        markAsView.setIcon(QtGui.QIcon('art/check.png'))
-        markAsView.triggered.connect(self.markAsView)
-        
-        markAsNotView = menu.addAction('Marquer comme non vu')
-        markAsNotView.setIcon(QtGui.QIcon('art/uncheck.png'))
-        markAsNotView.triggered.connect(self.markAsNotView)
-        
-        play = menu.addAction('Play')
-        play.setIcon(QtGui.QIcon('art/play.png'))
-        play.triggered.connect(self.playClicked)
-        menu.exec_(globalPos)
+        menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
+        menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
+        menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
+        menu.addAction('Copier le titre')
+        menu.exec_(self.mapToGlobal(pos))
     
     
     def markAsView(self):

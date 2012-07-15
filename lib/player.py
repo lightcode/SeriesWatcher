@@ -90,13 +90,13 @@ class Options(QtGui.QDialog):
         
         layout = QtGui.QFormLayout()
         layout.addRow('Sous-titres', self.st)
-        layout.addRow('Audio', self.audio)
-        
+        layout.addRow('Audio', self.audio)    
         self.setLayout(layout)
     
     
     def changeST(self, new):
         self.parent.mediaPlayer.video_set_spu(new)
+    
     
     def changeAudio(self, new):
         self.parent.mediaPlayer.audio_set_track(new)

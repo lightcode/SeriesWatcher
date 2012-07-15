@@ -26,6 +26,7 @@ def search(user, entry):
             return False
     return True
 
+
 def search2(user, entry):
     user = decompose(user)
     return len(set(user) & set(entry))
