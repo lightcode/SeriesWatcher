@@ -21,7 +21,7 @@ class Main(QtGui.QMainWindow):
         self.setWindowTitle('Series Watcher %s' % __VERSION__)
         self.setMinimumSize(820, 600)
         self.resize(1150, 660)
-        self.setWindowIcon(QtGui.QIcon('art/film.png'))
+        self.setWindowIcon(QIcon('art/film.png'))
         
         self.setup()
         Config.loadConfig()
@@ -303,8 +303,7 @@ class Main(QtGui.QMainWindow):
     
     
     def seriesEdited(self):
-        self.reloadSelectSerie()
-        self.serieChanged()
+        self.loaderThread.forceReload()
     
     
     def openAbout(self):
@@ -540,12 +539,12 @@ class Main(QtGui.QMainWindow):
         filterID = self.filter.getFilterID()
         for e in self.currentSerie.episodes:
             status, season = e['status'], e['season']
-            if filterSeason == -1 or filterSeason == season:
-                if (filterID == 0 and status in (1, 2)) \
+            if (filterSeason == -1 or filterSeason == season) \
+                and ((filterID == 0 and status in (1, 2)) \
                   or (filterID == 1 and status == 2) \
-                  or (filterID == 2 and status == 0) or filterID == 3:
-                    if season != 0 or filterSeason == 0:
-                        yield e
+                  or (filterID == 2 and status == 0) or filterID == 3) \
+                and (season != 0 or filterSeason == 0):
+                    yield e
     
     
     def refreshScreen(self):
@@ -575,7 +574,6 @@ class Main(QtGui.QMainWindow):
             firstAired = self.currentSerie['firstAired'].strftime('%d/%m/%Y')
             self.description.setText(u'%s<hr/>Date de création : %s' \
                                                     % (desc, firstAired))
-            
             nbSeasons = self.currentSerie['nbSeason']
             listSeasons = ['Saison %d' % x for x in range(1, nbSeasons + 1)]
             self.selectSeason.addItems(listSeasons)
@@ -594,7 +592,7 @@ class Main(QtGui.QMainWindow):
     def serieUpdated(self, serieLocalID):
         self.status.showMessage('')
         if self.currentSerieId() == serieLocalID:
-            self.serieChanged()
+            self.loaderThread.forceReload()
 
 
 

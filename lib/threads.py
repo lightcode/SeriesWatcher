@@ -103,7 +103,7 @@ class RefreshSeriesThread(QtCore.QThread):
                 self.downloadConfiguration(serieLocalID)
                 self.serieUpdated.emit(serieLocalID)
                 del self.toRefresh[0]
-            self.msleep(10)
+            self.msleep(50)
 
 
 
@@ -112,13 +112,19 @@ class LoaderThread(QtCore.QThread):
     serieLoaded = QtCore.pyqtSignal(Serie)
     
     lastCurrentSerieID = -1
+    _forceReload = False
+    
+    def forceReload(self):
+        self._forceReload = True
+    
     
     def run(self):
         while True:
             currentSerieID = self.parent().currentSerieID
-            if currentSerieID != self.lastCurrentSerieID:
+            if currentSerieID != self.lastCurrentSerieID or self._forceReload:
                 self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
                 self.lastCurrentSerieID = currentSerieID
+                self._forceReload = False
             self.msleep(100)
 
 
@@ -137,20 +143,24 @@ class SearchThread(QtCore.QThread):
         while True:
             if textSearch != self.textSearch:
                 textSearch = self.textSearch
-                listEpisodes = []
-                for e in self.episodes:
-                    score = int(search(textSearch, decompose(e['title']))) * 1000
-                    score += search2(textSearch, decompose(e['desc']))
-                    if score > 0:
-                        listEpisodes.append((score, e))
-                
-                listEpisodes = sorted(listEpisodes, \
-                                      key=lambda x: x[0], reverse=True)
-                listEpisodes = [e for t, e in listEpisodes]
-                self.searchFinished.emit(listEpisodes)
-            self.msleep(10)
+                self.search(textSearch)
+            self.msleep(100)
     
     
+    def search(self, textSearch):
+        listEpisodes = []
+        for e in self.episodes:
+            score = 1000 if search(textSearch, decompose(e['title'])) else 0
+            score += search2(textSearch, decompose(e['desc']))
+            if score > 0:
+                listEpisodes.append((score, e))
+        
+        func = lambda x: x[0]
+        listEpisodes = sorted(listEpisodes, key=func, reverse=True)
+        listEpisodes = [e for t, e in listEpisodes]
+        self.searchFinished.emit(listEpisodes)
+
+
     def changeText(self, search, episodes):
         self.episodes = episodes
         self.textSearch = search

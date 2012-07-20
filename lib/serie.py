@@ -2,6 +2,8 @@
 
 import cPickle as pickle
 from datetime import datetime
+from itertools import chain
+from glob import iglob
 import os
 import os.path
 import re
@@ -22,19 +24,22 @@ class Serie(object):
     PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
     def loadDownloadedList(self):
         self.downloadedEpisode = {}
-        for t in os.walk(unicode(self.path)):
-            files = [t[0] + '/' + f for f in t[2]]
-            for f in files:
-                if os.path.splitext(f)[1] in self.EXTENSION:
-                    numbers = re.findall(self.PATTERN_FILE, os.path.basename(f))
-                    if numbers:
-                        numbers = numbers[0]
-                        episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
+        
+        if not self.path:
+            return
+        
+        files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
+        for f in files:
+            if os.path.splitext(f)[1] in self.EXTENSION:
+                numbers = re.findall(self.PATTERN_FILE, os.path.basename(f))
+                if numbers:
+                    numbers = numbers[0]
+                    episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
+                    self.downloadedEpisode[episodeID] = f
+                    if numbers[2]:
+                        episodeID = '%02d-%02d' % \
+                                    (int(numbers[0]), int(numbers[2]))
                         self.downloadedEpisode[episodeID] = f
-                        if numbers[2]:
-                            episodeID = '%02d-%02d' % \
-                                        (int(numbers[0]), int(numbers[2]))
-                            self.downloadedEpisode[episodeID] = f
     
     
     def loadEpisodes(self):

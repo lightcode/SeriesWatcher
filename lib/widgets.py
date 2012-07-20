@@ -36,7 +36,6 @@ class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
     def __init__(self, parent = None):
         super(FilterMenu, self).__init__('Filtrer', parent)
-        
         self.setFlat(True)
         self.setMenu(self.menu())
         self.setFixedWidth(180)
@@ -144,8 +143,17 @@ class EpisodesViewer(QtGui.QTableWidget):
         menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
         menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
         menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
-        menu.addAction('Copier le titre')
+        menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))
+    
+    
+    def copyTitle(self):
+        self.pressPaper = QtGui.QApplication.clipboard()
+        indexes = self.selectedIndexes()
+        if len(indexes) == 1:
+            r, c = indexes[0].row(), indexes[0].column()
+            title = self.cellWidget(r, c).title.text()[17:]
+            self.pressPaper.setText(title)
     
     
     def markAsView(self):

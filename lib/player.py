@@ -201,8 +201,8 @@ class Player(QtGui.QMainWindow):
     
     def showCurrentEpisode(self):
         self.currentEpisodeWidget.show()
-        hideAction = self.currentEpisodeWidget.hide
-        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, hideAction)
+        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR,
+                                 self.currentEpisodeWidget.hide)
     
     
     def closeEvent(self, e):
@@ -214,6 +214,8 @@ class Player(QtGui.QMainWindow):
         self.playList.clear()
         self.playList.blockSignals(False)
         self._playerState = self.STOP
+        self.autoPlay.setChecked(False)
+        self.btnRandom.setChecked(False)
         QtGui.QMainWindow.closeEvent(self, e)
     
     
@@ -221,8 +223,7 @@ class Player(QtGui.QMainWindow):
         totalWidth = self.videoFrame.width()
         w = totalWidth - 60 if totalWidth < 750 else 750
         self.bar.resize(w, 100)
-        y = self.videoFrame.y() + self.videoFrame.height()
-        y -= self.bar.height()
+        y = self.videoFrame.y() + self.videoFrame.height() - self.bar.height()
         x = (totalWidth - w) / 2
         self.bar.move(x, y)
         
@@ -238,15 +239,13 @@ class Player(QtGui.QMainWindow):
     
     def volumeUp(self):
         volume = self.volumeSlider.value() + 5
-        if volume > 100:
-            volume = 100
+        volume = 100 if volume > 100 else volume
         self.volumeSlider.setValue(volume)
     
     
     def volumeDown(self):
         volume = self.volumeSlider.value() - 5
-        if volume < 0:
-            volume = 0
+        volume = 0 if volume < 0 else volume
         self.volumeSlider.setValue(volume)
     
     
