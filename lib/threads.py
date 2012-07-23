@@ -91,6 +91,7 @@ class RefreshSeriesThread(QtCore.QThread):
             pickle.dump(serie, pklFile)
         
         UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
+        self.serieUpdated.emit(serieLocalID)
 
 
     def addSerie(self, serieLocalID):
@@ -101,7 +102,6 @@ class RefreshSeriesThread(QtCore.QThread):
         while True:
             for serieLocalID in self.toRefresh[:]:
                 self.downloadConfiguration(serieLocalID)
-                self.serieUpdated.emit(serieLocalID)
                 del self.toRefresh[0]
             self.msleep(50)
 

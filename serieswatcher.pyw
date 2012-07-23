@@ -341,7 +341,7 @@ class Main(QtGui.QMainWindow):
                 
                 title = '<b>%s</b>' % episode['title']
                 if episode['firstAired']:
-                    firstAired = datetime.strftime(episode['firstAired'], \
+                    firstAired = datetime.strftime(episode['firstAired'],
                                                    '%d/%m/%Y')
                     title += '  -  %s' % firstAired
                 
@@ -353,9 +353,9 @@ class Main(QtGui.QMainWindow):
             self.clearSelectionInfos()
     
     
-    def serieAdded(self, *serie):  ## TODO : ajouter une condition
-        self.reloadSelectSerie()
+    def serieAdded(self, *serie):
         self.selectSerie.setCurrentIndex(len(Config.series) - 1)
+        self.reloadSelectSerie()
     
     
     def reloadSelectSerie(self):

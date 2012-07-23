@@ -108,17 +108,16 @@ class Player(QtGui.QMainWindow):
     _playList = []
     TIME_HIDE_BAR = 2000
     currentEpisode = -1
-    VLC_PARAM = "-I dummy --ignore-config --verbose=0 \
-                --no-video-title-show --no-plugins-cache"
-    
     PLAY, PAUSE, STOP, USER_STOP = 0, 1, 2, 3
     _playerState = STOP
+    VLC_PARAM = ' '.join(['-I dummy', '--ignore-config', '--verbose=0',
+                          '--no-video-title-show', '--no-plugins-cache'])
+    
     
     def __init__(self, parent=None):
         QtGui.QMainWindow.__init__(self, parent)
         self.setWindowTitle("Series Player")
         self.resize(640, 480)
-        
         if vlc:
             self.VLCLoaded = True
             self.instance = vlc.Instance(self.VLC_PARAM)
@@ -147,7 +146,7 @@ class Player(QtGui.QMainWindow):
     
     
     def nextEpisode(self):
-        if self.currentEpisode < (len(self._playList) - 1):
+        if self.currentEpisode < len(self._playList) - 1:
             Logs.add('nextEpisode')
             self.currentEpisode += 1
             self.playFile()
@@ -266,14 +265,17 @@ class Player(QtGui.QMainWindow):
             self.playButton.setIcon(QIcon("art/play.png"))
             self._playerState = self.PAUSE
         else:
-            if self.mediaPlayer.play() == -1:
-                self.playFile()
-                return
-            self.mediaPlayer.play()
-            self.playButton.setText("Pause")
-            self.playButton.setIcon(QIcon("art/pause.png"))
-            self.timer.start()
-            self._playerState = self.PLAY
+            self.play()
+    
+    
+    def play(self):
+        if self.mediaPlayer.play() == -1:
+            self.playFile()
+            return
+        self.playButton.setText("Pause")
+        self.playButton.setIcon(QIcon("art/pause.png"))
+        self.timer.start()
+        self._playerState = self.PLAY
     
     
     def stop(self, state=USER_STOP):
@@ -342,8 +344,6 @@ class Player(QtGui.QMainWindow):
         volume = self.volumeSlider.value()
         if volume == 0:
             volume = 100
-        else:
-            volume = 0
         self.volumeSlider.setValue(volume)
     
     
@@ -379,14 +379,17 @@ class Player(QtGui.QMainWindow):
         else:
             self.currentTime.setText('--:--')
         
-        if not self.mediaPlayer.is_playing():
+        if self.mediaPlayer.is_playing() == 0:
             self.timer.stop()
-            if self._playerState != self.PAUSE:
+            # FIX : when videos don't play
+            if percent <= 1 and self._playerState == self.PLAY:
+                self.play()
+            elif self._playerState != self.PAUSE:
                 if self._playerState != self.USER_STOP:
                     self.stop(self.STOP)
                 if self._playerState == self.STOP:
                     Logs.add('updateUI : nextEpisode()')
-                    if percent > 98: # video is at the end
+                    if percent >= 99: # video is at the end
                         self.videoFinished()
     
     
@@ -437,11 +440,11 @@ class Player(QtGui.QMainWindow):
         self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
                                           "Playlist", self.showPlayList)
         self.playListBtn.setCheckable(True)
-        self.autoPlay = tool.addAction(QIcon('art/refresh.png'), \
+        self.autoPlay = tool.addAction(QIcon('art/refresh.png'),
                                        "Activer la lecture automatique")
         self.autoPlay.setCheckable(True)
         
-        self.btnRandom = tool.addAction(QIcon('art/random.png'), \
+        self.btnRandom = tool.addAction(QIcon('art/random.png'),
                                        u"Jouer aléatoirement un autre épisode")
         self.btnRandom.setCheckable(True)
         

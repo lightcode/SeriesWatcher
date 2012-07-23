@@ -169,6 +169,9 @@ class EditSeries(QtGui.QDialog):
         bigLayout.addWidget(buttonBox)
         
         self.setLayout(bigLayout)
+        
+        # Select the first serie
+        self.listSeries.listWidget.setCurrentRow(0)
     
     
     def itemSelectionChanged(self, title, path, lang):
