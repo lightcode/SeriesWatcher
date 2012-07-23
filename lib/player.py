@@ -79,12 +79,20 @@ class Options(QtGui.QDialog):
         self.st = QtGui.QComboBox()
         for id, text in stList:
             self.st.addItem(text.decode('utf8'))
+        if stList:
+            self.st.setDisabled(False)
+        else:
+            self.st.setDisabled(True)
         self.st.setCurrentIndex(self.parent.mediaPlayer.video_get_spu())
         self.st.currentIndexChanged.connect(self.changeST)
         
         self.audio = QtGui.QComboBox()
         for id, text in audioList:
             self.audio.addItem(text.decode('utf8'))
+        if audioList:
+            self.audio.setDisabled(False)
+        else:
+            self.audio.setDisabled(True)
         self.audio.setCurrentIndex(self.parent.mediaPlayer.audio_get_track())
         self.audio.currentIndexChanged.connect(self.changeAudio)
         
@@ -332,19 +340,20 @@ class Player(QtGui.QMainWindow):
     
     
     def setBtnVolume(self, volume):
-        if volume == 0:
-            self.volumeBtn.setIcon(QIcon('art/mute.png'))
-        elif volume < 50:
+        if volume < 50:
             self.volumeBtn.setIcon(QIcon('art/volume_down.png'))
         else:
             self.volumeBtn.setIcon(QIcon('art/volume_up.png'))
     
     
     def toggleVolume(self):
-        volume = self.volumeSlider.value()
-        if volume == 0:
-            volume = 100
-        self.volumeSlider.setValue(volume)
+        self.mediaPlayer.audio_toggle_mute()
+        if self.mediaPlayer.audio_get_mute():
+            self.volumeBtn.setIcon(QIcon('art/mute.png'))
+            self.volumeSlider.setDisabled(True)
+        else:
+            self.setBtnVolume(self.mediaPlayer.audio_get_volume())
+            self.volumeSlider.setDisabled(False)
     
     
     def setVolume(self, volume):
