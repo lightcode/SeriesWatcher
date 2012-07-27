@@ -29,7 +29,7 @@ class Serie(object):
         if not self.path:
             return
         
-        self.path = str(self.path)
+        self.path = unicode(self.path)
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
             if os.path.splitext(f)[1] in self.EXTENSION:

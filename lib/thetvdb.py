@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os
 import urllib
+import urllib2
 import xml.dom.minidom
 from const import SERIES_BANNERS
 
@@ -9,6 +11,7 @@ class TheTVDB:
     URL_ROOT = 'http://www.thetvdb.com/api/'
     
     def searchSearie(self, userInput):
+        userInput = unicode(userInput).encode('utf8')
         url = self.URL_ROOT + 'GetSeries.php?seriesname=%s&language=%s'
         url = url % (userInput, 'all')
         search = xml.dom.minidom.parse(urllib.urlopen(url))
