@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
-
-__VERSION__ = '1.2'
+from const import VERSION, RELEASE_DATE
 
 class About(QtGui.QDialog):
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle('A propos')
         
-        ABOUT = [u"Series Watcher %s Juin 2012<br/>" % __VERSION__,
+        ABOUT = [u"Series Watcher %s %s<br/>" % (VERSION, RELEASE_DATE),
                  u'Créé par <a href="http://lightcode.fr">LightCode.fr</a> ',
                  'sous licence Creative Commons BY-NC-SA.',
                  "<hr/>",

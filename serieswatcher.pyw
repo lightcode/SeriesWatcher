@@ -10,7 +10,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
 from lib import *
-from lib.about import __VERSION__
+from lib.const import *
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -18,7 +18,7 @@ class Main(QtGui.QMainWindow):
     
     def __init__(self):
         super(Main, self).__init__()
-        self.setWindowTitle('Series Watcher %s' % __VERSION__)
+        self.setWindowTitle('Series Watcher %s' % VERSION)
         self.setMinimumSize(820, 600)
         self.resize(1150, 660)
         self.setWindowIcon(QIcon('art/film.png'))
@@ -50,7 +50,7 @@ class Main(QtGui.QMainWindow):
         self.searchThread.searchFinished.connect(self.searchFinished)
         
         self.refreshSeries = RefreshSeriesThread()
-        self.refreshSeries.serieLoadStarted.connect(self.serieLoadStarted)
+        self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
         self.refreshSeries.start()
         
@@ -237,12 +237,18 @@ class Main(QtGui.QMainWindow):
     #  Config Manager
     # =================
     def setup(self):
-        if not os.path.isdir('database'):
-            os.mkdir('database')
-        if not os.path.isdir('database/banners'):
-            os.mkdir('database/banners')
-        if not os.path.isdir('database/img'):
-            os.mkdir('database/img')
+        if not os.path.isdir(USER):
+            os.mkdir(USER)
+        if not os.path.isdir(SERIES):
+            os.mkdir(SERIES)
+        if not os.path.isdir(SERIES_IMG):
+            os.mkdir(SERIES_IMG)
+        if not os.path.isdir(SERIES_BANNERS):
+            os.mkdir(SERIES_BANNERS)
+        if not os.path.isdir(SERIES_VIEW):
+            os.mkdir(SERIES_VIEW)
+        if not os.path.isdir(SERIES_DB):
+            os.mkdir(SERIES_DB)
     
     
     # =================
@@ -292,8 +298,16 @@ class Main(QtGui.QMainWindow):
         self.refreshScreen()
     
     
-    def serieLoadStarted(self, title):
-        self.status.showMessage('Chargement de %s' % title)
+    def serieUpdateStatus(self, serieLocalID, title, status):
+        messages = [
+            u'%s : Téléchargement des informations sur la série...',
+            u'%s : Téléchargement des informations sur les épisodes...',
+            u'%s : Téléchargement des miniatures'
+        ]
+        message = messages[status] % title
+        self.status.showMessage(message)
+        if self.currentSerieId() == serieLocalID:
+            self.loaderThread.forceReload()
     
     
     def openEditSerie(self):
@@ -469,7 +483,7 @@ class Main(QtGui.QMainWindow):
             
             path = os.path.normpath(episode['path'])
             serieName = self.currentSerie.name
-            imgPath = 'database/img/%s/%s.jpg' % (serieName, episode['number'])
+            imgPath = '%s%s/%s.jpg' % (SERIES_IMG, serieName, episode['number'])
             title = episode['title']
             self.player.addToPlayList(episode['number'], title, path, imgPath)
             self.episodeViewed(episode['number'])
@@ -488,7 +502,7 @@ class Main(QtGui.QMainWindow):
         self.episodes.clear()
         self.map = {}
         serieName = self.currentSerie.name
-        imgDir = 'database/img/%s/%s.jpg' % (serieName, '%s')
+        imgDir = '%s%s/%%s.jpg' % (SERIES_IMG, serieName)
         nbColumn = self.episodes.nbColumn
         count = 0
         for i, e in enumerate(episodes):
@@ -512,9 +526,12 @@ class Main(QtGui.QMainWindow):
         self.filter.setCounters(self.currentSerie['nbEpisodeTotal'],
                                self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)
         
-        percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
-        percentageView = ((nbDL - nbNew) /\
-            float(self.currentSerie['nbEpisodeTotal'])) * 100
+        if self.currentSerie['nbEpisodeTotal'] > 0:
+            percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
+            percentageView = ((nbDL - nbNew) /\
+                float(self.currentSerie['nbEpisodeTotal'])) * 100
+        else:
+            percentageDL = percentageView = 0
         
         c = u"Série vue à %d %% | %d %% d'épisodes disponibles" \
                 % (percentageView, percentageDL)
@@ -553,6 +570,24 @@ class Main(QtGui.QMainWindow):
             self.showEpisode(self.episodesGenerator())
     
     
+    def clearSeries(self):
+        self.map = {}
+        
+        self.selectSeason.blockSignals(True)
+        self.selectSeason.clear()
+        self.selectSeason.addItem('Toutes les saisons')
+        self.selectSeason.addItem('Bonus')
+        self.selectSeason.blockSignals(False)
+        
+        self.btnPlay.setEnabled(False)
+        self.description.setText(u"La série n'est pas encore chargée.")
+        self.imageSerie.clear()
+        self.episodes.clear()
+        self.nbEpisodes.clear()
+        
+        self.filter.setCounters(0, 0, 0, 0)
+    
+    
     def serieLoaded(self, serie):
         self.currentSerie = serie
         serieLocalID = self.currentSerieId()
@@ -560,6 +595,8 @@ class Main(QtGui.QMainWindow):
             self.currentSerie.loadSerie()
         except ValueError:
             self.refreshSeries.addSerie(serieLocalID)
+            self.clearSeries()
+            return
         
         self.selectSeason.blockSignals(True)
         self.selectSeason.clear()

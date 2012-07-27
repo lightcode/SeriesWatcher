@@ -7,6 +7,7 @@ from glob import iglob
 import os
 import os.path
 import re
+from const import *
 
 class Serie(object):
     EXTENSION = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
@@ -28,6 +29,7 @@ class Serie(object):
         if not self.path:
             return
         
+        self.path = str(self.path)
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
             if os.path.splitext(f)[1] in self.EXTENSION:
@@ -81,7 +83,7 @@ class Serie(object):
     
     
     def loadSerie(self):
-        pkl = 'database/%s.pkl' % self.name
+        pkl = '%s%s.pkl' % (SERIES_DB, self.name)
         if os.path.isfile(pkl):
             serie = pickle.load(open(pkl, 'rb'))
             
@@ -91,7 +93,7 @@ class Serie(object):
             
             # Serie's informations
             self.infos.update(serie['serieInfos'])
-            self.infos['bannerPath'] = 'database/banners/%s.jpg' % self.name
+            self.infos['bannerPath'] = '%s%s.jpg' % (SERIES_BANNERS, self.name)
             self.infos['firstAired'] = datetime.strptime(\
                                         self.infos['firstAired'], '%Y-%m-%d')
         else:
@@ -111,7 +113,7 @@ class Serie(object):
     # =========================
     def loadEpisodesViewed(self):
         self.episodesViewed = set()
-        pkl = 'database/view-%s.pkl' % self.name
+        pkl = '%s/view-%s.pkl' % (SERIES_VIEW, self.name)
         try:
             with open(pkl, 'rb') as pklFile:
                 self.episodesViewed = set(pickle.load(pklFile))
@@ -120,7 +122,7 @@ class Serie(object):
     
     
     def episodesViewedSave(self):
-        pkl = 'database/view-%s.pkl' % self.name
+        pkl = '%s/view-%s.pkl' % (SERIES_VIEW, self.name)
         try:
             with open(pkl, 'wb+') as pklFile:
                 pickle.dump(self.episodesViewed, pklFile)

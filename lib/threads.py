@@ -10,6 +10,7 @@ from updatesfile import UpdatesFile
 from search import *
 from thetvdb import TheTVDBSerie
 from serie import Serie
+from const import *
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
            'CheckSerieUpdate', 'LoaderThread']
@@ -19,7 +20,6 @@ class CheckSerieUpdate(QtCore.QThread):
     # Signals :
     updateRequired = QtCore.pyqtSignal(int)
     TIME_BETWEEN_UPDATE = 86400 # a day
-    LATS_VERIF_PATH = 'database/lastVerif.txt'
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -28,7 +28,7 @@ class CheckSerieUpdate(QtCore.QThread):
     
     def getLastVerification(self):
         try:
-            with open(self.LATS_VERIF_PATH, 'r') as f:
+            with open(LAST_VERIF_PATH, 'r') as f:
                 return int(''.join(f.readlines()).strip())
         except IOError:
             return 0
@@ -37,7 +37,7 @@ class CheckSerieUpdate(QtCore.QThread):
     
     
     def updateLastVerif(self):
-        with open(self.LATS_VERIF_PATH, 'w+') as f:
+        with open(LAST_VERIF_PATH, 'w+') as f:
             f.write("%d" % time.time())
     
     
@@ -60,7 +60,7 @@ class CheckSerieUpdate(QtCore.QThread):
 class RefreshSeriesThread(QtCore.QThread):
     # Signals :
     serieUpdated = QtCore.pyqtSignal(int)
-    serieLoadStarted = QtCore.pyqtSignal('QString')
+    serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -70,9 +70,9 @@ class RefreshSeriesThread(QtCore.QThread):
     def downloadConfiguration(self, serieLocalID):
         serieInfos = Config.series[serieLocalID]
         serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
-        self.serieLoadStarted.emit(title)
+        self.serieUpdateStatus.emit(serieLocalID, title, 0)
         
-        imgDir = 'database/img/%s' % serieName
+        imgDir = SERIES_IMG + serieName
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
@@ -82,16 +82,28 @@ class RefreshSeriesThread(QtCore.QThread):
         except xml.parsers.expat.ExpatError:
             print "Error download"
             return False
-        serieInfos = tvDb.getInfosSerie()
-        episodeList = tvDb.getEpisodes(imgDir)
         
-        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
-        pkl = 'database/%s.pkl' % serieName
+        pkl = '%s%s.pkl' % (SERIES_DB, serieName)
+        
+        # Info serie
+        serieInfos = tvDb.getInfosSerie()
+        serie = {'serieInfos': serieInfos, 'episodes': []}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
+        self.serieUpdateStatus.emit(serieLocalID, title, 1)
+        
+        # Info episode
+        episodeList = tvDb.getEpisodes()
+        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
+        with open(pkl, 'wb+') as pklFile:
+            pickle.dump(serie, pklFile)
+        self.serieUpdateStatus.emit(serieLocalID, title, 2)
+        
+        # Miniature DL
+        tvDb.downloadAllImg(imgDir)
+        self.serieUpdated.emit(serieLocalID)
         
         UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
-        self.serieUpdated.emit(serieLocalID)
 
 
     def addSerie(self, serieLocalID):
