@@ -112,8 +112,6 @@ class AddSerie(QtGui.QDialog):
             nbErrors += 1
         
         path = self.selectFolder.path()
-        if path == '':
-            nbErrors += 1
         
         if nbErrors > 0:
             title = u"Données incorrectes"

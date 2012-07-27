@@ -368,8 +368,11 @@ class Main(QtGui.QMainWindow):
     
     
     def serieAdded(self, *serie):
-        self.selectSerie.setCurrentIndex(len(Config.series) - 1)
+        nbSeries = len(Config.series)
         self.reloadSelectSerie()
+        self.selectSerie.setCurrentIndex(nbSeries - 1)
+        if nbSeries == 1:
+            self.loaderThread.forceReload()
     
     
     def reloadSelectSerie(self):
