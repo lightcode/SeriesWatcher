@@ -60,6 +60,7 @@ class Config(object):
         cls.config = {}
         cls.config['command_open'] = None
         cls.config['player'] = 1
+        cls.config['debug'] = 0
         
         # Load the options
         if config.has_section('options'):

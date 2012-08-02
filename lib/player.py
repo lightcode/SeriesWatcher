@@ -8,7 +8,7 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QColor, QIcon, QPalette, QShortcut
-from logs import Logs
+from debug import Debug
 
 # Import VLC
 path = os.getcwd()
@@ -18,8 +18,6 @@ except:
     vlc = None
 os.chdir(path)
 
-# Uncomment for enable logs
-# Logs.enable = True
 
 class VLCWidget(QtGui.QFrame):
     mouseMoved = QtCore.pyqtSignal()
@@ -155,7 +153,7 @@ class Player(QtGui.QMainWindow):
     
     def nextEpisode(self):
         if self.currentEpisode < len(self._playList) - 1:
-            Logs.add('nextEpisode')
+            Debug.add(Debug.INFO, 'nextEpisode')
             self.currentEpisode += 1
             self.playFile()
         elif self.autoPlay.isChecked():
@@ -171,8 +169,8 @@ class Player(QtGui.QMainWindow):
             else:
                 return False
         else:
-            Logs.add('nextEpisode : self._playList = ', self._playList)
-            Logs.add('nextEpisode : self.currentEpisode = ', self.currentEpisode)
+            Debug.add(Debug.INFO, 'nextEpisode : self._playList = %s' % self._playList)
+            Debug.add(Debug.INFO, 'nextEpisode : self.currentEpisode = %s' % self.currentEpisode)
             return False
         return True
     
@@ -297,8 +295,8 @@ class Player(QtGui.QMainWindow):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
-            Logs.add('playFile : self._playList = ', self._playList)
-            Logs.add('playFile : self.currentEpisode = ', self.currentEpisode)
+            Debug.add(Debug.INFO, 'playFile : self._playList = %s' % self._playList)
+            Debug.add(Debug.INFO, 'playFile : self.currentEpisode = %s' % self.currentEpisode)
         else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
@@ -329,13 +327,13 @@ class Player(QtGui.QMainWindow):
         self._playList.append([fullTitle, path, imgPath])
         item = QtGui.QListWidgetItem(title)
         self.playList.addItem(item)
-        Logs.add('addToPlayList : self._playList = ', self._playList)
-        Logs.add('addToPlayList : self.currentEpisode = ', self.currentEpisode)
+        Debug.add(Debug.INFO, 'addToPlayList : self._playList =', self._playList)
+        Debug.add(Debug.INFO, 'addToPlayList : self.currentEpisode =', self.currentEpisode)
 
     
     def tryToPlay(self):
         if self._playerState == self.STOP:
-            Logs.add('tryToPlay')
+            Debug.add(Debug.INFO, 'tryToPlay')
             self.nextEpisode()
     
     
@@ -397,7 +395,7 @@ class Player(QtGui.QMainWindow):
                 if self._playerState != self.USER_STOP:
                     self.stop(self.STOP)
                 if self._playerState == self.STOP:
-                    Logs.add('updateUI : nextEpisode()')
+                    Debug.add(Debug.INFO, 'updateUI : nextEpisode()')
                     if percent >= 99: # video is at the end
                         self.videoFinished()
     

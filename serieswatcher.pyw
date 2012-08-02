@@ -25,6 +25,11 @@ class Main(QtGui.QMainWindow):
         
         self.setup()
         Config.loadConfig()
+        
+        if int(Config.config['debug']):
+            Debug.setEnabled(True)
+            Debug.add(Debug.INFO, u'Debug activé')
+        
         self.createWindow()
         self.startTheads()
         if Config.series:
@@ -221,10 +226,12 @@ class Main(QtGui.QMainWindow):
         episodesMenu.addAction(u'Marquer la série comme vue',
                                self.allEpisodeView)
         
-        # Menu "Help"
-        helpMenu = self.menubar.addMenu('Series Watcher')
-        helpMenu.addAction(QIcon('art/options.png'), 'Options', self.openOptions)
-        helpMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
+        # Menu "Series Watcher"
+        SWMenu = self.menubar.addMenu('Series Watcher')
+        SWMenu.addAction(QIcon('art/options.png'), 'Options', self.openOptions)
+        SWMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
+        if Debug.isEnabled():
+            SWMenu.addAction('Debug', self.openDebug)
     
     
     def clearSelectionInfos(self):
@@ -330,10 +337,15 @@ class Main(QtGui.QMainWindow):
         options.show()
     
     
+    def openDebug(self):
+        debug = DebugWindow(self)
+        debug.show()
+    
+    
     def openAddSerie(self):
-        s = AddSerie(self)
-        s.serieAdded.connect(self.serieAdded)
-        s.show()
+        addSerie = AddSerie(self)
+        addSerie.serieAdded.connect(self.serieAdded)
+        addSerie.show()
     
     
     def updateSerieMenu(self):
