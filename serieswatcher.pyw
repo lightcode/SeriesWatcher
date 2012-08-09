@@ -20,11 +20,14 @@ class Main(QtGui.QMainWindow):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % VERSION)
         self.setMinimumSize(820, 600)
-        self.resize(1150, 660)
         self.setWindowIcon(QIcon('art/film.png'))
         
         self.setup()
         Config.loadConfig()
+        
+        if 'window_size' in Config.config:
+            w, h = Config.config['window_size'].split('x')
+            self.resize(int(w), int(h))
         
         if int(Config.config['debug']):
             Debug.setEnabled(True)
@@ -50,9 +53,9 @@ class Main(QtGui.QMainWindow):
         self.episodesLoader = EpisodesLoaderThread()
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
-        self.searchThread = SearchThread()
-        self.searchThread.start()
+        self.searchThread = SearchThread(self)
         self.searchThread.searchFinished.connect(self.searchFinished)
+        self.searchThread.start()
         
         self.refreshSeries = RefreshSeriesThread()
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
@@ -231,6 +234,7 @@ class Main(QtGui.QMainWindow):
         SWMenu.addAction(QIcon('art/options.png'), 'Options', self.openOptions)
         SWMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
         if Debug.isEnabled():
+            SWMenu.addSeparator()
             SWMenu.addAction('Debug', self.openDebug)
     
     
@@ -325,6 +329,7 @@ class Main(QtGui.QMainWindow):
     
     def seriesEdited(self):
         self.loaderThread.forceReload()
+        self.reloadSelectSerie()
     
     
     def openAbout(self):
@@ -395,6 +400,13 @@ class Main(QtGui.QMainWindow):
         self.selectSerie.blockSignals(False)
     
     
+    def closeEvent(self, e):
+        if not self.isMaximized():
+            Config.config['window_size'] = '%dx%d' % (self.width(), self.height())
+            Config.save()
+        QtGui.QMainWindow.closeEvent(self, e)
+    
+    
     def viewSelectEpisodeMenu(self):
         items = self.episodes.selectedIndexes()
         for item in items:
@@ -438,9 +450,8 @@ class Main(QtGui.QMainWindow):
     
     def searchChanged(self, textSearch):
         if self.currentSerie:
-            episodes = self.currentSerie.episodes
             textSearch = unicode(self.searchBar.text())
-            self.searchThread.changeText(textSearch, episodes)
+            self.searchThread.changeText(textSearch)
     
     
     def searchFinished(self, listEpisodes):
@@ -505,7 +516,7 @@ class Main(QtGui.QMainWindow):
             self.refreshCount()
             if not self.player.isVisible():
                 self.player.show()
-            self.player.tryToPlay()
+                self.player.tryToPlay()
     
     
     # ===============

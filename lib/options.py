@@ -4,6 +4,7 @@
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
+from widgets import SelectFile
 
 class Options(QtGui.QDialog):
     def __init__(self, parent = None):
@@ -12,9 +13,8 @@ class Options(QtGui.QDialog):
         self.setMinimumWidth(500)
         self.setMinimumHeight(200)
         
-        
         # Player Choice
-        self.cmdOpen = QtGui.QLineEdit(Config.config['command_open'])
+        self.cmdOpen = SelectFile(Config.config['command_open'])
         
         self.player1 = QtGui.QRadioButton(u'Utiliser le lecteur par défaut')
         self.player2 = QtGui.QRadioButton(u'Utiliser le lecteur intégré')
@@ -30,7 +30,7 @@ class Options(QtGui.QDialog):
         form.addRow(self.player1)
         form.addRow(self.player2)
         form.addRow(self.player3)
-        form.addRow(u"Commande d'ouverture de vidéo", self.cmdOpen)
+        form.addRow(self.cmdOpen)
         
         groupPlayer = QtGui.QGroupBox(u'Configuration du lecteur vidéo')
         groupPlayer.setLayout(form)
@@ -62,11 +62,23 @@ class Options(QtGui.QDialog):
         layout.addWidget(buttonBox)
         
         self.setLayout(layout)
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(200)
+        self.timer.timeout.connect(self.playerChanged)
+        self.timer.start()
     
     
     def setPlayer(self, value):
         if 4 > value > 0:
             self.__dict__['player%s' % value].setChecked(True)
+    
+    
+    def playerChanged(self):
+        if self.player() == 3:
+            self.cmdOpen.setDisabled(False)
+        else:
+            self.cmdOpen.setDisabled(True)
     
     
     def player(self):
@@ -76,7 +88,7 @@ class Options(QtGui.QDialog):
     
     
     def save(self):
-        cmdOpen = str(self.cmdOpen.text())
+        cmdOpen = str(self.cmdOpen.path())
         Config.setOption('command_open', cmdOpen)
         Config.setOption('player', self.player())
         if self.enablePlayer.isChecked():

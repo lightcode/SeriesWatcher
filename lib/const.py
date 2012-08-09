@@ -1,11 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS',
 'SERIES_VIEW', 'SERIES_DB', 'CONFIG_FILE', 'LAST_VERIF_PATH']
 __all__ = ['VERSION', 'PATHS'] + PATHS
 
 VERSION = '1.2'
-RELEASE_DATE = 'Juillet 2012'
+RELEASE_DATE = u'Août 2012'
 
 USER = 'user/'
 SERIES = 'user/series/'

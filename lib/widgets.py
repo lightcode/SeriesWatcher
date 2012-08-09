@@ -6,8 +6,36 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 
+
+class SelectFile(QtGui.QWidget):
+    def __init__(self, path='', parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.label = QtGui.QLineEdit()
+        btn = QtGui.QPushButton('Parcourir')
+        btn.clicked.connect(self.selectFolder)
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(btn)
+        self.setLayout(layout)
+        
+        self.setPath(path)
+    
+    
+    def selectFolder(self):
+        path = QtGui.QFileDialog.getOpenFileName(self)
+        self.label.setText(path)
+    
+    
+    def path(self):
+        return self.label.text()
+    
+    
+    def setPath(self, path):
+        self.label.setText(path)
+
+
 class SelectFolder(QtGui.QWidget):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
@@ -19,7 +47,7 @@ class SelectFolder(QtGui.QWidget):
     
     
     def selectFolder(self):
-        path = QtGui.QFileDialog.getExistingDirectory()
+        path = QtGui.QFileDialog.getExistingDirectory(self)
         self.label.setText(path)
     
     
@@ -128,6 +156,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
+        
+        self.resizeTimer = QtCore.QTimer(self)
+        self.resizeTimer.setInterval(200)
+        self.resizeTimer.timeout.connect(self.updateSize)
+        self.resizeTimer.start()
     
     
     def contextMenu(self, pos):
@@ -181,15 +214,17 @@ class EpisodesViewer(QtGui.QTableWidget):
             self.pressEnter.emit(self.currentIndex())
     
     
-    def resizeEvent(self, size):
-        QtGui.QTableWidget.resizeEvent(self, size)
-        oldNbColumn = size.oldSize().width() // 260
-        self.nbColumn = size.size().width() // 260
-        self.columnWidth = size.size().width() // self.nbColumn
+    def updateSize(self):
+        oldNbColumn = self.columnCount()
         self.setColumnCount(self.nbColumn)
         if oldNbColumn != self.nbColumn:
-            self.setColumnCount(self.nbColumn)
             self.refreshEpisodes.emit()
+    
+    
+    def resizeEvent(self, size):
+        QtGui.QTableWidget.resizeEvent(self, size)
+        self.nbColumn = size.size().width() // 260
+        self.columnWidth = size.size().width() // self.nbColumn
 
 
 

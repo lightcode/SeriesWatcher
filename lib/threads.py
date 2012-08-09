@@ -134,7 +134,10 @@ class LoaderThread(QtCore.QThread):
         while True:
             currentSerieID = self.parent().currentSerieID
             if currentSerieID != self.lastCurrentSerieID or self._forceReload:
-                self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                try:
+                    self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                except IndexError:
+                    pass
                 self.lastCurrentSerieID = currentSerieID
                 self._forceReload = False
             self.msleep(100)
@@ -161,7 +164,8 @@ class SearchThread(QtCore.QThread):
     
     def search(self, textSearch):
         listEpisodes = []
-        for e in self.episodes:
+        episodes = self.parent().currentSerie.episodes
+        for e in episodes:
             score = 1000 if search(textSearch, decompose(e['title'])) else 0
             score += search2(textSearch, decompose(e['desc']))
             if score > 0:
@@ -173,8 +177,7 @@ class SearchThread(QtCore.QThread):
         self.searchFinished.emit(listEpisodes)
 
 
-    def changeText(self, search, episodes):
-        self.episodes = episodes
+    def changeText(self, search):
         self.textSearch = search
 
 

@@ -39,7 +39,7 @@ class DebugWindow(QtGui.QDialog):
     
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
-        self.setWindowTitle('Options')
+        self.setWindowTitle('Debug')
         self.resize(800, 600)
         
         self.logs = QtGui.QTableWidget()

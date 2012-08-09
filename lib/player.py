@@ -153,22 +153,26 @@ class Player(QtGui.QMainWindow):
     
     def nextEpisode(self):
         if self.currentEpisode < len(self._playList) - 1:
-            Debug.add(Debug.INFO, 'nextEpisode')
+            Debug.add(Debug.INFO, 'nextEpisode(1)')
             self.currentEpisode += 1
             self.playFile()
         elif self.autoPlay.isChecked():
+            Debug.add(Debug.INFO, 'nextEpisode(2)')
             if self.parent().playFirstEpisode():
                 self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
         elif self.btnRandom.isChecked():
+            Debug.add(Debug.INFO, 'nextEpisode(3)')
             if self.parent().playRandomEpisode():
+                Debug.add(Debug.INFO, 'nextEpisode(3) : play action')
                 self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
         else:
+            Debug.add(Debug.INFO, 'nextEpisode(4)')
             Debug.add(Debug.INFO, 'nextEpisode : self._playList = %s' % self._playList)
             Debug.add(Debug.INFO, 'nextEpisode : self.currentEpisode = %s' % self.currentEpisode)
             return False
@@ -295,14 +299,14 @@ class Player(QtGui.QMainWindow):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
-            Debug.add(Debug.INFO, 'playFile : self._playList = %s' % self._playList)
-            Debug.add(Debug.INFO, 'playFile : self.currentEpisode = %s' % self.currentEpisode)
+            Debug.add(Debug.ERROR, 'playFile : self._playList = %s' % self._playList)
+            Debug.add(Debug.ERROR, 'playFile : self.currentEpisode = %s' % self.currentEpisode)
         else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
             self.currentEpisodeWidget.setTitle(title)
             self.openFile(path)
-            self.playPause()
+            self.play()
             self.playList.blockSignals(True)
             self.playList.setCurrentRow(self.currentEpisode)
             self.playList.blockSignals(False)
