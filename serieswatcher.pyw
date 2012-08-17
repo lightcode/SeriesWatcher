@@ -50,19 +50,19 @@ class Main(QtGui.QMainWindow):
     def startTheads(self):
         self.commandOpen = QtCore.QProcess()
         
-        self.episodesLoader = EpisodesLoaderThread()
+        self.episodesLoader = EpisodesLoaderThread(self)
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
         self.searchThread = SearchThread(self)
         self.searchThread.searchFinished.connect(self.searchFinished)
         self.searchThread.start()
         
-        self.refreshSeries = RefreshSeriesThread()
+        self.refreshSeries = RefreshSeriesThread(self)
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
         self.refreshSeries.start()
         
-        self.checkSerieUpdate = CheckSerieUpdate()
+        self.checkSerieUpdate = CheckSerieUpdate(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
         self.checkSerieUpdate.start()
         
