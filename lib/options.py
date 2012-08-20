@@ -13,6 +13,17 @@ class Options(QtGui.QDialog):
         self.setMinimumWidth(500)
         self.setMinimumHeight(200)
         
+        # Series Watcher options
+        self.randomDuration = QtGui.QComboBox()
+        self.randomDuration.addItems(['15 jours', '1 mois', '3 mois'])
+        
+        form = QtGui.QFormLayout()
+        form.addRow(u"Ne pas rediffuser d'épisode vu il y a moins de", \
+                    self.randomDuration)
+        groupSW = QtGui.QGroupBox(u'Series Watcher')
+        groupSW.setLayout(form)
+        
+        
         # Player Choice
         self.cmdOpen = SelectFile(Config.config['command_open'])
         
@@ -57,6 +68,7 @@ class Options(QtGui.QDialog):
         buttonBox.rejected.connect(self.close)
         
         layout = QtGui.QVBoxLayout()
+        layout.addWidget(groupSW)
         layout.addWidget(groupPlayer)
         layout.addWidget(groupDebug)
         layout.addWidget(buttonBox)
