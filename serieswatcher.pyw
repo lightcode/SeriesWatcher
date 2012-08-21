@@ -310,11 +310,11 @@ class Main(QtGui.QMainWindow):
     
     
     def serieUpdateStatus(self, serieLocalID, title, status):
-        messages = [
-            u'%s : Téléchargement des informations sur la série...',
-            u'%s : Téléchargement des informations sur les épisodes...',
-            u'%s : Téléchargement des miniatures'
-        ]
+        messages = {
+            201: u'%s : Téléchargement des informations sur la série...',
+            202: u'%s : Téléchargement des informations sur les épisodes...',
+            203: u'%s : Téléchargement des miniatures'
+        }
         message = messages[status] % title
         self.status.showMessage(message)
         if self.currentSerieId() == serieLocalID:

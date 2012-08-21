@@ -3,6 +3,7 @@
 import cPickle as pickle
 import os.path
 import time
+import xml
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
@@ -70,7 +71,7 @@ class RefreshSeriesThread(QtCore.QThread):
     def downloadConfiguration(self, serieLocalID):
         serieInfos = Config.series[serieLocalID]
         serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
-        self.serieUpdateStatus.emit(serieLocalID, title, 0)
+        self.serieUpdateStatus.emit(serieLocalID, title, 201)
         
         imgDir = SERIES_IMG + serieName
         if not os.path.isdir(imgDir):
@@ -80,7 +81,6 @@ class RefreshSeriesThread(QtCore.QThread):
         try:
             tvDb.downloadFullSerie()
         except xml.parsers.expat.ExpatError:
-            print "Error download"
             return False
         
         pkl = '%s%s.pkl' % (SERIES_DB, serieName)
@@ -90,14 +90,14 @@ class RefreshSeriesThread(QtCore.QThread):
         serie = {'serieInfos': serieInfos, 'episodes': []}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 1)
+        self.serieUpdateStatus.emit(serieLocalID, title, 202)
         
         # Info episode
         episodeList = tvDb.getEpisodes()
         serie = {'serieInfos': serieInfos, 'episodes': episodeList}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 2)
+        self.serieUpdateStatus.emit(serieLocalID, title, 203)
         
         # Miniature DL
         tvDb.downloadAllImg(imgDir)
@@ -107,6 +107,7 @@ class RefreshSeriesThread(QtCore.QThread):
 
 
     def addSerie(self, serieLocalID):
+        print '--'
         self.toRefresh.append(serieLocalID)
     
     
