@@ -15,7 +15,7 @@ class Options(QtGui.QDialog):
         
         # Series Watcher options
         self.randomDuration = QtGui.QComboBox()
-        self.randomDuration.addItems(['15 jours', '1 mois', '3 mois'])
+        self.randomDuration.addItems([u'Désactiver', '15 jours', '1 mois', '3 mois'])
         
         form = QtGui.QFormLayout()
         form.addRow(u"Ne pas rediffuser d'épisode vu il y a moins de", \
