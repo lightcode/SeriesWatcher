@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 
 import cPickle as pickle
+from datetime import datetime
 import os.path
 import time
+import xml
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
 from updatesfile import UpdatesFile
 from search import *
 from thetvdb import TheTVDBSerie
-from serie import Serie
 from const import *
+from models import Serie, Episode
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
            'CheckSerieUpdate', 'LoaderThread']
@@ -68,42 +70,48 @@ class RefreshSeriesThread(QtCore.QThread):
     
     
     def downloadConfiguration(self, serieLocalID):
-        serieInfos = Config.series[serieLocalID]
-        serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
-        self.serieUpdateStatus.emit(serieLocalID, title, 0)
+        serie = Serie.getSeries()[serieLocalID]
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 0)
         
-        imgDir = SERIES_IMG + serieName
-        if not os.path.isdir(imgDir):
-            os.mkdir(imgDir)
-        
-        tvDb = TheTVDBSerie(serieInfos)
+        tvDb = TheTVDBSerie(serie)
         try:
             tvDb.downloadFullSerie()
         except xml.parsers.expat.ExpatError:
             print "Error download"
             return False
         
-        pkl = '%s%s.pkl' % (SERIES_DB, serieName)
-        
         # Info serie
         serieInfos = tvDb.getInfosSerie()
-        serie = {'serieInfos': serieInfos, 'episodes': []}
-        with open(pkl, 'wb+') as pklFile:
-            pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 1)
+        serie.description = serieInfos['description']
+        serie.firstAired = datetime.strptime(serieInfos['firstAired'], '%Y-%m-%d')
+        serie.lastUpdated = int(serieInfos['lastUpdated'])
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 1)
         
         # Info episode
         episodeList = tvDb.getEpisodes()
-        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
-        with open(pkl, 'wb+') as pklFile:
-            pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 2)
+        for e in episodeList:
+            Episode(
+                title = unicode(e['title']),
+                description = unicode(e['desc']),
+                season = int(e['season']),
+                episode = int(e['episode']),
+                firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d'),
+                serie = serie
+            )
+        
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
+        
+        # Create image path
+        imgDir = SERIES_IMG + serie.uuid
+        if not os.path.isdir(imgDir):
+            os.mkdir(imgDir)
         
         # Miniature DL
         tvDb.downloadAllImg(imgDir)
         self.serieUpdated.emit(serieLocalID)
         
-        UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
+        UpdatesFile.setLastUpdate(serie.uuid, serie.lastUpdated)
+        serie.setLoaded(True)
 
 
     def addSerie(self, serieLocalID):
@@ -123,7 +131,7 @@ class LoaderThread(QtCore.QThread):
     # Signals :
     serieLoaded = QtCore.pyqtSignal(Serie)
     
-    lastCurrentSerieID = -1
+    lastCurrentSerieId = -1
     _forceReload = False
     
     def forceReload(self):
@@ -132,13 +140,13 @@ class LoaderThread(QtCore.QThread):
     
     def run(self):
         while True:
-            currentSerieID = self.parent().currentSerieID
-            if currentSerieID != self.lastCurrentSerieID or self._forceReload:
+            currentSerieId = self.parent().currentSerieId()
+            if currentSerieId != self.lastCurrentSerieId or self._forceReload:
                 try:
-                    self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                    self.serieLoaded.emit(Serie.getSeries()[currentSerieId])
                 except IndexError:
                     pass
-                self.lastCurrentSerieID = currentSerieID
+                self.lastCurrentSerieId = currentSerieId
                 self._forceReload = False
             self.msleep(100)
 

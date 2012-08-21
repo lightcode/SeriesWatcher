@@ -3,7 +3,7 @@
 database/
 database.old/
 /tests
-/user
+/user*
 /todo.txt
 /build
 /setup

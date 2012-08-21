@@ -38,8 +38,9 @@ class TheTVDBSerie(TheTVDB):
     URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
     miniatureToDL = []
     
-    def __init__(self, serieInfos):
-        self.serieInfos = serieInfos
+    def __init__(self, serie):
+        # This is to adapt this API for the new database
+        self.serieInfos = (serie.uuid, None, None, serie.tvdbID, serie.lang)
     
     
     def downloadFullSerie(self):
@@ -64,12 +65,11 @@ class TheTVDBSerie(TheTVDB):
         name = self.serieInfos[0]
         series = self.dom.getElementsByTagName('Series')[0]
         infos['firstAired'] = self._getData(series, 'FirstAired')
-        infos['desc'] = self._getData(series, 'Overview')
-        infos['status'] = self._getData(series, 'Status')
+        infos['description'] = self._getData(series, 'Overview')
         banner = self._getData(series, 'banner')
         infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
         bannerPath = '%s%s.jpg' % (SERIES_BANNERS, name)
-        if not os.path.isfile(bannerPath) and banner != '':
+        if banner != '' and not os.path.isfile(bannerPath):
             try:
                 o = urllib.urlopen(self.URL_BANNER + banner)
                 img = o.read()
@@ -107,7 +107,6 @@ class TheTVDBSerie(TheTVDB):
                 continue
             entry['desc'] = self._getData(e, 'Overview')
             entry['firstAired'] = self._getData(e, 'FirstAired', None)
-            entry['path'] = None
             # Miniature
             urlMin = self._getData(e, 'filename', None)
             if urlMin is not None:
