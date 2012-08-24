@@ -9,10 +9,11 @@ from widgets import SelectFolder
 from thetvdb import TheTVDB
 from camelcase import getCamelCase
 from config import Config
+from models import Serie
 
 class AddSerie(QtGui.QDialog):
     # Signals :
-    serieAdded = QtCore.pyqtSignal('QString', 'QString', int, 'QString', 'QString')
+    serieAdded = QtCore.pyqtSignal()
     
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
@@ -91,28 +92,28 @@ class AddSerie(QtGui.QDialog):
     
     def validate(self):
         nbErrors = 0
-        name = str(uuid1())
         
-        title = self.title.text()
+        title = unicode(self.title.text())
         if title == '':
             nbErrors += 1
         
         try:
-            theTVDB = int(self.theTVDB.text())
+            tvdbID = int(self.theTVDB.text())
         except ValueError:
             nbErrors += 1
         
-        lang = self.lang.text()
+        lang = unicode(self.lang.text())
         if lang == '':
             nbErrors += 1
         
-        path = self.selectFolder.path()
+        path = unicode(self.selectFolder.path())
         
         if nbErrors > 0:
             title = u"Données incorrectes"
             message = u"Certaines données sont erronées."
             QMessageBox.critical(self, title, message)
         else:
-            Config.addSerie(name, title, path, theTVDB, lang)
-            self.serieAdded.emit(name, title, theTVDB, lang, path)
+            pos = len(Serie.getSeries())
+            Serie(pos=pos, title=title, tvdbID=tvdbID, lang=lang, path=path)
+            self.serieAdded.emit()
             self.close()

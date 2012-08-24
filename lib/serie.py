@@ -9,7 +9,7 @@ import os.path
 import re
 from const import *
 
-class Serie(object):
+class OSerie(object):
     EXTENSION = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
     downloadedEpisode = {}
     episodesViewed = set()
