@@ -53,8 +53,8 @@ class CheckSerieUpdate(QtCore.QThread):
                 remoteTime = tvDb.getLastUpdate()
                 
                 if localTime < remoteTime:
-                    self.updateLastVerif()
                     self.updateRequired.emit(localeID)
+            self.updateLastVerif()
 
 
 
