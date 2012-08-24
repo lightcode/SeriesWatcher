@@ -254,10 +254,6 @@ class Main(QtGui.QMainWindow):
             os.mkdir(SERIES_IMG)
         if not os.path.isdir(SERIES_BANNERS):
             os.mkdir(SERIES_BANNERS)
-        if not os.path.isdir(SERIES_VIEW):
-            os.mkdir(SERIES_VIEW)
-        if not os.path.isdir(SERIES_DB):
-            os.mkdir(SERIES_DB)
     
     
     # =================
@@ -351,7 +347,7 @@ class Main(QtGui.QMainWindow):
     
     
     def updateAllSeriesMenu(self):
-        for e in range(len(Config.series)):
+        for e in range(Serie.getSeries()):
             self.refreshSeries.addSerie(e)
     
     

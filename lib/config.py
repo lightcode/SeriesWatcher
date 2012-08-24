@@ -15,14 +15,6 @@ class Config(object):
     
     
     @classmethod
-    def addSerie(cls, *serie):
-        serie = map(unicode, serie)
-        serie[0], serie[3] = str(serie[0]), str(serie[3])
-        cls.series.append(serie)
-        cls.save()
-    
-    
-    @classmethod
     def setOption(cls, key, value):
         cls.config[key] = value
     
@@ -66,18 +58,8 @@ class Config(object):
         if config.has_section('options'):
             for key, value in config.items('options'):
                 cls.config[key] = value
-        
-        # Load the series
-        cls.series = []
-        for section in config.sections():
-            if section != 'options':
-                title = config.get(section, 'title')
-                videos = config.get(section, 'videos')
-                theTvDb = config.getint(section, 'theTvDb')
-                lang = config.get(section, 'lang')
-                cls.series.append([section, title, videos, theTvDb, lang])
+
 
 
 if __name__ == '__main__':
     Config.loadConfig()
-    print Config.series
