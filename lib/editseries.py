@@ -6,6 +6,7 @@ from PyQt4.QtGui import QIcon
 from config import Config
 from widgets import SelectFolder
 from addserie import AddSerie
+from models import Serie
 
 class ListSeries(QtGui.QWidget):
     # Signals :
@@ -15,13 +16,12 @@ class ListSeries(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         
         self.listWidget = QtGui.QListWidget()
-        for serie in Config.series:
-            name, title, path, TVDBID, lang = serie
-            item = QtGui.QListWidgetItem(title)
-            setattr(item, 'name', name)
-            setattr(item, 'path', path)
-            setattr(item, 'lang', lang)
-            setattr(item, 'TVDBID', TVDBID)
+        for serie in Serie.getSeries():
+            item = QtGui.QListWidgetItem(serie.title)
+            setattr(item, 'uuid', serie.uuid)
+            setattr(item, 'path', serie.path)
+            setattr(item, 'lang', serie.lang)
+            setattr(item, 'TVDBID', serie.tvdbID)
             self.listWidget.addItem(item)
         self.listWidget.itemSelectionChanged.connect(self._itemSelectionChanged)
         
@@ -55,9 +55,9 @@ class ListSeries(QtGui.QWidget):
         del item
     
     
-    def serieAdded(self, name, title, TVDBID, lang, path):
+    def serieAdded(self, uuid, title, TVDBID, lang, path):
         item = QtGui.QListWidgetItem(title)
-        setattr(item, 'name', name)
+        setattr(item, 'uuid', uuid)
         setattr(item, 'path', path)
         setattr(item, 'lang', lang)
         setattr(item, 'TVDBID', TVDBID)
@@ -109,11 +109,11 @@ class ListSeries(QtGui.QWidget):
         items = []
         for i in xrange(nb):
             title = unicode(self.listWidget.item(i).text())
-            name = self.listWidget.item(i).name
-            path = self.listWidget.item(i).path
-            lang = self.listWidget.item(i).lang
+            uuid = str(self.listWidget.item(i).uuid)
+            path = unicode(self.listWidget.item(i).path)
+            lang = unicode(self.listWidget.item(i).lang)
             TVDBID = self.listWidget.item(i).TVDBID
-            items.append([name, title, path, TVDBID, lang])
+            items.append([uuid, title, path, TVDBID, lang])
         return items
 
 
@@ -181,7 +181,13 @@ class EditSeries(QtGui.QDialog):
     
     
     def save(self):
-        Config.series = self.listSeries.getItems()
-        Config.save()
+        for pos, serie in enumerate(self.listSeries.getItems()):
+            uuid, title, path, tvdbID, lang = serie
+            sdb = list(Serie.select(Serie.q.uuid==uuid))[0]
+            sdb.title = title
+            sdb.path = path
+            sdb.tvdbID = tvdbID
+            sdb.lang = lang
+            sdb.pos = pos
         self.edited.emit()
         self.close()

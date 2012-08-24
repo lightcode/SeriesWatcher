@@ -5,7 +5,7 @@ import sys
 import os.path
 from uuid import uuid1
 from const import *
-from datetime import datetime
+from datetime import datetime, date
 import re
 from itertools import chain
 from glob import iglob
@@ -25,20 +25,21 @@ class Serie(SQLObject):
     path = UnicodeCol()
     lang = UnicodeCol()
     tvdbID = IntCol()
+    pos = IntCol(default=0)
     lastUpdate = TimestampCol()
     firstAired = DateCol(default=None)
     loadCompleted = BoolCol(default=False)
     episodes = MultipleJoin('Episode')
     
     nbSeason = 0
-    nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = nbNotView = 0
+    nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = nbNotView = nbView = 0
     _seriesCache = None
     _episodesCache = None
     episodesAvailable = {}
     
     
     class sqlmeta:
-        pass
+        defaultOrder = 'pos'
         #lazyUpdate = True
     
     def isLoaded(self):
@@ -47,6 +48,11 @@ class Serie(SQLObject):
     
     def setLoaded(self, v):
         self.loadCompleted = v
+    
+    
+    @classmethod
+    def deleteSeriesCache(cls):
+        cls._seriesCache = None
     
     
     @classmethod
@@ -78,38 +84,31 @@ class Serie(SQLObject):
     
     
     def loadEpisodes(self):
-        #return
-        nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = nbNotView = 0
+        self._cacheEpisodes = None
+        nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = nbNotView = nbView = 0
         nbSeason = 0
-        now = datetime.now()
         for i, e in enumerate(self.episodes):
             number = e.number
             nbSeason = max(nbSeason, e.season)
-            status = 0
             if e.season > 0:
                 nbEpisodeTotal += 1
-            if self.episodes[i].title[:3].lower() == 'tba':
-                del self.episodes[i]
-                i -= 1
-            #if e.firstAired and now < e.firstAired:
-            #    status = 3
             if number in self.episodesAvailable:
-                self.episodes[i].path = self.episodesAvailable[number]
-                status = 1
+                e.path = self.episodesAvailable[number]
                 if e.season > 0:
                     nbEpisodeAvailable += 1
                 if e.nbView == 0:
-                    status = 2
                     nbNotView += 1
+                else:
+                    nbView += 1
             else:
                 self.nbEpisodeNotAvailable += 1
-            self.episodes[i].status = status
         
         self.nbSeason = nbSeason
         self.nbEpisodeTotal = nbEpisodeTotal
         self.nbEpisodeNotAvailable = nbEpisodeNotAvailable
         self.nbEpisodeAvailable = nbEpisodeAvailable
         self.nbNotView = nbNotView
+        self.nbView = nbView
     
     
     def loadSerie(self):
@@ -120,15 +119,12 @@ class Serie(SQLObject):
     def _get_bannerPath(self):
         return SERIES_BANNERS + '%s.jpg' % self.uuid
     
+    
     _cacheEpisodes = None
     def _get_episodes(self):
         if self._cacheEpisodes is None:
             self._cacheEpisodes = list(Episode.select(Episode.q.serieID==self.id))
         return self._cacheEpisodes
-    
-    '''
-    def __repr__(self):
-        return u'<Serie %s>' % self.title'''
 
 
 
@@ -142,13 +138,12 @@ class Episode(SQLObject):
     firstAired = DateCol(default=None)
     serie = ForeignKey('Serie')
     
-    status = 0
     path = None
     
     
     class sqlmeta:
         defaultOrder = ('season', 'episode')
-        lazyUpdate = False
+        #lazyUpdate = False
     
     
     def userPlayed(self):
@@ -160,18 +155,32 @@ class Episode(SQLObject):
     def setView(self):
         if self.nbView == 0 and self.isAvailable():
             self.serie.nbNotView -= 1
+            self.serie.nbView += 1
             self.nbView += 1
+    
+    
+    def setNotView(self):
+        if self.nbView > 0 and self.isAvailable():
+            self.serie.nbNotView += 1
+            self.serie.nbView -= 1
+            self.lastView = None
+            self.nbView = 0
     
     
     def isAvailable(self):
         return self.path is not None
     
     
-    def setNotView(self):
-        if self.nbView > 0 and self.isAvailable():
-            self.serie.nbNotView += 1
-            self.lastView = None
-            self.nbView = 0
+    def _get_status(self):
+        status = 0
+        if self.path is not None:
+            status = 1
+            if self.nbView == 0:
+                status = 2
+        now = date.today()
+        if self.firstAired and now < self.firstAired:
+            status = 3
+        return status
     
     
     def _get_number(self):
@@ -180,11 +189,7 @@ class Episode(SQLObject):
     
     def _get_cover(self):
         return u'%s%s/%s.jpg' % (SERIES_IMG, self.serie.uuid, self.number)
-    
-    '''
-    def __repr__(self):
-        return u'<Episode (%d) [%02d-%02d] %s>' % (self.id, self.season, \
-                                                  self.episode, self.title)'''
+
 
 
 if not os.path.isfile(PATH_TO_DATABASE):
@@ -192,16 +197,8 @@ if not os.path.isfile(PATH_TO_DATABASE):
     Episode.createTable()
 
 
-Serie._connection.debug = True
-Episode._connection.debug = True
+#Serie._connection.debug = True
+#Episode._connection.debug = True
 if __name__ == '__main__':
     pass
-
-    def foo():
-        episodes = Serie.get(3).episodes
-        for e in episodes:
-            yield e
-    
-    
-    for e in foo():
-        pass
+    print Serie.get(3).episodes

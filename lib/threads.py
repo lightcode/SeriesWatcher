@@ -46,16 +46,15 @@ class CheckSerieUpdate(QtCore.QThread):
     def run(self):
         lastVerification = self.getLastVerification()
         if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
-            for localeID, serie in enumerate(Config.series):
-                serieName, TVDBID = serie[0], serie[3]
-                localTime = UpdatesFile.getLastUpdate(serieName)
+            for localeID, serie in enumerate(Serie.getSeries()):
+                localTime = serie.lastUpdate
                 
                 tvDb = TheTVDBSerie(serie)
-                remoteTime = tvDb.getLastUpdate()
+                remoteTime = datetime.fromtimestamp(tvDb.getLastUpdate())
                 
-                if localTime < remoteTime:
-                    self.updateLastVerif()
+                if not localTime or localTime < remoteTime:
                     self.updateRequired.emit(localeID)
+            self.updateLastVerif()
 
 
 
@@ -87,35 +86,44 @@ class RefreshSeriesThread(QtCore.QThread):
         serie.lastUpdated = int(serieInfos['lastUpdated'])
         self.serieUpdateStatus.emit(serieLocalID, serie.title, 1)
         
-        # Info episode
-        episodeList = tvDb.getEpisodes()
-        for e in episodeList:
-            Episode(
-                title = unicode(e['title']),
-                description = unicode(e['desc']),
-                season = int(e['season']),
-                episode = int(e['episode']),
-                firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d'),
-                serie = serie
-            )
-        
-        self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
+        episodesDb = {e.number for e in serie.episodes}       
         
         # Create image path
         imgDir = SERIES_IMG + serie.uuid
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
+        # Info episode
+        episodeList = tvDb.getEpisodes(imgDir)
+        for e in episodeList:
+            if e['number'] in episodesDb:
+                continue
+            if e['firstAired']:
+                firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
+            else:
+                firstAired = None
+            Episode(
+                title = unicode(e['title']),
+                description = unicode(e['desc']),
+                season = int(e['season']),
+                episode = int(e['episode']),
+                firstAired = firstAired,
+                serie = serie
+            )
+        
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
+        
         # Miniature DL
-        tvDb.downloadAllImg(imgDir)
+        tvDb.downloadAllImg()
         self.serieUpdated.emit(serieLocalID)
         
-        UpdatesFile.setLastUpdate(serie.uuid, serie.lastUpdated)
+        serie.lastUpdate = datetime.now()
         serie.setLoaded(True)
 
 
     def addSerie(self, serieLocalID):
-        self.toRefresh.append(serieLocalID)
+        if serieLocalID not in self.toRefresh:
+            self.toRefresh.append(serieLocalID)
     
     
     def run(self):
@@ -174,8 +182,8 @@ class SearchThread(QtCore.QThread):
         listEpisodes = []
         episodes = self.parent().currentSerie.episodes
         for e in episodes:
-            score = 1000 if search(textSearch, decompose(e['title'])) else 0
-            score += search2(textSearch, decompose(e['desc']))
+            score = 1000 if search(textSearch, decompose(e.title)) else 0
+            score += search2(textSearch, decompose(e.description))
             if score > 0:
                 listEpisodes.append((score, e))
         

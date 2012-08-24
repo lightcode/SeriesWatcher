@@ -35,11 +35,8 @@ class Main(QtGui.QMainWindow):
         
         self.createWindow()
         self.startTheads()
-        '''
-        if Config.series:
-            self.serieChanged(0)
-        else:
-            self.openAddSerie()'''
+        if not Serie.getSeries():
+            self.openAddSerie()
         
         # Load the player
         try:
@@ -56,7 +53,7 @@ class Main(QtGui.QMainWindow):
         
         self.searchThread = SearchThread(self)
         self.searchThread.searchFinished.connect(self.searchFinished)
-        #self.searchThread.start()
+        self.searchThread.start()
         
         self.refreshSeries = RefreshSeriesThread(self)
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
@@ -65,7 +62,7 @@ class Main(QtGui.QMainWindow):
         
         self.checkSerieUpdate = CheckSerieUpdate(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
-        #self.checkSerieUpdate.start()
+        self.checkSerieUpdate.start()
         
         self.loaderThread = LoaderThread(self)
         self.loaderThread.serieLoaded.connect(self.serieLoaded)
@@ -267,8 +264,7 @@ class Main(QtGui.QMainWindow):
     #  Slots
     # =================
     def playFirstEpisode(self):
-        episodes = {i:e for i, e in self.map.iteritems() if e.status == 2}
-        firstNewEpisode = []
+        firstNewEpisode = None
         pos = None
         minSeason = minEpisode = 0
         for i, e in episodes.iteritems():
@@ -286,7 +282,7 @@ class Main(QtGui.QMainWindow):
     
     
     def playRandomEpisode(self):
-        episodes = [e for i, e in self.map.iteritems() if e.status == 1]
+        episodes = [e for i, e in self.map.iteritems() if e.status in (1, 2)]
         if episodes:
             self.playEpisode(random.choice(episodes))
             self.player.btnRandom.setChecked(True)
@@ -313,9 +309,9 @@ class Main(QtGui.QMainWindow):
         ]
         message = messages[status] % title
         self.status.showMessage(message)
-        '''
+        
         if self.currentSerieId() == serieLocalID:
-            self.loaderThread.forceReload()'''
+            self.loaderThread.forceReload()
     
     
     def openEditSerie(self):
@@ -392,6 +388,7 @@ class Main(QtGui.QMainWindow):
     def reloadSelectSerie(self):
         self.selectSerie.blockSignals(True)
         self.selectSerie.clear()
+        Serie.deleteSeriesCache()
         for s in Serie.getSeries():
             self.selectSerie.addItem(s.title)
         self.selectSerie.blockSignals(False)
@@ -431,12 +428,6 @@ class Main(QtGui.QMainWindow):
         if coord in self.map:
             episode = self.map[coord]
             self.playEpisode(episode)
-    
-    '''
-    def episodeViewed(self, number):
-        if number not in self.currentSerie.episodesViewed:
-            self.currentSerie.episodesViewed.add(number)
-            self.currentSerie.episodesViewedSave()'''
     
     
     def searchChanged(self, textSearch):
@@ -537,8 +528,7 @@ class Main(QtGui.QMainWindow):
         
         if self.currentSerie.nbEpisodeTotal > 0:
             percentageDL = (nbAv / float(self.currentSerie.nbEpisodeTotal)) * 100
-            percentageView = ((nbAv - nbNotView) /\
-                float(self.currentSerie.nbEpisodeTotal)) * 100
+            percentageView = (self.currentSerie.nbView / float(self.currentSerie.nbEpisodeTotal)) * 100
         else:
             percentageDL = percentageView = 0
         

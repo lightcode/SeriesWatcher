@@ -113,6 +113,7 @@ class AddSerie(QtGui.QDialog):
             message = u"Certaines données sont erronées."
             QMessageBox.critical(self, title, message)
         else:
-            Serie(title=title, tvdbID=tvdbID, lang=lang, path='X:/Les Simpson')
+            pos = len(Serie.getSeries())
+            Serie(pos=pos, title=title, tvdbID=tvdbID, lang=lang, path=path)
             self.serieAdded.emit()
             self.close()
