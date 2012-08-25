@@ -252,6 +252,8 @@ class Main(QtGui.QMainWindow):
             os.mkdir(USER)
         if not os.path.isdir(SERIES):
             os.mkdir(SERIES)
+        if os.path.isdir('database'):
+            import lib.upgrader
         if not os.path.isdir(SERIES_IMG):
             os.mkdir(SERIES_IMG)
         if not os.path.isdir(SERIES_BANNERS):
@@ -260,6 +262,8 @@ class Main(QtGui.QMainWindow):
             os.mkdir(SERIES_VIEW)
         if not os.path.isdir(SERIES_DB):
             os.mkdir(SERIES_DB)
+        
+
     
     
     # =================

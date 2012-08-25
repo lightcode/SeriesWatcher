@@ -30,7 +30,7 @@ Si PyQt4 n'est pas installé, vous pouvez faire : `sudo apt-get install python-q
 Pour mettre à jour Series Watcher, il faut :
 
 - se rendre dans le dossier de Series Watcher 1.x, et de copier le dossier `database` et le fichier `series-watcher.cfg` dans le dossier de Series Watcher 1.2 ;
-- lancer le script `upgrade-to-1.2.py`.
+- la mise à jour devrait s'exécuter automatiquement.
 
 
 # Fonctionnalités additionnelles

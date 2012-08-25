@@ -107,7 +107,6 @@ class RefreshSeriesThread(QtCore.QThread):
 
 
     def addSerie(self, serieLocalID):
-        print '--'
         self.toRefresh.append(serieLocalID)
     
     

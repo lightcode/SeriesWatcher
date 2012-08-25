@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 
 from glob import iglob as glob
 import os
@@ -11,13 +10,10 @@ def mkdir(p):
         os.mkdir(p)
 
 def move(src, dst):
-    print u'Déplacement de `%s`...' % src
     try:
         shutil.move(src, dst)
     except:
-        print '\t\t\t\tError'
-    else:
-        print '\t\t\t\tOK'
+        pass
 
 # Create new folder `user`
 USR = 'user/'
@@ -78,9 +74,4 @@ for f in glob(SERIES_DB_OLD):
 try:
     shutil.rmtree('database')
 except:
-    print 'Vous pouvez supprimer le dossier `database`'
-else:
-    print u'Dossier database supprimé.'
-
-
-raw_input('Appuyez sur ENTRER pour quitter...')
+    pass
