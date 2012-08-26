@@ -50,10 +50,13 @@ class CheckSerieUpdate(QtCore.QThread):
                 localTime = serie.lastUpdate
                 
                 tvDb = TheTVDBSerie(serie)
-                remoteTime = datetime.fromtimestamp(tvDb.getLastUpdate())
-                
-                if not localTime or localTime < remoteTime:
-                    self.updateRequired.emit(localeID)
+                try:
+                    remoteTime = datetime.fromtimestamp(tvDb.getLastUpdate())
+                except TypeError:
+                    print 'Get last update failed.'
+                else:
+                    if not localTime or localTime < remoteTime:
+                        self.updateRequired.emit(localeID)
             self.updateLastVerif()
 
 
@@ -81,6 +84,10 @@ class RefreshSeriesThread(QtCore.QThread):
         
         # Info serie
         serieInfos = tvDb.getInfosSerie()
+        
+        if serieInfos is None:
+            return
+        
         serie.description = serieInfos['description']
         serie.firstAired = datetime.strptime(serieInfos['firstAired'], '%Y-%m-%d')
         serie.lastUpdated = int(serieInfos['lastUpdated'])

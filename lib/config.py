@@ -28,15 +28,6 @@ class Config(object):
         for key, value in cls.config.iteritems():
             config.set('options', str(key), unicode(value))
         
-        # Make the series sections
-        for name, title, path, TVDBID, lang in cls.series:
-            name = str(name)
-            config.add_section(name)
-            config.set(name, 'title', unicode(title))
-            config.set(name, 'theTvDb', str(TVDBID))
-            config.set(name, 'videos', unicode(path))
-            config.set(name, 'lang', unicode(lang))
-        
         # Write the config
         with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
             config.write(f)
@@ -53,6 +44,7 @@ class Config(object):
         cls.config['command_open'] = None
         cls.config['player'] = 1
         cls.config['debug'] = 0
+        cls.config['random_duration'] = 0
         
         # Load the options
         if config.has_section('options'):

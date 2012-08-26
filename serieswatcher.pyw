@@ -6,6 +6,7 @@ import math
 import os.path
 import random
 import sys
+import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
@@ -261,15 +262,15 @@ class Main(QtGui.QMainWindow):
     # =================
     def playFirstEpisode(self):
         firstNewEpisode = None
-        pos = None
         minSeason = minEpisode = 0
-        for i, e in episodes.iteritems():
-            season, episode = e.season, e.episode
-            if (minSeason > season) \
-             or (minSeason == season and minEpisode > episode) \
-             or (minSeason == 0 and minEpisode == 0):
-                pos, firstNewEpisode = i, e
-                minSeason, minEpisode = season, episode
+        for e in self.map.itervalues():
+            if e.status == 2:
+                season, episode = e.season, e.episode
+                if (minSeason > season) \
+                 or (minSeason == season and minEpisode > episode) \
+                 or (minSeason == 0 and minEpisode == 0):
+                    firstNewEpisode = e
+                    minSeason, minEpisode = season, episode
         
         if firstNewEpisode:
             self.playEpisode(firstNewEpisode)
@@ -278,9 +279,28 @@ class Main(QtGui.QMainWindow):
     
     
     def playRandomEpisode(self):
-        episodes = [e for i, e in self.map.iteritems() if e.status in (1, 2)]
-        if episodes:
-            self.playEpisode(random.choice(episodes))
+        episodesLongTime = []
+        otherEpisodes = []
+        
+        rd = int(Config.config['random_duration'])
+        if rd is not None:
+            limitDate = datetime.fromtimestamp(time.time() - rd)
+        
+        # Search if there are long time viewed episode
+        for e in self.map.itervalues():
+            if e.status in (1, 2):
+                if e.lastView is not None and e.lastView <= limitDate:
+                    episodesLongTime.append(e)
+        
+        if episodesLongTime:
+            self.playEpisode(random.choice(episodesLongTime))
+            self.player.btnRandom.setChecked(True)
+            return True
+        
+        # Else...
+        otherEpisodes = [e for e in self.map.itervalues() if e.status in (1, 2)]
+        if otherEpisodes:
+            self.playEpisode(random.choice(otherEpisodes))
             self.player.btnRandom.setChecked(True)
             return True
         return False
