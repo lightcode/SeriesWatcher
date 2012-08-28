@@ -9,5 +9,5 @@ database.old/
 /setup
 setup.py
 *.komodoproject
-/-user-
+/user-1.2
 .gitignore

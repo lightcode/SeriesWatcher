@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS',
-'SERIES_VIEW', 'SERIES_DB', 'CONFIG_FILE', 'LAST_VERIF_PATH',
-'SCRIPT_UPGRADE']
+'SERIES_VIEW', 'SERIES_DB', 'CONFIG_FILE', 'LAST_VERIF_PATH']
 __all__ = ['VERSION', 'PATHS'] + PATHS
 
 VERSION = u'1.2 bêta'
@@ -19,5 +18,3 @@ SERIES_DB = 'user/series/database/'
 CONFIG_FILE = 'user/series-watcher.cfg'
 LAST_VERIF_PATH = 'user/series/lastVerif.txt'
 REFRESH_FILE = 'user/series/updates.pkl'
-
-SCRIPT_UPGRADE = 'upgrade-to-1-2.py'
