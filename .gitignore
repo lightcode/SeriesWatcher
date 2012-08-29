@@ -1,7 +1,6 @@
 *.pyc
 *.pyo
-database/
-database.old/
+database*
 /tests
 /user*
 /todo.txt

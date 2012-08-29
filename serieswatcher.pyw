@@ -289,17 +289,18 @@ class Main(QtGui.QMainWindow):
         # Search if there are long time viewed episode
         for e in self.map.itervalues():
             if e.status in (1, 2):
-                if e.lastView is not None and e.lastView <= limitDate:
+                if e.lastView is None \
+                   or (e.lastView is None and e.lastView <= limitDate):
                     episodesLongTime.append(e)
+                else:
+                    otherEpisodes.append(e)
         
         if episodesLongTime:
-            self.playEpisode(random.choice(episodesLongTime))
-            self.player.btnRandom.setChecked(True)
-            return True
+            episodes = episodesLongTime
+        else:
+            episodes = otherEpisodes
         
-        # Else...
-        otherEpisodes = [e for e in self.map.itervalues() if e.status in (1, 2)]
-        if otherEpisodes:
+        if episodes:
             self.playEpisode(random.choice(otherEpisodes))
             self.player.btnRandom.setChecked(True)
             return True
