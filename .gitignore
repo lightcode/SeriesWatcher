@@ -1,13 +1,12 @@
 *.pyc
 *.pyo
-database/
-database.old/
+/database*
 /tests
-/user
 /todo.txt
 /build
 /setup
 setup.py
 *.komodoproject
-/user-1.2
+/user*
 .gitignore
+/dist

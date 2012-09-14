@@ -20,7 +20,7 @@ class Main(QtGui.QMainWindow):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % VERSION)
         self.setMinimumSize(820, 600)
-        self.setWindowIcon(QIcon('art/film.png'))
+        self.setWindowIcon(QIcon(ART + 'film.png'))
         
         self.setup()
         Config.loadConfig()
@@ -98,12 +98,12 @@ class Main(QtGui.QMainWindow):
         self.reloadSelectSerie()
         self.selectSerie.currentIndexChanged.connect(self.serieChanged)
         
-        self.btnPlay = QtGui.QPushButton(QtGui.QIcon('art/play.png'), '')
+        self.btnPlay = QtGui.QPushButton(QtGui.QIcon(ART + 'play.png'), '')
         self.btnPlay.setFlat(True)
         self.btnPlay.setToolTip(u"Jouer le premier épisode disponible non vu")
         self.btnPlay.clicked.connect(self.playFirstEpisode)
         
-        btnRand = QtGui.QPushButton(QtGui.QIcon('art/random.png'), '')
+        btnRand = QtGui.QPushButton(QtGui.QIcon(ART + 'random.png'), '')
         btnRand.setFlat(True)
         btnRand.setToolTip(u"Jouer un épisode au hasard")
         btnRand.clicked.connect(self.playRandomEpisode)
@@ -209,9 +209,9 @@ class Main(QtGui.QMainWindow):
         
         # Menu "Series"
         seriesMenu = self.menubar.addMenu(u'Séries')
-        seriesMenu.addAction(QIcon('art/add.png'), u'Nouvelle série',
+        seriesMenu.addAction(QIcon(ART + 'add.png'), u'Nouvelle série',
                              self.openAddSerie).setShortcut('Ctrl+N')
-        seriesMenu.addAction(QIcon('art/edit.png'), u'Editer les séries',
+        seriesMenu.addAction(QIcon(ART + 'edit.png'), u'Editer les séries',
                              self.openEditSerie).setShortcut('Ctrl+E')
         seriesMenu.addAction(u'Mettre à jour cette série',
                              self.updateSerieMenu).setShortcut('Ctrl+U')
@@ -220,19 +220,19 @@ class Main(QtGui.QMainWindow):
         
         # Menu "Episodes"
         episodesMenu = self.menubar.addMenu('Episodes')
-        episodesMenu.addAction(QIcon('art/refresh.png'), u'Recharger',
+        episodesMenu.addAction(QIcon(ART + 'refresh.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
-        episodesMenu.addAction(QIcon('art/check.png'), u'Marquer comme vue',
+        episodesMenu.addAction(QIcon(ART + 'check.png'), u'Marquer comme vue',
                                self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
-        episodesMenu.addAction(QIcon('art/uncheck.png'), u'Marquer comme non vue',
+        episodesMenu.addAction(QIcon(ART + 'uncheck.png'), u'Marquer comme non vue',
                                self.notViewSelectEpisodeMenu)
         episodesMenu.addAction(u'Marquer la série comme vue',
                                self.allEpisodeView)
         
         # Menu "Series Watcher"
         SWMenu = self.menubar.addMenu('Series Watcher')
-        SWMenu.addAction(QIcon('art/options.png'), 'Options', self.openOptions)
-        SWMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
+        SWMenu.addAction(QIcon(ART + 'options.png'), 'Options', self.openOptions)
+        SWMenu.addAction(QIcon(ART + 'help.png'), 'A propos', self.openAbout)
         if Debug.isEnabled():
             SWMenu.addSeparator()
             SWMenu.addAction('Debug', self.openDebug)
