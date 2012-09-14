@@ -15,14 +15,6 @@ class Config(object):
     
     
     @classmethod
-    def addSerie(cls, *serie):
-        serie = map(unicode, serie)
-        serie[0], serie[3] = str(serie[0]), str(serie[3])
-        cls.series.append(serie)
-        cls.save()
-    
-    
-    @classmethod
     def setOption(cls, key, value):
         cls.config[key] = value
     
@@ -35,15 +27,6 @@ class Config(object):
         config.add_section('options')
         for key, value in cls.config.iteritems():
             config.set('options', str(key), unicode(value))
-        
-        # Make the series sections
-        for name, title, path, TVDBID, lang in cls.series:
-            name = str(name)
-            config.add_section(name)
-            config.set(name, 'title', unicode(title))
-            config.set(name, 'theTvDb', str(TVDBID))
-            config.set(name, 'videos', unicode(path))
-            config.set(name, 'lang', unicode(lang))
         
         # Write the config
         with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
@@ -61,23 +44,14 @@ class Config(object):
         cls.config['command_open'] = None
         cls.config['player'] = 1
         cls.config['debug'] = 0
+        cls.config['random_duration'] = 0
         
         # Load the options
         if config.has_section('options'):
             for key, value in config.items('options'):
                 cls.config[key] = value
-        
-        # Load the series
-        cls.series = []
-        for section in config.sections():
-            if section != 'options':
-                title = config.get(section, 'title')
-                videos = config.get(section, 'videos')
-                theTvDb = config.getint(section, 'theTvDb')
-                lang = config.get(section, 'lang')
-                cls.series.append([section, title, videos, theTvDb, lang])
+
 
 
 if __name__ == '__main__':
     Config.loadConfig()
-    print Config.series

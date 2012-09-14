@@ -6,12 +6,29 @@ from PyQt4.QtCore import Qt
 from config import Config
 from widgets import SelectFile
 
+
+RANDOM_TIMES = [(u'Désactiver', 0),
+                ('15 jours', 1296000),
+                ('1 mois', 2592000),
+                ('3 mois', 7776000)]
+
 class Options(QtGui.QDialog):
     def __init__(self, parent = None):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle('Options')
         self.setMinimumWidth(500)
         self.setMinimumHeight(200)
+        
+        # Series Watcher options
+        self.randomDuration = QtGui.QComboBox()
+        self.randomDuration.addItems([t for t, v in RANDOM_TIMES])
+        self.setRandomDuration(Config.config['random_duration'])
+        form = QtGui.QFormLayout()
+        form.addRow(u"Ne pas rediffuser d'épisode vu il y a moins de", \
+                    self.randomDuration)
+        groupSW = QtGui.QGroupBox(u'Series Watcher')
+        groupSW.setLayout(form)
+        
         
         # Player Choice
         self.cmdOpen = SelectFile(Config.config['command_open'])
@@ -57,6 +74,7 @@ class Options(QtGui.QDialog):
         buttonBox.rejected.connect(self.close)
         
         layout = QtGui.QVBoxLayout()
+        layout.addWidget(groupSW)
         layout.addWidget(groupPlayer)
         layout.addWidget(groupDebug)
         layout.addWidget(buttonBox)
@@ -86,6 +104,17 @@ class Options(QtGui.QDialog):
             if self.__dict__['player%s' % n].isChecked():
                 return n
     
+    def getRandomValue(self):
+        return RANDOM_TIMES[self.randomDuration.currentIndex()][1]
+    
+    
+    def setRandomDuration(self, value):
+        for pos, v in enumerate(RANDOM_TIMES):
+            t, d = v
+            if d == int(value):
+                self.randomDuration.setCurrentIndex(pos)
+                return
+    
     
     def save(self):
         cmdOpen = str(self.cmdOpen.path())
@@ -95,6 +124,7 @@ class Options(QtGui.QDialog):
             Config.setOption('debug', 1)
         else:    
             Config.setOption('debug', 0)
+        Config.setOption('random_duration', self.getRandomValue())
         Config.save()
         self.close()
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from lib.config import Config
-from lib.serie import Serie
 from lib.threads import *
 from lib.addserie import AddSerie
 from lib.editseries import EditSeries

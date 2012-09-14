@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import cPickle as pickle
+from datetime import datetime
 import os.path
 import time
 import xml
@@ -10,14 +11,22 @@ from config import Config
 from updatesfile import UpdatesFile
 from search import *
 from thetvdb import TheTVDBSerie
-from serie import Serie
 from const import *
+from models import Serie, Episode
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdate', 'LoaderThread']
+           'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead']
 
 
-class CheckSerieUpdate(QtCore.QThread):
+class SyncDBThead(QtCore.QThread):
+    def run(self):
+        while True:
+            for e in Episode.select():
+                e.syncUpdate()
+            self.msleep(500)
+
+
+class CheckSerieUpdateThread(QtCore.QThread):
     # Signals :
     updateRequired = QtCore.pyqtSignal(int)
     TIME_BETWEEN_UPDATE = 86400 # a day
@@ -45,15 +54,17 @@ class CheckSerieUpdate(QtCore.QThread):
     def run(self):
         lastVerification = self.getLastVerification()
         if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
-            for localeID, serie in enumerate(Config.series):
-                serieName, TVDBID = serie[0], serie[3]
-                localTime = UpdatesFile.getLastUpdate(serieName)
+            for localeID, serie in enumerate(Serie.getSeries()):
+                localTime = serie.lastUpdate
                 
                 tvDb = TheTVDBSerie(serie)
-                remoteTime = tvDb.getLastUpdate()
-                
-                if localTime < remoteTime:
-                    self.updateRequired.emit(localeID)
+                try:
+                    remoteTime = datetime.fromtimestamp(tvDb.getLastUpdate())
+                except TypeError:
+                    print 'Get last update failed.'
+                else:
+                    if not localTime or localTime < remoteTime:
+                        self.updateRequired.emit(localeID)
             self.updateLastVerif()
 
 
@@ -69,45 +80,65 @@ class RefreshSeriesThread(QtCore.QThread):
     
     
     def downloadConfiguration(self, serieLocalID):
-        serieInfos = Config.series[serieLocalID]
-        serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
-        self.serieUpdateStatus.emit(serieLocalID, title, 201)
+        serie = Serie.getSeries()[serieLocalID]
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 0)
         
-        imgDir = SERIES_IMG + serieName
-        if not os.path.isdir(imgDir):
-            os.mkdir(imgDir)
-        
-        tvDb = TheTVDBSerie(serieInfos)
+        tvDb = TheTVDBSerie(serie)
         try:
             tvDb.downloadFullSerie()
         except xml.parsers.expat.ExpatError:
+            print "Error download"
             return False
-        
-        pkl = '%s%s.pkl' % (SERIES_DB, serieName)
         
         # Info serie
         serieInfos = tvDb.getInfosSerie()
-        serie = {'serieInfos': serieInfos, 'episodes': []}
-        with open(pkl, 'wb+') as pklFile:
-            pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 202)
+        
+        if serieInfos is None:
+            return
+        
+        serie.description = serieInfos['description']
+        serie.firstAired = datetime.strptime(serieInfos['firstAired'], '%Y-%m-%d')
+        serie.lastUpdated = int(serieInfos['lastUpdated'])
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 1)
+        
+        episodesDb = {e.number for e in serie.episodes}       
+        
+        # Create image path
+        imgDir = SERIES_IMG + serie.uuid
+        if not os.path.isdir(imgDir):
+            os.mkdir(imgDir)
         
         # Info episode
-        episodeList = tvDb.getEpisodes()
-        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
-        with open(pkl, 'wb+') as pklFile:
-            pickle.dump(serie, pklFile)
-        self.serieUpdateStatus.emit(serieLocalID, title, 203)
+        episodeList = tvDb.getEpisodes(imgDir)
+        for e in episodeList:
+            if e['number'] in episodesDb:
+                continue
+            if e['firstAired']:
+                firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
+            else:
+                firstAired = None
+            Episode(
+                title = unicode(e['title']),
+                description = unicode(e['desc']),
+                season = int(e['season']),
+                episode = int(e['episode']),
+                firstAired = firstAired,
+                serie = serie
+            )
+        
+        self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
         
         # Miniature DL
-        tvDb.downloadAllImg(imgDir)
+        tvDb.downloadAllImg()
         self.serieUpdated.emit(serieLocalID)
         
-        UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
+        serie.lastUpdate = datetime.now()
+        serie.setLoaded(True)
 
 
     def addSerie(self, serieLocalID):
-        self.toRefresh.append(serieLocalID)
+        if serieLocalID not in self.toRefresh:
+            self.toRefresh.append(serieLocalID)
     
     
     def run(self):
@@ -123,7 +154,7 @@ class LoaderThread(QtCore.QThread):
     # Signals :
     serieLoaded = QtCore.pyqtSignal(Serie)
     
-    lastCurrentSerieID = -1
+    lastCurrentSerieId = -1
     _forceReload = False
     
     def forceReload(self):
@@ -132,13 +163,13 @@ class LoaderThread(QtCore.QThread):
     
     def run(self):
         while True:
-            currentSerieID = self.parent().currentSerieID
-            if currentSerieID != self.lastCurrentSerieID or self._forceReload:
+            currentSerieId = self.parent().currentSerieId()
+            if currentSerieId != self.lastCurrentSerieId or self._forceReload:
                 try:
-                    self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                    self.serieLoaded.emit(Serie.getSeries()[currentSerieId])
                 except IndexError:
                     pass
-                self.lastCurrentSerieID = currentSerieID
+                self.lastCurrentSerieId = currentSerieId
                 self._forceReload = False
             self.msleep(100)
 
@@ -166,8 +197,8 @@ class SearchThread(QtCore.QThread):
         listEpisodes = []
         episodes = self.parent().currentSerie.episodes
         for e in episodes:
-            score = 1000 if search(textSearch, decompose(e['title'])) else 0
-            score += search2(textSearch, decompose(e['desc']))
+            score = 1000 if search(textSearch, decompose(e.title)) else 0
+            score += search2(textSearch, decompose(e.description))
             if score > 0:
                 listEpisodes.append((score, e))
         
@@ -190,17 +221,17 @@ class EpisodesLoaderThread(QtCore.QThread):
     
     def run(self):
         param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        for qId, x, y, title, status, imgPath in self.episodes:
+        for qId, x, y, episode, imgPath in self.episodes:
             if qId == self.lastQuery:
                 image = QtGui.QImage(imgPath)
                 if image != QtGui.QImage():
                     image = image.scaled(120, 90, *param)
-                self.episodeLoaded.emit((x, y, title, status, image))
+                self.episodeLoaded.emit((x, y, episode, image))
     
     
     def newQuery(self):
         self.lastQuery += 1
     
     
-    def addEpisode(self, x, y, title, infos, imgPath):
-        self.episodes.append((self.lastQuery, x, y, title, infos, imgPath))
+    def addEpisode(self, x, y, episode, imgPath):
+        self.episodes.append((self.lastQuery, x, y, episode, imgPath))

@@ -6,38 +6,40 @@ import math
 import os.path
 import random
 import sys
+import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
 from lib import *
 from lib.const import *
+from lib.models import Serie, Episode
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
-    currentSerieID = -1
     
     def __init__(self):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % VERSION)
         self.setMinimumSize(820, 600)
-        self.setWindowIcon(QIcon(ART + 'film.png'))
+        self.setWindowIcon(QIcon('art/film.png'))
         
         self.setup()
         Config.loadConfig()
         
+        # Get the last window size
         if 'window_size' in Config.config:
             w, h = Config.config['window_size'].split('x')
             self.resize(int(w), int(h))
         
+        # Enable debug
         if int(Config.config['debug']):
             Debug.setEnabled(True)
             Debug.add(Debug.INFO, u'Debug activé')
         
+        # Load the main windows
         self.createWindow()
         self.startTheads()
-        if Config.series:
-            self.serieChanged(0)
-        else:
+        if not Serie.getSeries():
             self.openAddSerie()
         
         # Load the player
@@ -62,13 +64,16 @@ class Main(QtGui.QMainWindow):
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
         self.refreshSeries.start()
         
-        self.checkSerieUpdate = CheckSerieUpdate(self)
+        self.checkSerieUpdate = CheckSerieUpdateThread(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
         self.checkSerieUpdate.start()
         
         self.loaderThread = LoaderThread(self)
         self.loaderThread.serieLoaded.connect(self.serieLoaded)
         self.loaderThread.start()
+        
+        self.syncDBThead = SyncDBThead(self)
+        self.syncDBThead.start()
     
     
     def currentSerieId(self):
@@ -96,14 +101,13 @@ class Main(QtGui.QMainWindow):
         
         self.selectSerie = QtGui.QComboBox()
         self.reloadSelectSerie()
-        self.selectSerie.currentIndexChanged.connect(self.serieChanged)
         
-        self.btnPlay = QtGui.QPushButton(QtGui.QIcon(ART + 'play.png'), '')
+        self.btnPlay = QtGui.QPushButton(QtGui.QIcon('art/play.png'), '')
         self.btnPlay.setFlat(True)
         self.btnPlay.setToolTip(u"Jouer le premier épisode disponible non vu")
         self.btnPlay.clicked.connect(self.playFirstEpisode)
         
-        btnRand = QtGui.QPushButton(QtGui.QIcon(ART + 'random.png'), '')
+        btnRand = QtGui.QPushButton(QtGui.QIcon('art/random.png'), '')
         btnRand.setFlat(True)
         btnRand.setToolTip(u"Jouer un épisode au hasard")
         btnRand.clicked.connect(self.playRandomEpisode)
@@ -154,11 +158,11 @@ class Main(QtGui.QMainWindow):
         self.episodes = EpisodesViewer()
         self.episodes.refreshEpisodes.connect(self.refreshScreen)
         self.episodes.pressEnter.connect(self.episodesDblClicked)
-        self.episodes.markedAsView.connect(self.viewSelectEpisodeMenu)
-        self.episodes.markedAsNotView.connect(self.notViewSelectEpisodeMenu)
+        self.episodes.viewStatusChanged.connect(self.viewStatusChanged)
         self.episodes.doubleClicked.connect(self.episodesDblClicked)
         self.episodes.playClicked.connect(self.playClicked)
         self.episodes.itemSelectionChanged.connect(self.episodeChanged)
+        self.episodes.favoriteChanged.connect(self.favoriteChanged)
         body = QtGui.QHBoxLayout()
         body.addWidget(self.episodes)
         
@@ -195,23 +199,14 @@ class Main(QtGui.QMainWindow):
         shortSearch.activated.connect(self.searchBar.setFocus)
     
     
-    def playClicked(self):
-        items = self.episodes.selectedIndexes()
-        for item in items:
-            coord = item.row(), item.column()
-            if coord in self.map:
-                self.playIntegratedPlayer(self.map[coord])
-                self.markAsView(episode)
-    
-    
     def createMenu(self):
         self.menubar = self.menuBar()
         
         # Menu "Series"
         seriesMenu = self.menubar.addMenu(u'Séries')
-        seriesMenu.addAction(QIcon(ART + 'add.png'), u'Nouvelle série',
+        seriesMenu.addAction(QIcon('art/add.png'), u'Nouvelle série',
                              self.openAddSerie).setShortcut('Ctrl+N')
-        seriesMenu.addAction(QIcon(ART + 'edit.png'), u'Editer les séries',
+        seriesMenu.addAction(QIcon('art/edit.png'), u'Editer les séries',
                              self.openEditSerie).setShortcut('Ctrl+E')
         seriesMenu.addAction(u'Mettre à jour cette série',
                              self.updateSerieMenu).setShortcut('Ctrl+U')
@@ -220,22 +215,44 @@ class Main(QtGui.QMainWindow):
         
         # Menu "Episodes"
         episodesMenu = self.menubar.addMenu('Episodes')
-        episodesMenu.addAction(QIcon(ART + 'refresh.png'), u'Recharger',
+        episodesMenu.addAction(QIcon('art/refresh.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
-        episodesMenu.addAction(QIcon(ART + 'check.png'), u'Marquer comme vue',
+        episodesMenu.addAction(QIcon('art/check.png'), u'Marquer comme vue',
                                self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
-        episodesMenu.addAction(QIcon(ART + 'uncheck.png'), u'Marquer comme non vue',
+        episodesMenu.addAction(QIcon('art/uncheck.png'), u'Marquer comme non vue',
                                self.notViewSelectEpisodeMenu)
         episodesMenu.addAction(u'Marquer la série comme vue',
                                self.allEpisodeView)
         
         # Menu "Series Watcher"
         SWMenu = self.menubar.addMenu('Series Watcher')
-        SWMenu.addAction(QIcon(ART + 'options.png'), 'Options', self.openOptions)
-        SWMenu.addAction(QIcon(ART + 'help.png'), 'A propos', self.openAbout)
+        SWMenu.addAction(QIcon('art/options.png'), 'Options', self.openOptions)
+        SWMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
         if Debug.isEnabled():
             SWMenu.addSeparator()
             SWMenu.addAction('Debug', self.openDebug)
+    
+    
+    def setup(self):
+        if not os.path.isdir(USER):
+            os.mkdir(USER)
+        if not os.path.isdir(SERIES):
+            os.mkdir(SERIES)
+        if not os.path.isdir(SERIES_IMG):
+            os.mkdir(SERIES_IMG)
+        if not os.path.isdir(SERIES_BANNERS):
+            os.mkdir(SERIES_BANNERS)
+    
+    
+    # =================
+    #  Slots
+    # =================
+    def viewSelectEpisodeMenu(self):
+        self.viewStatusChanged(True)
+    
+    
+    def notViewSelectEpisodeMenu(self):
+        self.viewStatusChanged(False)
     
     
     def clearSelectionInfos(self):
@@ -244,43 +261,17 @@ class Main(QtGui.QMainWindow):
         self.footer.hide()
     
     
-    # =================
-    #  Config Manager
-    # =================
-    def setup(self):
-        if not os.path.isdir(USER):
-            os.mkdir(USER)
-        if not os.path.isdir(SERIES):
-            os.mkdir(SERIES)
-        if os.path.isdir('database'):
-            import lib.upgrader
-        if not os.path.isdir(SERIES_IMG):
-            os.mkdir(SERIES_IMG)
-        if not os.path.isdir(SERIES_BANNERS):
-            os.mkdir(SERIES_BANNERS)
-        if not os.path.isdir(SERIES_VIEW):
-            os.mkdir(SERIES_VIEW)
-        if not os.path.isdir(SERIES_DB):
-            os.mkdir(SERIES_DB)
-        
-
-    
-    
-    # =================
-    #  Slots
-    # =================
     def playFirstEpisode(self):
-        episodes = {i:e for i, e in self.map.iteritems() if e['status'] == 2}
-        firstNewEpisode = []
-        pos = None
+        firstNewEpisode = None
         minSeason = minEpisode = 0
-        for i, e in episodes.iteritems():
-            season, episode = e['season'], e['episode']
-            if (minSeason > season) \
-             or (minSeason == season and minEpisode > episode) \
-             or (minSeason == 0 and minEpisode == 0):
-                pos, firstNewEpisode = i, e
-                minSeason, minEpisode = season, episode
+        for e in self.map.itervalues():
+            if e.status == 2:
+                season, episode = e.season, e.episode
+                if (minSeason > season) \
+                 or (minSeason == season and minEpisode > episode) \
+                 or (minSeason == 0 and minEpisode == 0):
+                    firstNewEpisode = e
+                    minSeason, minEpisode = season, episode
         
         if firstNewEpisode:
             self.playEpisode(firstNewEpisode)
@@ -289,38 +280,54 @@ class Main(QtGui.QMainWindow):
     
     
     def playRandomEpisode(self):
-        episodes = [e for i, e in self.map.iteritems() if e['status'] == 1]
+        episodesLongTime = []
+        otherEpisodes = []
+        
+        rd = int(Config.config['random_duration'])
+        if rd is not None:
+            limitDate = datetime.fromtimestamp(time.time() - rd)
+        
+        # Search if there are long time viewed episode
+        for e in self.map.itervalues():
+            if e.status in (1, 2):
+                if e.lastView is None \
+                   or (e.lastView is None and e.lastView <= limitDate):
+                    episodesLongTime.append(e)
+                else:
+                    otherEpisodes.append(e)
+        
+        if episodesLongTime:
+            episodes = episodesLongTime
+        else:
+            episodes = otherEpisodes
+        
         if episodes:
-            self.playEpisode(random.choice(episodes))
+            self.playEpisode(random.choice(otherEpisodes))
             self.player.btnRandom.setChecked(True)
             return True
         return False
     
     
     def allEpisodeView(self):
-        episodesViewed = set()
-        for number in self.currentSerie.downloadedEpisode.iterkeys():
-            episodesViewed.add(number)
-        self.currentSerie.episodesViewed = episodesViewed
-        self.currentSerie.episodesViewedSave()
+        for e in self.currentSerie.episodes:
+            e.setView()
         self.refreshScreen()
     
     
     def reloadMenu(self):
-        serieLocalID = self.currentSerieId()
-        self.currentSerie.loadDownloadedList()
-        self.currentSerie.loadEpisodes()
+        self.currentSerie.loadSerie()
         self.refreshScreen()
     
     
     def serieUpdateStatus(self, serieLocalID, title, status):
-        messages = {
-            201: u'%s : Téléchargement des informations sur la série...',
-            202: u'%s : Téléchargement des informations sur les épisodes...',
-            203: u'%s : Téléchargement des miniatures'
-        }
+        messages = [
+            u'%s : Téléchargement des informations sur la série...',
+            u'%s : Téléchargement des informations sur les épisodes...',
+            u'%s : Téléchargement des miniatures'
+        ]
         message = messages[status] % title
         self.status.showMessage(message)
+        
         if self.currentSerieId() == serieLocalID:
             self.loaderThread.forceReload()
     
@@ -362,7 +369,7 @@ class Main(QtGui.QMainWindow):
     
     
     def updateAllSeriesMenu(self):
-        for e in range(len(Config.series)):
+        for e in range(Serie.getSeries()):
             self.refreshSeries.addSerie(e)
     
     
@@ -374,22 +381,22 @@ class Main(QtGui.QMainWindow):
                 episode = self.map[r, c]
                 self.footer.show()
                 
-                title = '<b>%s</b>' % episode['title']
-                if episode['firstAired']:
-                    firstAired = datetime.strftime(episode['firstAired'],
+                title = '<b>%s</b>' % episode.title
+                if episode.firstAired:
+                    firstAired = datetime.strftime(episode.firstAired,
                                                    '%d/%m/%Y')
                     title += '  -  %s' % firstAired
                 
                 self.selectionTitle.setText(title)
-                self.selectionDescription.setText(episode['desc'])
+                self.selectionDescription.setText(episode.description)
             else:
                 self.clearSelectionInfos()
         else:
             self.clearSelectionInfos()
     
     
-    def serieAdded(self, *serie):
-        nbSeries = len(Config.series)
+    def serieAdded(self):
+        nbSeries = len(Serie.getSeries())
         self.reloadSelectSerie()
         self.selectSerie.setCurrentIndex(nbSeries - 1)
         if nbSeries == 1:
@@ -399,8 +406,9 @@ class Main(QtGui.QMainWindow):
     def reloadSelectSerie(self):
         self.selectSerie.blockSignals(True)
         self.selectSerie.clear()
-        for e in Config.series:
-            self.selectSerie.addItem(e[1])
+        Serie.deleteSeriesCache()
+        for s in Serie.getSeries():
+            self.selectSerie.addItem(s.title)
         self.selectSerie.blockSignals(False)
     
     
@@ -410,32 +418,30 @@ class Main(QtGui.QMainWindow):
             Config.save()
         QtGui.QMainWindow.closeEvent(self, e)
     
-    
-    def viewSelectEpisodeMenu(self):
+
+    def favoriteChanged(self, value):
         items = self.episodes.selectedIndexes()
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
             if video is not None:
-                number = self.map[coord]['number']
-                if number in self.currentSerie.downloadedEpisode:
-                    video.setStatus(1)
-                    self.currentSerie.episodesViewed.add(number)
-        self.currentSerie.episodesViewedSave()
+                number = self.map[coord].favorite = value
+                video.setFavorite(value)
         self.refreshCount()
-    
-    
-    def notViewSelectEpisodeMenu(self):
+
+
+    def viewStatusChanged(self, value):
         items = self.episodes.selectedIndexes()
         for item in items:
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
             if video is not None:
-                number = self.map[coord]['number']
-                if number in self.currentSerie.episodesViewed:
+                if value:
+                    number = self.map[coord].setView()
+                    video.setStatus(1)
+                else:
+                    number = self.map[coord].setNotView()
                     video.setStatus(2)
-                    self.currentSerie.episodesViewed.remove(number)
-        self.currentSerie.episodesViewedSave()
         self.refreshCount()
     
     
@@ -444,12 +450,6 @@ class Main(QtGui.QMainWindow):
         if coord in self.map:
             episode = self.map[coord]
             self.playEpisode(episode)
-    
-    
-    def episodeViewed(self, number):
-        if number not in self.currentSerie.episodesViewed:
-            self.currentSerie.episodesViewed.add(number)
-            self.currentSerie.episodesViewedSave()
     
     
     def searchChanged(self, textSearch):
@@ -465,25 +465,22 @@ class Main(QtGui.QMainWindow):
             self.showEpisode(listEpisodes)
     
     
-    # ===============
+    # =================
     #  Episode play
-    # ===============
-    def markAsView(self, episode):
-        for i, e in self.map.iteritems():
-            if e == episode:
-                try:
-                    self.episodes.cellWidget(*i).setStatus(1)
-                except AttributeError:
-                    pass
-                self.episodeViewed(episode['number'])
-                return True
-        return False
+    # =================
+    def playClicked(self):
+        items = self.episodes.selectedIndexes()
+        for item in items:
+            coord = item.row(), item.column()
+            if coord in self.map:
+                self.playIntegratedPlayer(self.map[coord])
+                self.markAsView(episode)
     
     
     def playEpisode(self, episode):
         command = Config.config['command_open']
-        if episode['path']:
-            path = os.path.normpath(episode['path'])
+        if episode.path:
+            path = os.path.normpath(episode.path)
             player = int(Config.config['player'])
             if player == 1:
                 desktop.open(path)
@@ -502,21 +499,14 @@ class Main(QtGui.QMainWindow):
     
     
     def playIntegratedPlayer(self, episode):
-        if episode['path']:
+        if episode.path:
             if not self.player or not self.player.VLCLoaded:
                 title = 'Erreur lors du chargement de VLC'
-                message = u"Le lecteur intégré ne peut pas être démarrer car" \
-                          + u" la bibliothèque VLC ne s'est pas chargée" \
-                          + u" correctement."
-                QMessageBox.critical(self, title, message)
+                QMessageBox.critical(self, title, ERROR_PLAYER_LOAD)
                 return
             
-            path = os.path.normpath(episode['path'])
-            serieName = self.currentSerie.name
-            imgPath = '%s%s/%s.jpg' % (SERIES_IMG, serieName, episode['number'])
-            title = episode['title']
-            self.player.addToPlayList(episode['number'], title, path, imgPath)
-            self.episodeViewed(episode['number'])
+            path = os.path.normpath(episode.path)
+            self.player.addToPlayList(episode.number, episode.title, path, episode.cover)
             self.refreshCount()
             if not self.player.isVisible():
                 self.player.show()
@@ -526,21 +516,33 @@ class Main(QtGui.QMainWindow):
     # ===============
     #  Episode view
     # ===============
+    def markAsView(self, episode):
+        for i, e in self.map.iteritems():
+            if e == episode:
+                try:
+                    self.episodes.cellWidget(*i).setStatus(1)
+                except AttributeError:
+                    pass
+                e.userPlayed()
+                self.refreshCount()
+                return True
+        return False
+    
+    
     def showEpisode(self, episodes):
         self.clearSelectionInfos()
         self.episodesLoader.newQuery()
         self.episodes.clear()
         self.map = {}
-        serieName = self.currentSerie.name
-        imgDir = '%s%s/%%s.jpg' % (SERIES_IMG, serieName)
+        serieUUID = self.currentSerie.uuid
+        imgDir = '%s%s/%%s.jpg' % (SERIES_IMG, serieUUID)
         nbColumn = self.episodes.nbColumn
         count = 0
         for i, e in enumerate(episodes):
             (x, y) = (i // nbColumn, i % nbColumn)
-            imgPath = imgDir % e['number']
-            title = u'<b>{0}</b><br/>{1}'.format(e['number'], e['title'])
+            imgPath = imgDir % e.number
             self.map[x, y] = e
-            self.episodesLoader.addEpisode(x, y, title, e['status'], imgPath)
+            self.episodesLoader.addEpisode(x, y, e, imgPath)
             count += 1
         self.episodesLoader.start()
         self.refreshCount()
@@ -549,17 +551,15 @@ class Main(QtGui.QMainWindow):
     
     
     def refreshCount(self):
-        nbDL = self.currentSerie['nbEpisodeDL']
-        allDl = {e['number'] for e in self.currentSerie.episodes \
-                                if e['path'] and e['season'] > 0}
-        nbNew = len(allDl - set(self.currentSerie.episodesViewed))
-        self.filter.setCounters(self.currentSerie['nbEpisodeTotal'],
-                               self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)
+        nbAv = self.currentSerie.nbEpisodeAvailable
+        nbNotView = self.currentSerie.nbNotView
+        self.filter.setCounters(self.currentSerie.nbEpisodeTotal,
+                               self.currentSerie.nbEpisodeNotAvailable,
+                               nbAv, nbNotView, self.currentSerie.nbFavorites)
         
-        if self.currentSerie['nbEpisodeTotal'] > 0:
-            percentageDL = (nbDL / float(self.currentSerie['nbEpisodeTotal'])) * 100
-            percentageView = ((nbDL - nbNew) /\
-                float(self.currentSerie['nbEpisodeTotal'])) * 100
+        if self.currentSerie.nbEpisodeTotal > 0:
+            percentageDL = (nbAv / float(self.currentSerie.nbEpisodeTotal)) * 100
+            percentageView = (self.currentSerie.nbView / float(self.currentSerie.nbEpisodeTotal)) * 100
         else:
             percentageDL = percentageView = 0
         
@@ -567,16 +567,15 @@ class Main(QtGui.QMainWindow):
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
         
-        if nbNew > 0:
+        if nbNotView > 0:
             self.btnPlay.setEnabled(True)
         else:
             self.btnPlay.setEnabled(False)
     
     
-    def episodeLoaded(self, episode):
-        x, y, title, status, image = episode
-        item = VideoItem(title)
-        item.setStatus(status)
+    def episodeLoaded(self, args):
+        x, y, episode, image = args
+        item = VideoItem(episode)
         item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
     
@@ -585,11 +584,12 @@ class Main(QtGui.QMainWindow):
         filterSeason = self.selectSeason.currentIndex() - 1
         filterID = self.filter.getFilterID()
         for e in self.currentSerie.episodes:
-            status, season = e['status'], e['season']
+            status, season = e.status, e.season
             if (filterSeason == -1 or filterSeason == season) \
                 and ((filterID == 0 and status in (1, 2)) \
                   or (filterID == 1 and status == 2) \
-                  or (filterID == 2 and status == 0) or filterID == 3) \
+                  or (filterID == 2 and e.favorite) \
+                  or (filterID == 3 and status == 0) or filterID == 4) \
                 and (season != 0 or filterSeason == 0):
                     yield e
     
@@ -615,18 +615,16 @@ class Main(QtGui.QMainWindow):
         self.episodes.clear()
         self.nbEpisodes.clear()
         
-        self.filter.setCounters(0, 0, 0, 0)
+        self.filter.setCounters(0, 0, 0, 0, 0)
     
     
     def serieLoaded(self, serie):
         self.currentSerie = serie
-        serieLocalID = self.currentSerieId()
-        try:
-            self.currentSerie.loadSerie()
-        except ValueError:
-            self.refreshSeries.addSerie(serieLocalID)
+        self.currentSerie.loadSerie()
+        
+        if not self.currentSerie.isLoaded():
+            self.refreshSeries.addSerie(self.currentSerieId())
             self.clearSeries()
-            return
         
         self.selectSeason.blockSignals(True)
         self.selectSeason.clear()
@@ -634,26 +632,24 @@ class Main(QtGui.QMainWindow):
         self.selectSeason.addItem('Bonus')
         
         # Show infos about the serie
-        if self.currentSerie.infos:
-            image = QtGui.QPixmap(self.currentSerie['bannerPath'])
-            self.imageSerie.setPixmap(image)
-            desc = self.currentSerie['desc'].replace("\n", '<br/>')
-            firstAired = self.currentSerie['firstAired'].strftime('%d/%m/%Y')
+        image = QtGui.QPixmap(self.currentSerie.bannerPath)
+        self.imageSerie.setPixmap(image)
+        desc = self.currentSerie.description.replace("\n", '<br/>')
+        firstAired = self.currentSerie.firstAired
+        if firstAired:
+            firstAired = firstAired.strftime('%d/%m/%Y')
             self.description.setText(u'%s<hr/>Date de création : %s' \
                                                     % (desc, firstAired))
-            nbSeasons = self.currentSerie['nbSeason']
-            listSeasons = ['Saison %d' % x for x in range(1, nbSeasons + 1)]
-            self.selectSeason.addItems(listSeasons)
-            self.selectSeason.setCurrentIndex(0)
+        else:
+            self.description.setText(desc)
+        
+        nbSeasons = self.currentSerie.nbSeason
+        listSeasons = ['Saison %d' % x for x in range(1, nbSeasons + 1)]
+        self.selectSeason.addItems(listSeasons)
+        self.selectSeason.setCurrentIndex(0)
         
         self.selectSeason.blockSignals(False)
         self.refreshScreen()
-    
-    
-    def serieChanged(self, serieLocalID=None):
-        if not isinstance(serieLocalID, int):
-            serieLocalID = self.currentSerieId()
-        self.currentSerieID = serieLocalID
     
     
     def serieUpdated(self, serieLocalID):

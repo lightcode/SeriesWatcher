@@ -7,6 +7,8 @@ PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
 'SERIES_VIEW', 'SERIES_DB', 'CONFIG_FILE', 'LAST_VERIF_PATH']
 __all__ = ['VERSION', 'PATHS'] + PATHS
 
+EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
+
 VERSION = u'1.2'
 RELEASE_DATE = u'Septembre 2012'
 
@@ -23,3 +25,7 @@ SERIES_DB = ROOT + 'user/series/database/'
 CONFIG_FILE = ROOT + 'user/series-watcher.cfg'
 LAST_VERIF_PATH = ROOT + 'user/series/lastVerif.txt'
 REFRESH_FILE = ROOT + 'user/series/updates.pkl'
+
+ERROR_PLAYER_LOAD = u"Le lecteur intégré ne peut pas être démarrer car" \
+                  + u" la bibliothèque VLC ne s'est pas chargée" \
+                  + u" correctement."
