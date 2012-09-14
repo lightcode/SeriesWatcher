@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 import cPickle as pickle
+from const import REFRESH_FILE
 
 class UpdatesFile(object):
     _instance = None
-    REFRESH_FILE = 'database/updates.pkl'
     def __new__(cls): 
         if cls._instance is None:
             cls._instance = object.__new__(cls)
@@ -14,7 +14,7 @@ class UpdatesFile(object):
     def loadUpdates(cls):
         # Open the updater PKL file
         try:
-            with open(cls.REFRESH_FILE, 'rb') as f:
+            with open(REFRESH_FILE, 'rb') as f:
                 cls.updates = pickle.load(f)
         except IOError:
             cls.updates = {}
@@ -38,5 +38,5 @@ class UpdatesFile(object):
     
     @classmethod
     def save(cls):
-        with open(cls.REFRESH_FILE, 'w+b') as f:
+        with open(REFRESH_FILE, 'w+b') as f:
             pickle.dump(cls.updates, f)

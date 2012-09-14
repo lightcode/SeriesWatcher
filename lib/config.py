@@ -4,10 +4,10 @@ import os.path
 import codecs
 import sys
 from configparser import SafeConfigParser
+from const import *
 
 class Config(object):
     _instance = None
-    CONFIG_FILE = 'series-watcher.cfg'
     def __new__(cls): 
         if cls._instance is None:
             cls._instance = object.__new__(cls)
@@ -46,20 +46,21 @@ class Config(object):
             config.set(name, 'lang', unicode(lang))
         
         # Write the config
-        with codecs.open(cls.CONFIG_FILE, 'w+', encoding='utf-8') as f:
+        with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
             config.write(f)
     
     
     @classmethod
     def loadConfig(cls):
         config = SafeConfigParser()
-        if os.path.isfile(cls.CONFIG_FILE):
-            config.read_file(codecs.open(cls.CONFIG_FILE, encoding='utf-8'))
+        if os.path.isfile(CONFIG_FILE):
+            config.read_file(codecs.open(CONFIG_FILE, encoding='utf-8'))
         
         # The default config
         cls.config = {}
         cls.config['command_open'] = None
         cls.config['player'] = 1
+        cls.config['debug'] = 0
         
         # Load the options
         if config.has_section('options'):

@@ -92,6 +92,12 @@ class ListSeries(QtGui.QWidget):
         currentItem.setText(title)
     
     
+    def setLang(self, lang):
+        currentIndex = self.listWidget.currentIndex().row()
+        currentItem = self.listWidget.item(currentIndex)
+        currentItem.lang = lang
+    
+    
     def setPath(self, path):
         currentIndex = self.listWidget.currentIndex().row()
         currentItem = self.listWidget.item(currentIndex)
@@ -127,15 +133,18 @@ class EditSeries(QtGui.QDialog):
         # Edit serie pannel
         self.title = QtGui.QLineEdit()
         self.title.textChanged.connect(self.listSeries.setTitle)
+        self.lang = QtGui.QLineEdit()
+        self.lang.textChanged.connect(self.listSeries.setLang)
         self.path = SelectFolder()
         self.path.label.textChanged.connect(self.listSeries.setPath)
         
         groupSerie = QtGui.QGroupBox(u'Information de la série')
         form = QtGui.QFormLayout()
         form.addRow('Titre', self.title)
+        form.addRow('Langue', self.lang)
         groupSerie.setLayout(form)
         
-        groupDownload = QtGui.QGroupBox(u'Vos téléchargements')
+        groupDownload = QtGui.QGroupBox(u'Répertoire')
         layoutDl = QtGui.QVBoxLayout()
         layoutDl.addWidget(self.path)
         groupDownload.setLayout(layoutDl)
@@ -160,10 +169,14 @@ class EditSeries(QtGui.QDialog):
         bigLayout.addWidget(buttonBox)
         
         self.setLayout(bigLayout)
+        
+        # Select the first serie
+        self.listSeries.listWidget.setCurrentRow(0)
     
     
     def itemSelectionChanged(self, title, path, lang):
         self.title.setText(title)
+        self.lang.setText(lang)
         self.path.setPath(path)
     
     

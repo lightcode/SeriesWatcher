@@ -4,9 +4,11 @@
 import os.path
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
+from PyQt4.QtGui import QIcon
 
-class SelectFolder(QtGui.QWidget):
-    def __init__(self, parent = None):
+
+class SelectFile(QtGui.QWidget):
+    def __init__(self, path='', parent=None):
         QtGui.QWidget.__init__(self, parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
@@ -15,11 +17,12 @@ class SelectFolder(QtGui.QWidget):
         layout.addWidget(self.label)
         layout.addWidget(btn)
         self.setLayout(layout)
+        
+        self.setPath(path)
     
     
     def selectFolder(self):
-        path = QtGui.QFileDialog.getExistingDirectory()
-        path = '%s/*' % path
+        path = QtGui.QFileDialog.getOpenFileName(self)
         self.label.setText(path)
     
     
@@ -31,18 +34,43 @@ class SelectFolder(QtGui.QWidget):
         self.label.setText(path)
 
 
+class SelectFolder(QtGui.QWidget):
+    def __init__(self, parent=None):
+        QtGui.QWidget.__init__(self, parent)
+        self.label = QtGui.QLineEdit()
+        btn = QtGui.QPushButton('Parcourir')
+        btn.clicked.connect(self.selectFolder)
+        layout = QtGui.QHBoxLayout()
+        layout.addWidget(self.label)
+        layout.addWidget(btn)
+        self.setLayout(layout)
+    
+    
+    def selectFolder(self):
+        path = QtGui.QFileDialog.getExistingDirectory(self)
+        self.label.setText(path)
+    
+    
+    def path(self):
+        return self.label.text()
+    
+    
+    def setPath(self, path):
+        self.label.setText(path)
+
+
+
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
     def __init__(self, parent = None):
         super(FilterMenu, self).__init__('Filtrer', parent)
-        
         self.setFlat(True)
         self.setMenu(self.menu())
         self.setFixedWidth(180)
     
     
     def menu(self):
-        self.dl = QtGui.QAction(u'Episodes téléchargés', self)
+        self.dl = QtGui.QAction(u'Episodes disponibles', self)
         setattr(self.dl, 'filterID', 0)
         self.dl.setCheckable(True)
         self.setText(self.dl.text())
@@ -52,7 +80,7 @@ class FilterMenu(QtGui.QPushButton):
         setattr(self.new, 'filterID', 1)
         self.new.setCheckable(True)
         
-        self.notDL = QtGui.QAction(u'Episodes non téléchargés', self)
+        self.notDL = QtGui.QAction(u'Episodes non disponibles', self)
         setattr(self.notDL, 'filterID', 2)
         self.notDL.setCheckable(True)
         
@@ -100,11 +128,12 @@ class FilterMenu(QtGui.QPushButton):
     
     
     def setCounters(self, nbTotal, nbNotDL, nbDL, nbNew):
-        self.dl.setText(u'Episodes téléchargés (%d)' % nbDL)
+        self.dl.setText(u'Episodes disponibles (%d)' % nbDL)
         self.new.setText(u'Nouveaux (%d)' % nbNew)
-        self.notDL.setText(u'Episodes non téléchargés (%d)' % nbNotDL)
+        self.notDL.setText(u'Episodes non disponibles (%d)' % nbNotDL)
         self.total.setText(u'Tous (%d)' % nbTotal)
         self.setText(self.getFilterAction().text())
+
 
 
 class EpisodesViewer(QtGui.QTableWidget):
@@ -119,7 +148,6 @@ class EpisodesViewer(QtGui.QTableWidget):
     columnWidth = 260
     rowHeight = 100
     
-    
     def __init__(self, parent = None):
         super(EpisodesViewer, self).__init__(parent)
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
@@ -128,11 +156,14 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.horizontalHeader().hide()
         self.verticalHeader().hide()
         self.setShowGrid(False)
+        
+        self.resizeTimer = QtCore.QTimer(self)
+        self.resizeTimer.setInterval(200)
+        self.resizeTimer.timeout.connect(self.updateSize)
+        self.resizeTimer.start()
     
     
     def contextMenu(self, pos):
-        globalPos = self.mapToGlobal(pos)
-        
         nbNone = 0
         for item in self.selectedIndexes():
             (r, c) = (item.row(), item.column())
@@ -142,18 +173,20 @@ class EpisodesViewer(QtGui.QTableWidget):
             return
         
         menu = QtGui.QMenu()
-        markAsView = menu.addAction('Marquer comme vu')
-        markAsView.setIcon(QtGui.QIcon('art/check.png'))
-        markAsView.triggered.connect(self.markAsView)
-        
-        markAsNotView = menu.addAction('Marquer comme non vu')
-        markAsNotView.setIcon(QtGui.QIcon('art/uncheck.png'))
-        markAsNotView.triggered.connect(self.markAsNotView)
-        
-        play = menu.addAction('Play')
-        play.setIcon(QtGui.QIcon('art/play.png'))
-        play.triggered.connect(self.playClicked)
-        menu.exec_(globalPos)
+        menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
+        menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
+        menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
+        menu.addAction('Copier le titre', self.copyTitle)
+        menu.exec_(self.mapToGlobal(pos))
+    
+    
+    def copyTitle(self):
+        self.pressPaper = QtGui.QApplication.clipboard()
+        indexes = self.selectedIndexes()
+        if len(indexes) == 1:
+            r, c = indexes[0].row(), indexes[0].column()
+            title = self.cellWidget(r, c).title.text()[17:]
+            self.pressPaper.setText(title)
     
     
     def markAsView(self):
@@ -181,15 +214,17 @@ class EpisodesViewer(QtGui.QTableWidget):
             self.pressEnter.emit(self.currentIndex())
     
     
-    def resizeEvent(self, size):
-        QtGui.QTableWidget.resizeEvent(self, size)
-        oldNbColumn = size.oldSize().width() // 260
-        self.nbColumn = size.size().width() // 260
-        self.columnWidth = size.size().width() // self.nbColumn
+    def updateSize(self):
+        oldNbColumn = self.columnCount()
         self.setColumnCount(self.nbColumn)
         if oldNbColumn != self.nbColumn:
-            self.setColumnCount(self.nbColumn)
             self.refreshEpisodes.emit()
+    
+    
+    def resizeEvent(self, size):
+        QtGui.QTableWidget.resizeEvent(self, size)
+        self.nbColumn = size.size().width() // 260
+        self.columnWidth = size.size().width() // self.nbColumn
 
 
 
@@ -198,7 +233,7 @@ class VideoItem(QtGui.QWidget):
         QtGui.QWidget.__init__(self)
         
         self.img = QtGui.QLabel()
-        self.img.setMaximumWidth(120)
+        self.img.setFixedWidth(120)
         
         self.title = QtGui.QLabel(titleStr)
         self.title.setAlignment(Qt.AlignTop)
@@ -230,13 +265,16 @@ class VideoItem(QtGui.QWidget):
         self.title.setText(titleStr)
     
     
-    def setInfos(self, infos):
+    def setStatus(self, status):
         text = ''
         commonStyle = 'padding-left:1px;padding-bottom:5px'
-        if infos == 1:
+        if status == 1:
             self.infos.setStyleSheet('color:#777;' + commonStyle)
-            text = u'Téléchargé'
-        elif infos == 2:
+            text = u'Disponible'
+        elif status == 2:
             self.infos.setStyleSheet('color:red;' + commonStyle)
-            text = u'Téléchargé <sup>Nouveau</sup>'
+            text = u'Disponible <sup>Nouveau</sup>'
+        elif status == 3:
+            self.infos.setStyleSheet('color:#777;' + commonStyle)
+            text = u'Inédit'
         self.infos.setText(text)

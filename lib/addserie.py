@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from uuid import uuid1
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
@@ -17,8 +18,6 @@ class AddSerie(QtGui.QDialog):
         QtGui.QDialog.__init__(self, parent)
         self.setWindowTitle(u'Ajouter une série')
         
-        self.name = QtGui.QLineEdit()
-        
         # Title & search
         self.title = QtGui.QLineEdit()
         search = QtGui.QPushButton('Rechercher')
@@ -34,12 +33,11 @@ class AddSerie(QtGui.QDialog):
         groupSerie = QtGui.QGroupBox(u'Information de la série')
         form = QtGui.QFormLayout()
         form.addRow('Titre', title)
-        form.addRow('Nom', self.name)
         form.addRow('ID OpenTV', self.theTVDB)
         form.addRow('Langue', self.lang)
         groupSerie.setLayout(form)
         
-        groupDownload = QtGui.QGroupBox(u'Vos téléchargements')
+        groupDownload = QtGui.QGroupBox(u"Répertoire d'épisodes")
         layout = QtGui.QVBoxLayout()
         layout.addWidget(self.selectFolder)
         groupDownload.setLayout(layout)
@@ -85,7 +83,6 @@ class AddSerie(QtGui.QDialog):
             self.lang.setText(lang)
             self.title.setText(serieName)
             self.theTVDB.setText(serieId)
-            self.name.setText(getCamelCase(serieName))
         else:
             title = 'Erreur'
             message = u'Aucune série correspondante'
@@ -94,9 +91,7 @@ class AddSerie(QtGui.QDialog):
     
     def validate(self):
         nbErrors = 0
-        name = self.name.text()
-        if name == '':
-            nbErrors += 1
+        name = str(uuid1())
         
         title = self.title.text()
         if title == '':
@@ -112,8 +107,6 @@ class AddSerie(QtGui.QDialog):
             nbErrors += 1
         
         path = self.selectFolder.path()
-        if path == '':
-            nbErrors += 1
         
         if nbErrors > 0:
             title = u"Données incorrectes"

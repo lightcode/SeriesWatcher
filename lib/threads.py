@@ -3,21 +3,24 @@
 import cPickle as pickle
 import os.path
 import time
+import xml
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
 from updatesfile import UpdatesFile
-from search import search, decompose
+from search import *
 from thetvdb import TheTVDBSerie
+from serie import Serie
+from const import *
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdate']
+           'CheckSerieUpdate', 'LoaderThread']
+
 
 class CheckSerieUpdate(QtCore.QThread):
     # Signals :
     updateRequired = QtCore.pyqtSignal(int)
     TIME_BETWEEN_UPDATE = 86400 # a day
-    LATS_VERIF_PATH = 'database/lastVerif.txt'
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -26,7 +29,7 @@ class CheckSerieUpdate(QtCore.QThread):
     
     def getLastVerification(self):
         try:
-            with open(self.LATS_VERIF_PATH, 'r') as f:
+            with open(LAST_VERIF_PATH, 'r') as f:
                 return int(''.join(f.readlines()).strip())
         except IOError:
             return 0
@@ -35,7 +38,7 @@ class CheckSerieUpdate(QtCore.QThread):
     
     
     def updateLastVerif(self):
-        with open(self.LATS_VERIF_PATH, 'w+') as f:
+        with open(LAST_VERIF_PATH, 'w+') as f:
             f.write("%d" % time.time())
     
     
@@ -50,15 +53,15 @@ class CheckSerieUpdate(QtCore.QThread):
                 remoteTime = tvDb.getLastUpdate()
                 
                 if localTime < remoteTime:
-                    self.updateLastVerif()
                     self.updateRequired.emit(localeID)
+            self.updateLastVerif()
 
 
 
 class RefreshSeriesThread(QtCore.QThread):
     # Signals :
-    serieLoaded = QtCore.pyqtSignal(int)
-    serieLoadStarted = QtCore.pyqtSignal('QString')
+    serieUpdated = QtCore.pyqtSignal(int)
+    serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
     
     def __init__(self, parent = None):
         QtCore.QThread.__init__(self, parent)
@@ -68,21 +71,37 @@ class RefreshSeriesThread(QtCore.QThread):
     def downloadConfiguration(self, serieLocalID):
         serieInfos = Config.series[serieLocalID]
         serieName, title, serieID = serieInfos[0], serieInfos[1], serieInfos[3]
-        self.serieLoadStarted.emit(title)
+        self.serieUpdateStatus.emit(serieLocalID, title, 201)
         
-        imgDir = 'database/img/%s' % serieName
+        imgDir = SERIES_IMG + serieName
         if not os.path.isdir(imgDir):
             os.mkdir(imgDir)
         
         tvDb = TheTVDBSerie(serieInfos)
-        tvDb.downloadFullSerie()
-        serieInfos = tvDb.getInfosSerie()
-        episodeList = tvDb.getEpisodes(imgDir)
+        try:
+            tvDb.downloadFullSerie()
+        except xml.parsers.expat.ExpatError:
+            return False
         
-        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
-        pkl = 'database/%s.pkl' % serieName
+        pkl = '%s%s.pkl' % (SERIES_DB, serieName)
+        
+        # Info serie
+        serieInfos = tvDb.getInfosSerie()
+        serie = {'serieInfos': serieInfos, 'episodes': []}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
+        self.serieUpdateStatus.emit(serieLocalID, title, 202)
+        
+        # Info episode
+        episodeList = tvDb.getEpisodes()
+        serie = {'serieInfos': serieInfos, 'episodes': episodeList}
+        with open(pkl, 'wb+') as pklFile:
+            pickle.dump(serie, pklFile)
+        self.serieUpdateStatus.emit(serieLocalID, title, 203)
+        
+        # Miniature DL
+        tvDb.downloadAllImg(imgDir)
+        self.serieUpdated.emit(serieLocalID)
         
         UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])
 
@@ -95,9 +114,33 @@ class RefreshSeriesThread(QtCore.QThread):
         while True:
             for serieLocalID in self.toRefresh[:]:
                 self.downloadConfiguration(serieLocalID)
-                self.serieLoaded.emit(serieLocalID)
                 del self.toRefresh[0]
-            self.msleep(10)
+            self.msleep(50)
+
+
+
+class LoaderThread(QtCore.QThread):
+    # Signals :
+    serieLoaded = QtCore.pyqtSignal(Serie)
+    
+    lastCurrentSerieID = -1
+    _forceReload = False
+    
+    def forceReload(self):
+        self._forceReload = True
+    
+    
+    def run(self):
+        while True:
+            currentSerieID = self.parent().currentSerieID
+            if currentSerieID != self.lastCurrentSerieID or self._forceReload:
+                try:
+                    self.serieLoaded.emit(Serie(Config.series[currentSerieID]))
+                except IndexError:
+                    pass
+                self.lastCurrentSerieID = currentSerieID
+                self._forceReload = False
+            self.msleep(100)
 
 
 
@@ -105,7 +148,7 @@ class SearchThread(QtCore.QThread):
     # Signals :
     searchFinished = QtCore.pyqtSignal(list)
     
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtCore.QThread.__init__(self, parent)
         self.textSearch = ""
     
@@ -115,16 +158,26 @@ class SearchThread(QtCore.QThread):
         while True:
             if textSearch != self.textSearch:
                 textSearch = self.textSearch
-                listEpisodes = []
-                for e in self.episodes:
-                    if search(textSearch, decompose(e['title'])):
-                        listEpisodes.append(e)
-                self.searchFinished.emit(listEpisodes)
-            self.msleep(10)
+                self.search(textSearch)
+            self.msleep(100)
     
     
-    def changeText(self, search, episodes):
-        self.episodes = episodes
+    def search(self, textSearch):
+        listEpisodes = []
+        episodes = self.parent().currentSerie.episodes
+        for e in episodes:
+            score = 1000 if search(textSearch, decompose(e['title'])) else 0
+            score += search2(textSearch, decompose(e['desc']))
+            if score > 0:
+                listEpisodes.append((score, e))
+        
+        func = lambda x: x[0]
+        listEpisodes = sorted(listEpisodes, key=func, reverse=True)
+        listEpisodes = [e for t, e in listEpisodes]
+        self.searchFinished.emit(listEpisodes)
+
+
+    def changeText(self, search):
         self.textSearch = search
 
 
@@ -135,18 +188,14 @@ class EpisodesLoaderThread(QtCore.QThread):
     episodes = []
     lastQuery = 0
     
-    def __init__(self, parent = None):
-        QtCore.QThread.__init__(self, parent)
-    
-    
     def run(self):
         param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        for qId, x, y, title, infos, imgPath in self.episodes:
+        for qId, x, y, title, status, imgPath in self.episodes:
             if qId == self.lastQuery:
                 image = QtGui.QImage(imgPath)
                 if image != QtGui.QImage():
                     image = image.scaled(120, 90, *param)
-                self.episodeLoaded.emit((x, y, title, infos, image))
+                self.episodeLoaded.emit((x, y, title, status, image))
     
     
     def newQuery(self):
