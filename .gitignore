@@ -8,5 +8,5 @@
 setup.py
 *.komodoproject
 /user*
-.gitignore
 /dist
+*Thumbs.db

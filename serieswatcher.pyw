@@ -551,7 +551,7 @@ class Main(QtGui.QMainWindow):
     def refreshCount(self):
         nbDL = self.currentSerie['nbEpisodeDL']
         allDl = {e['number'] for e in self.currentSerie.episodes \
-                                if e['path'] and e['season'] > 0}
+                                if 'path' in e and e['path'] and e['season'] > 0}
         nbNew = len(allDl - set(self.currentSerie.episodesViewed))
         self.filter.setCounters(self.currentSerie['nbEpisodeTotal'],
                                self.currentSerie['nbEpisodeNotDL'], nbDL, nbNew)

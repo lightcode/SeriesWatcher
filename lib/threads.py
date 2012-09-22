@@ -93,14 +93,14 @@ class RefreshSeriesThread(QtCore.QThread):
         self.serieUpdateStatus.emit(serieLocalID, title, 202)
         
         # Info episode
-        episodeList = tvDb.getEpisodes()
+        episodeList = tvDb.getEpisodes(imgDir)
         serie = {'serieInfos': serieInfos, 'episodes': episodeList}
         with open(pkl, 'wb+') as pklFile:
             pickle.dump(serie, pklFile)
         self.serieUpdateStatus.emit(serieLocalID, title, 203)
         
         # Miniature DL
-        tvDb.downloadAllImg(imgDir)
+        tvDb.downloadAllImg()
         self.serieUpdated.emit(serieLocalID)
         
         UpdatesFile.setLastUpdate(serieName, serieInfos['lastUpdated'])

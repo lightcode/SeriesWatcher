@@ -80,9 +80,8 @@ class TheTVDBSerie(TheTVDB):
         return infos
     
     
-    def downloadAllImg(self, imgDir):
-        for number, urlMin in self.miniatureToDL:
-            imgPath = '%s/%s.jpg' % (imgDir, number)
+    def downloadAllImg(self):
+        for imgPath, urlMin in self.miniatureToDL:
             if not os.path.isfile(imgPath):
                 try:
                     o = urllib.urlopen(self.URL_BANNER + urlMin)
@@ -90,10 +89,11 @@ class TheTVDBSerie(TheTVDB):
                     with open(imgPath, 'wb+') as f:
                         f.write(img)
                 except:
-                    print 'Erreur'
+                    print 'Error download episode cover.'
     
     
-    def getEpisodes(self):
+    def getEpisodes(self, imgDir):
+        self.miniatureToDL = []
         episodeList = []
         episodes = self.dom.getElementsByTagName('Episode')
         
@@ -107,10 +107,10 @@ class TheTVDBSerie(TheTVDB):
                 continue
             entry['desc'] = self._getData(e, 'Overview')
             entry['firstAired'] = self._getData(e, 'FirstAired', None)
-            entry['path'] = None
             # Miniature
             urlMin = self._getData(e, 'filename', None)
             if urlMin is not None:
-                self.miniatureToDL.append((entry['number'], urlMin))
+                imgPath = '%s/%s.jpg' % (imgDir, entry['number'])
+                self.miniatureToDL.append((imgPath, urlMin))
             episodeList.append(entry)
         return episodeList
