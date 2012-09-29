@@ -1,4 +1,4 @@
-Programme en version 1.2.
+Programme en version 1.3.
 
 # Qu'est-ce que Series Watcher ?
 

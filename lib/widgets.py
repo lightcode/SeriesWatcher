@@ -12,22 +12,22 @@ class SelectFile(QtGui.QWidget):
         QtGui.QWidget.__init__(self, parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
-        btn.clicked.connect(self.selectFolder)
+        btn.clicked.connect(self.selectFile)
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.label)
         layout.addWidget(btn)
         self.setLayout(layout)
-        
         self.setPath(path)
     
     
-    def selectFolder(self):
-        path = QtGui.QFileDialog.getOpenFileName(self)
+    def selectFile(self):
+        directory = os.path.basename(self.path())
+        path = QtGui.QFileDialog.getOpenFileName(self, directory=directory)
         self.label.setText(path)
     
     
     def path(self):
-        return self.label.text()
+        return str(self.label.text())
     
     
     def setPath(self, path):
@@ -47,12 +47,12 @@ class SelectFolder(QtGui.QWidget):
     
     
     def selectFolder(self):
-        path = QtGui.QFileDialog.getExistingDirectory(self)
+        path = QtGui.QFileDialog.getExistingDirectory(self, directory=self.path())
         self.label.setText(path)
     
     
     def path(self):
-        return self.label.text()
+        return str(self.label.text())
     
     
     def setPath(self, path):
@@ -279,6 +279,12 @@ class VideoItem(QtGui.QWidget):
         self.setLayout(cell)
         
         # Set params :
+        self.setStatus(episode.status)
+        self.setFavorite(episode.favorite)
+    
+    
+    def refresh(self):
+        episode = self.episode
         self.setStatus(episode.status)
         self.setFavorite(episode.favorite)
     

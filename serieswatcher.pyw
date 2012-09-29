@@ -161,7 +161,7 @@ class Main(QtGui.QMainWindow):
         self.episodes.viewStatusChanged.connect(self.viewStatusChanged)
         self.episodes.doubleClicked.connect(self.episodesDblClicked)
         self.episodes.playClicked.connect(self.playClicked)
-        self.episodes.itemSelectionChanged.connect(self.episodeChanged)
+        self.episodes.itemSelectionChanged.connect(self.refreshFooter)
         self.episodes.favoriteChanged.connect(self.favoriteChanged)
         body = QtGui.QHBoxLayout()
         body.addWidget(self.episodes)
@@ -177,13 +177,35 @@ class Main(QtGui.QMainWindow):
         scrollArea.setWidgetResizable(True)
         scrollArea.setWidget(self.selectionDescription)
         
+        self.selectionBtnFavorite = QtGui.QPushButton('')
+        self.selectionBtnFavorite.clicked.connect(self.toggleSelectionFavorite)
+        self.selectionBtnView = QtGui.QPushButton('')
+        self.selectionBtnView.clicked.connect(self.toggleSelectionView)
+        self.selectionNumberView = QtGui.QLabel('')
+        self.selectionLastView = QtGui.QLabel('')
+        
+        rightBar = QtGui.QVBoxLayout()
+        rightBar.addWidget(self.selectionBtnFavorite)
+        rightBar.addWidget(self.selectionBtnView)
+        rightBar.addWidget(self.selectionNumberView)
+        rightBar.addWidget(self.selectionLastView)
+        
+        
+        bottomLayout = QtGui.QHBoxLayout()
+        bottomLayout.addWidget(scrollArea)
+        bottomLayout.addLayout(rightBar)
+        
+        
         footerLayout = QtGui.QVBoxLayout()
         footerLayout.addWidget(self.selectionTitle)
-        footerLayout.addWidget(scrollArea)
+        footerLayout.addLayout(bottomLayout)
+        
         self.footer = QtGui.QWidget()
         self.footer.setFixedHeight(130)
         self.footer.setLayout(footerLayout)
         
+        
+        # Layout
         window = QtGui.QVBoxLayout()
         window.addLayout(header)
         window.addLayout(filterBar)
@@ -234,6 +256,14 @@ class Main(QtGui.QMainWindow):
     
     
     def setup(self):
+        if not os.path.isfile(VERSION_FILE):
+            r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
+                                 u"trouvé une ancienne base de données. "
+                                 u"Voulez-vous l'importer dans la nouvelle "
+                                 u"version ?",
+                                 QMessageBox.Yes | QMessageBox.No)
+            if r == QMessageBox.Yes:
+                import lib.upgrader
         if not os.path.isdir(USER):
             os.mkdir(USER)
         if not os.path.isdir(SERIES):
@@ -373,24 +403,47 @@ class Main(QtGui.QMainWindow):
             self.refreshSeries.addSerie(e)
     
     
-    def episodeChanged(self):
+    def refreshSelectedEpisode(self):
+        indexes = self.episodes.selectedIndexes()
+        if len(indexes) == 1:
+            r, c = indexes[0].row(), indexes[0].column()
+            self.episodes.cellWidget(r, c).refresh()
+    
+    
+    def getSelectedEpisode(self):
         indexes = self.episodes.selectedIndexes()
         if len(indexes) == 1:
             r, c = indexes[0].row(), indexes[0].column()
             if (r, c) in self.map:
-                episode = self.map[r, c]
-                self.footer.show()
-                
-                title = '<b>%s</b>' % episode.title
-                if episode.firstAired:
-                    firstAired = datetime.strftime(episode.firstAired,
-                                                   '%d/%m/%Y')
-                    title += '  -  %s' % firstAired
-                
-                self.selectionTitle.setText(title)
-                self.selectionDescription.setText(episode.description)
+                return self.map[r, c]
+        return False
+    
+    
+    def refreshFooter(self):
+        episode = self.getSelectedEpisode()
+        if episode:
+            self.footer.show()
+            title = '<b>%s</b>' % episode.title
+            if episode.firstAired:
+                firstAired = datetime.strftime(episode.firstAired, '%d/%m/%Y')
+                title += '  -  %s' % firstAired
+            
+            self.selectionTitle.setText(title)
+            self.selectionDescription.setText(episode.description)
+            self.selectionNumberView.setText('%d vues' % episode.nbView)
+            if episode.lastView:
+                lastView = datetime.strftime(episode.lastView, '%d/%m/%Y')
             else:
-                self.clearSelectionInfos()
+                lastView = ''
+            self.selectionLastView.setText(lastView)
+            if episode.favorite:
+                self.selectionBtnFavorite.setText('Enlever des favoris')
+            else:
+                self.selectionBtnFavorite.setText('Ajouter aux favoris')
+            if episode.nbView == 0:
+                self.selectionBtnView.setText('Marquer comme vu')
+            else:
+                self.selectionBtnView.setText('Marquer comme non vu')
         else:
             self.clearSelectionInfos()
     
@@ -427,6 +480,7 @@ class Main(QtGui.QMainWindow):
             if video is not None:
                 number = self.map[coord].favorite = value
                 video.setFavorite(value)
+        self.refreshFooter()
         self.refreshCount()
 
 
@@ -442,6 +496,7 @@ class Main(QtGui.QMainWindow):
                 else:
                     number = self.map[coord].setNotView()
                     video.setStatus(2)
+        self.refreshFooter()
         self.refreshCount()
     
     
@@ -513,9 +568,30 @@ class Main(QtGui.QMainWindow):
                 self.player.tryToPlay()
     
     
-    # ===============
-    #  Episode view
-    # ===============
+    # ====================
+    #  Episode properties
+    # ====================
+    def toggleSelectionFavorite(self):
+        episode = self.getSelectedEpisode()
+        if episode:
+            if episode.favorite:
+                episode.favorite = False
+            else:
+                episode.favorite = True
+            self.refreshSelectedEpisode()
+            self.refreshFooter()
+    
+    
+    def toggleSelectionView(self):
+        episode = self.getSelectedEpisode()
+        if episode:
+            if episode.nbView == 0:
+                episode.setView()
+            else:
+                episode.setNotView()
+            self.refreshSelectedEpisode()
+    
+    
     def markAsView(self, episode):
         for i, e in self.map.iteritems():
             if e == episode:
@@ -525,6 +601,7 @@ class Main(QtGui.QMainWindow):
                     pass
                 e.userPlayed()
                 self.refreshCount()
+                self.refreshFooter()
                 return True
         return False
     
@@ -660,6 +737,12 @@ class Main(QtGui.QMainWindow):
 
 
 app = QtGui.QApplication(sys.argv)
+
+locale = QtCore.QLocale.system().name()
+translator = QtCore.QTranslator()
+translator.load("qt_" + locale, QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+app.installTranslator(translator)
+
 window = Main()
 window.show()
 sys.exit(app.exec_())
