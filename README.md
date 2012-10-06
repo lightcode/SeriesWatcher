@@ -15,7 +15,7 @@ D'abord, veuillez extraire les fichiers du ZIP.
 Il faut installer :
 
 - [Python 2.7](http://python.org/ftp/python/2.7.3/python-2.7.3.msi)
-- [PyQt 4.9 pour Python 2.7](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.5/PyQt-Py3.3-x86-gpl-4.9.5-1.exe)
+- [PyQt 4.9 pour Python 2.7](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.5/PyQt-Py2.7-x86-gpl-4.9.5-1.exe/download)
 
 Enfin, vous pouvez ouvrir le fichier serieswatcher.pyw.
 
