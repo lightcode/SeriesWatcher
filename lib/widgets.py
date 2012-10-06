@@ -174,20 +174,30 @@ class EpisodesViewer(QtGui.QTableWidget):
     
     
     def contextMenu(self, pos):
-        nbNone = 0
+        nbEpisode = 0
         for item in self.selectedIndexes():
             (r, c) = (item.row(), item.column())
-            if not self.cellWidget(r, c):
-                nbNone += 1
-        if nbNone == len(self.selectedIndexes()):
+            if self.cellWidget(r, c):
+                nbEpisode += 1
+        if nbEpisode > 1:
             return
         
+        btnMarkAsView = btnFavorite = True
+        if nbEpisode == 1:
+            episode = self.cellWidget(r, c).episode
+            btnFavorite = not episode.favorite
+            btnMarkAsView = not (episode.nbView > 0)
+        
         menu = QtGui.QMenu()
-        menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
-        menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
+        if btnMarkAsView:
+            menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
+        else:
+            menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
         menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
-        menu.addAction(QIcon('art/star.png'), 'Mettre en favoris', self.favorite)
-        menu.addAction(QIcon('art/unstar.png'), 'Enlever des favoris', self.unfavorite)
+        if btnFavorite:
+            menu.addAction(QIcon('art/star.png'), 'Ajouter en favoris', self.favorite)
+        else:
+            menu.addAction(QIcon('art/unstar.png'), 'Enlever des favoris', self.unfavorite)
         menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))
     

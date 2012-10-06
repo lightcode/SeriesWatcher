@@ -10,7 +10,16 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
-from lib import *
+from lib.config import Config
+from lib.threads import *
+from lib.addserie import AddSerie
+from lib.editseries import EditSeries
+from lib.about import About
+from lib.options import Options
+from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
+from lib.debug import Debug, DebugWindow
+from lib import desktop
+from lib.player import Player
 from lib.const import *
 from lib.models import Serie, Episode
 
@@ -19,7 +28,7 @@ class Main(QtGui.QMainWindow):
     
     def __init__(self):
         super(Main, self).__init__()
-        self.setWindowTitle('Series Watcher %s' % VERSION)
+        self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
         self.setMinimumSize(820, 600)
         self.setWindowIcon(QIcon('art/film.png'))
         
@@ -178,23 +187,28 @@ class Main(QtGui.QMainWindow):
         scrollArea.setWidget(self.selectionDescription)
         
         self.selectionBtnFavorite = QtGui.QPushButton('')
+        self.selectionBtnFavorite.setFlat(True)
         self.selectionBtnFavorite.clicked.connect(self.toggleSelectionFavorite)
         self.selectionBtnView = QtGui.QPushButton('')
+        self.selectionBtnView.setFlat(True)
         self.selectionBtnView.clicked.connect(self.toggleSelectionView)
         self.selectionNumberView = QtGui.QLabel('')
         self.selectionLastView = QtGui.QLabel('')
         
-        rightBar = QtGui.QVBoxLayout()
-        rightBar.addWidget(self.selectionBtnFavorite)
-        rightBar.addWidget(self.selectionBtnView)
-        rightBar.addWidget(self.selectionNumberView)
-        rightBar.addWidget(self.selectionLastView)
+        episodeBarLayout = QtGui.QVBoxLayout()
+        episodeBarLayout.addWidget(self.selectionBtnFavorite)
+        episodeBarLayout.addWidget(self.selectionBtnView)
+        episodeBarLayout.addWidget(self.selectionNumberView)
+        episodeBarLayout.addWidget(self.selectionLastView)
         
+        episodeBar = QtGui.QWidget()
+        episodeBar.setFixedHeight(120)  ## Fix that
+        episodeBar.setFixedWidth(200)
+        episodeBar.setLayout(episodeBarLayout)
         
         bottomLayout = QtGui.QHBoxLayout()
         bottomLayout.addWidget(scrollArea)
-        bottomLayout.addLayout(rightBar)
-        
+        bottomLayout.addWidget(episodeBar)
         
         footerLayout = QtGui.QVBoxLayout()
         footerLayout.addWidget(self.selectionTitle)
@@ -203,7 +217,6 @@ class Main(QtGui.QMainWindow):
         self.footer = QtGui.QWidget()
         self.footer.setFixedHeight(130)
         self.footer.setLayout(footerLayout)
-        
         
         # Layout
         window = QtGui.QVBoxLayout()
@@ -219,6 +232,10 @@ class Main(QtGui.QMainWindow):
         # Shortcuts
         shortSearch = QtGui.QShortcut('Ctrl+F', self)
         shortSearch.activated.connect(self.searchBar.setFocus)
+        
+        QtGui.QShortcut('F', self).activated.connect(self.toggleSelectionFavorite)
+        QtGui.QShortcut('V', self).activated.connect(self.toggleSelectionView)
+        QtGui.QShortcut('P', self).activated.connect(self.playClicked)
     
     
     def createMenu(self):
@@ -255,15 +272,23 @@ class Main(QtGui.QMainWindow):
             SWMenu.addAction('Debug', self.openDebug)
     
     
+    def openUpdateWindow(self):
+        r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
+                             u"trouvé une ancienne base de données. "
+                             u"Voulez-vous l'importer dans la nouvelle "
+                             u"version ?",
+                             QMessageBox.Yes | QMessageBox.No)
+        if r == QMessageBox.Yes:
+            import lib.upgrader
+    
+    
     def setup(self):
-        if not os.path.isfile(VERSION_FILE):
-            r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
-                                 u"trouvé une ancienne base de données. "
-                                 u"Voulez-vous l'importer dans la nouvelle "
-                                 u"version ?",
-                                 QMessageBox.Yes | QMessageBox.No)
-            if r == QMessageBox.Yes:
-                import lib.upgrader
+        if os.path.isfile(VERSION_FILE):
+            with open(VERSION_FILE) as vf:
+                if vf.read().strip() != VERSION:
+                    self.openUpdateWindow()
+        else:
+            self.openUpdateWindow()
         if not os.path.isdir(USER):
             os.mkdir(USER)
         if not os.path.isdir(SERIES):
@@ -478,7 +503,10 @@ class Main(QtGui.QMainWindow):
             r, c = coord = item.row(), item.column()
             video = self.episodes.cellWidget(r, c)
             if video is not None:
-                number = self.map[coord].favorite = value
+                if value:
+                    self.map[coord].setFavorite()
+                else:
+                    self.map[coord].setUnFavorite()
                 video.setFavorite(value)
         self.refreshFooter()
         self.refreshCount()
@@ -528,7 +556,8 @@ class Main(QtGui.QMainWindow):
         for item in items:
             coord = item.row(), item.column()
             if coord in self.map:
-                self.playIntegratedPlayer(self.map[coord])
+                episode = self.map[coord]
+                self.playIntegratedPlayer(episode)
                 self.markAsView(episode)
     
     
@@ -679,7 +708,6 @@ class Main(QtGui.QMainWindow):
     
     def clearSeries(self):
         self.map = {}
-        
         self.selectSeason.blockSignals(True)
         self.selectSeason.clear()
         self.selectSeason.addItem('Toutes les saisons')

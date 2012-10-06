@@ -178,6 +178,18 @@ class Episode(SQLObject):
         return self.path is not None
     
     
+    def setFavorite(self):
+        if not self.favorite:
+            self.favorite = True
+            self.serie.nbFavorites += 1
+    
+    
+    def setUnFavorite(self):
+        if self.favorite:
+            self.favorite = False
+            self.serie.nbFavorites -= 1
+    
+    
     def _get_status(self):
         status = 0
         if self.path is not None:

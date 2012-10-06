@@ -3,11 +3,11 @@
 *.komodoproject
 *Thumbs.db
 .gitignore
-/user
+/user*
 /olddatabases
 /build
 /dist
 /setup
-/tests
+/test*
 /setup.py
 /todo.txt
