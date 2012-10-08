@@ -179,7 +179,7 @@ class EpisodesViewer(QtGui.QTableWidget):
             (r, c) = (item.row(), item.column())
             if self.cellWidget(r, c):
                 nbEpisode += 1
-        if nbEpisode > 1:
+        if nbEpisode == 0:
             return
         
         btnMarkAsView = btnFavorite = True
@@ -189,14 +189,14 @@ class EpisodesViewer(QtGui.QTableWidget):
             btnMarkAsView = not (episode.nbView > 0)
         
         menu = QtGui.QMenu()
-        if btnMarkAsView:
+        if btnMarkAsView or nbEpisode > 1:
             menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
-        else:
+        if not btnMarkAsView or nbEpisode > 1:
             menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
         menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
-        if btnFavorite:
-            menu.addAction(QIcon('art/star.png'), 'Ajouter en favoris', self.favorite)
-        else:
+        if btnFavorite or nbEpisode > 1:
+            menu.addAction(QIcon('art/star.png'), 'Ajouter aux favoris', self.favorite)
+        if not btnFavorite or nbEpisode > 1:
             menu.addAction(QIcon('art/unstar.png'), 'Enlever des favoris', self.unfavorite)
         menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))

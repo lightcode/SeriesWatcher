@@ -86,7 +86,7 @@ class AddSerie(QtGui.QDialog):
             self.theTVDB.setText(serieId)
         else:
             title = 'Erreur'
-            message = u'Aucune série correspondante'
+            message = u'Aucune série correspondante.'
             QMessageBox.critical(self, title, message)
     
     

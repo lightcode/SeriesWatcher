@@ -10,18 +10,19 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
-from lib.config import Config
-from lib.threads import *
-from lib.addserie import AddSerie
-from lib.editseries import EditSeries
-from lib.about import About
-from lib.options import Options
-from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
-from lib.debug import Debug, DebugWindow
 from lib import desktop
-from lib.player import Player
+from lib.about import About
+from lib.addserie import AddSerie
+from lib.config import Config
 from lib.const import *
+from lib.debug import Debug, DebugWindow
+from lib.editseries import EditSeries
 from lib.models import Serie, Episode
+from lib.options import Options
+from lib.player import Player
+from lib.threads import *
+from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
+
 
 class Main(QtGui.QMainWindow):
     currentSerie = None
@@ -187,10 +188,13 @@ class Main(QtGui.QMainWindow):
         scrollArea.setWidget(self.selectionDescription)
         
         self.selectionBtnFavorite = QtGui.QPushButton('')
+        self.selectionBtnFavorite.setFixedWidth(160)
         self.selectionBtnFavorite.setFlat(True)
+        self.selectionBtnFavorite.setStyleSheet("text-align:left")
         self.selectionBtnFavorite.clicked.connect(self.toggleSelectionFavorite)
         self.selectionBtnView = QtGui.QPushButton('')
         self.selectionBtnView.setFlat(True)
+        self.selectionBtnView.setStyleSheet("text-align:left")
         self.selectionBtnView.clicked.connect(self.toggleSelectionView)
         self.selectionNumberView = QtGui.QLabel('')
         self.selectionLastView = QtGui.QLabel('')
@@ -201,14 +205,9 @@ class Main(QtGui.QMainWindow):
         episodeBarLayout.addWidget(self.selectionNumberView)
         episodeBarLayout.addWidget(self.selectionLastView)
         
-        episodeBar = QtGui.QWidget()
-        episodeBar.setFixedHeight(120)  ## Fix that
-        episodeBar.setFixedWidth(200)
-        episodeBar.setLayout(episodeBarLayout)
-        
         bottomLayout = QtGui.QHBoxLayout()
         bottomLayout.addWidget(scrollArea)
-        bottomLayout.addWidget(episodeBar)
+        bottomLayout.addLayout(episodeBarLayout)
         
         footerLayout = QtGui.QVBoxLayout()
         footerLayout.addWidget(self.selectionTitle)
@@ -345,8 +344,7 @@ class Main(QtGui.QMainWindow):
         # Search if there are long time viewed episode
         for e in self.map.itervalues():
             if e.status in (1, 2):
-                if e.lastView is None \
-                   or (e.lastView is None and e.lastView <= limitDate):
+                if e.lastView is None or e.lastView <= limitDate:
                     episodesLongTime.append(e)
                 else:
                     otherEpisodes.append(e)
@@ -357,7 +355,7 @@ class Main(QtGui.QMainWindow):
             episodes = otherEpisodes
         
         if episodes:
-            self.playEpisode(random.choice(otherEpisodes))
+            self.playEpisode(random.choice(episodes))
             self.player.btnRandom.setChecked(True)
             return True
         return False
@@ -452,10 +450,13 @@ class Main(QtGui.QMainWindow):
             if episode.firstAired:
                 firstAired = datetime.strftime(episode.firstAired, '%d/%m/%Y')
                 title += '  -  %s' % firstAired
-            
             self.selectionTitle.setText(title)
             self.selectionDescription.setText(episode.description)
-            self.selectionNumberView.setText('%d vues' % episode.nbView)
+            nbView = episode.nbView
+            if nbView > 1:
+                self.selectionNumberView.setText('%d vues' % nbView)
+            else:
+                self.selectionNumberView.setText('%d vue' % nbView)
             if episode.lastView:
                 lastView = datetime.strftime(episode.lastView, '%d/%m/%Y')
             else:
@@ -463,12 +464,16 @@ class Main(QtGui.QMainWindow):
             self.selectionLastView.setText(lastView)
             if episode.favorite:
                 self.selectionBtnFavorite.setText('Enlever des favoris')
+                self.selectionBtnFavorite.setIcon(QIcon('art/unstar.png'))
             else:
                 self.selectionBtnFavorite.setText('Ajouter aux favoris')
+                self.selectionBtnFavorite.setIcon(QIcon('art/star.png'))
             if episode.nbView == 0:
                 self.selectionBtnView.setText('Marquer comme vu')
+                self.selectionBtnView.setIcon(QIcon('art/check.png'))
             else:
                 self.selectionBtnView.setText('Marquer comme non vu')
+                self.selectionBtnView.setIcon(QIcon('art/uncheck.png'))
         else:
             self.clearSelectionInfos()
     
@@ -604,11 +609,12 @@ class Main(QtGui.QMainWindow):
         episode = self.getSelectedEpisode()
         if episode:
             if episode.favorite:
-                episode.favorite = False
+                episode.setUnFavorite()
             else:
-                episode.favorite = True
+                episode.setFavorite()
             self.refreshSelectedEpisode()
             self.refreshFooter()
+            self.refreshCount()
     
     
     def toggleSelectionView(self):
