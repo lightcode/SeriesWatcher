@@ -6,11 +6,13 @@ from PyQt4.QtGui import QIcon
 from config import Config
 from widgets import SelectFolder
 from addserie import AddSerie
-from models import Serie
+from models import Serie, Episode
 
 class ListSeries(QtGui.QWidget):
     # Signals :
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')
+    
+    _itemsDeleted = []
     
     def __init__(self, parent = None):
         QtGui.QWidget.__init__(self, parent)
@@ -52,7 +54,12 @@ class ListSeries(QtGui.QWidget):
     def delete(self):
         currentIndex = self.listWidget.currentIndex().row()
         item = self.listWidget.takeItem(currentIndex)
+        self._itemsDeleted.append(item)
         del item
+    
+    
+    def getItemsDeleted(self):
+        return self._itemsDeleted
     
     
     def serieAdded(self, uuid, title, TVDBID, lang, path):
@@ -189,5 +196,9 @@ class EditSeries(QtGui.QDialog):
             sdb.tvdbID = tvdbID
             sdb.lang = lang
             sdb.pos = pos
+        for item in self.listSeries.getItemsDeleted():
+            sdb = list(Serie.select(Serie.q.uuid==item.uuid))[0]
+            Episode.deleteBy(serie=sdb)
+            Serie.delete(sdb.id)
         self.edited.emit()
         self.close()
