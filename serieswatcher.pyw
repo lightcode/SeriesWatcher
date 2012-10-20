@@ -625,6 +625,8 @@ class Main(QtGui.QMainWindow):
             else:
                 episode.setNotView()
             self.refreshSelectedEpisode()
+            self.refreshFooter()
+            self.refreshCount()
     
     
     def markAsView(self, episode):

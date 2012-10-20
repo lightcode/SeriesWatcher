@@ -160,10 +160,10 @@ class Episode(SQLObject):
     
     def setView(self):
         if self.isAvailable():
-            self.nbView += 1
             if self.nbView == 0:
                 self.serie.nbNotView -= 1
                 self.serie.nbView += 1
+            self.nbView += 1
     
     
     def setNotView(self):
