@@ -350,15 +350,14 @@ class Main(QtGui.QMainWindow):
                     otherEpisodes.append(e)
         
         if episodesLongTime:
-            episodes = episodesLongTime
+            self.playEpisode(random.choice(episodesLongTime))
+        elif otherEpisodes:
+            self.playEpisode(random.choice(sorted(otherEpisodes, key=lambda o: o.lastView)[:10]))
         else:
-            episodes = otherEpisodes
+            return False
         
-        if episodes:
-            self.playEpisode(random.choice(episodes))
-            self.player.btnRandom.setChecked(True)
-            return True
-        return False
+        self.player.btnRandom.setChecked(True)
+        return True
     
     
     def allEpisodeView(self):

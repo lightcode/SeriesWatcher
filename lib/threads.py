@@ -22,7 +22,10 @@ class SyncDBThead(QtCore.QThread):
     def run(self):
         while True:
             for e in Episode.select():
-                e.syncUpdate()
+                try:
+                    e.syncUpdate()
+                except sqlobject.dberrors.OperationalError as e:
+                    print 'SQLObject Error : %s' % e
             self.msleep(500)
 
 

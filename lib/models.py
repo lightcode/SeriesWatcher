@@ -103,7 +103,8 @@ class Serie(SQLObject):
                 else:
                     nbView += 1
             else:
-                self.nbEpisodeNotAvailable += 1
+                if e.season > 0:
+                    nbEpisodeNotAvailable += 1
             if e.favorite:
                 nbFavorites += 1
         
