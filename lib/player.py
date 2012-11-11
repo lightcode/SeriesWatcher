@@ -264,7 +264,7 @@ class Player(QtGui.QMainWindow):
             self.setWindowState(self._afterFullScreen)
         else:
             self._afterFullScreen = self.windowState()
-            self.screenBtn.setIcon(QIcon('art/minimise.png'))
+            self.screenBtn.setIcon(QIcon('art/fullscreen-exit.png'))
             self.setWindowState(Qt.WindowFullScreen)
     
     
@@ -442,16 +442,16 @@ class Player(QtGui.QMainWindow):
         tool = QtGui.QToolBar()
         self.playButton = tool.addAction(QIcon('art/play.png'), 'Play',
                                          self.playPause)
-        tool.addAction(QIcon('art/previous.png'), u'Précédent',
+        tool.addAction(QIcon('art/arrow-left.png'), u'Précédent',
                        self.previousEpisode)
         tool.addAction(QIcon('art/stop.png'), 'Stop', self.stop)
-        tool.addAction(QIcon('art/next.png'), 'Suivant', self.nextEpisode)
+        tool.addAction(QIcon('art/arrow-right.png'), 'Suivant', self.nextEpisode)
         tool.addSeparator()
         
         self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
                                           "Playlist", self.showPlayList)
         self.playListBtn.setCheckable(True)
-        self.autoPlay = tool.addAction(QIcon('art/refresh.png'),
+        self.autoPlay = tool.addAction(QIcon('art/reload.png'),
                                        "Activer la lecture automatique")
         self.autoPlay.setCheckable(True)
         

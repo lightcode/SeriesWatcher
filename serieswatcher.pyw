@@ -31,7 +31,7 @@ class Main(QtGui.QMainWindow):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
         self.setMinimumSize(820, 600)
-        self.setWindowIcon(QIcon('art/film.png'))
+        self.setWindowIcon(QIcon('art/sw.ico'))
         
         self.setup()
         Config.loadConfig()
@@ -47,8 +47,9 @@ class Main(QtGui.QMainWindow):
             Debug.add(Debug.INFO, u'Debug activé')
         
         # Load the main windows
+        QtCore.QTimer.singleShot(250, self.startTheads1)
         self.createWindow()
-        self.startTheads()
+        QtCore.QTimer.singleShot(1000, self.startTheads2)
         if not Serie.getSeries():
             self.openAddSerie()
         
@@ -59,16 +60,22 @@ class Main(QtGui.QMainWindow):
             self.player = None
     
     
-    def startTheads(self):
+    def startTheads1(self):
         self.commandOpen = QtCore.QProcess()
         
         self.episodesLoader = EpisodesLoaderThread(self)
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
+        self.loaderThread = LoaderThread(self)
+        self.loaderThread.serieLoaded.connect(self.serieLoaded)
+        self.loaderThread.start()
+        
         self.searchThread = SearchThread(self)
         self.searchThread.searchFinished.connect(self.searchFinished)
         self.searchThread.start()
-        
+    
+    
+    def startTheads2(self):
         self.refreshSeries = RefreshSeriesThread(self)
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
@@ -77,10 +84,6 @@ class Main(QtGui.QMainWindow):
         self.checkSerieUpdate = CheckSerieUpdateThread(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
         self.checkSerieUpdate.start()
-        
-        self.loaderThread = LoaderThread(self)
-        self.loaderThread.serieLoaded.connect(self.serieLoaded)
-        self.loaderThread.start()
         
         self.syncDBThead = SyncDBThead(self)
         self.syncDBThead.start()
@@ -199,11 +202,18 @@ class Main(QtGui.QMainWindow):
         self.selectionNumberView = QtGui.QLabel('')
         self.selectionLastView = QtGui.QLabel('')
         
-        episodeBarLayout = QtGui.QVBoxLayout()
-        episodeBarLayout.addWidget(self.selectionBtnFavorite)
-        episodeBarLayout.addWidget(self.selectionBtnView)
-        episodeBarLayout.addWidget(self.selectionNumberView)
-        episodeBarLayout.addWidget(self.selectionLastView)
+        self.selectionIconFavorite = QtGui.QLabel('<img src="art/star.png" />')
+        self.selectionIconView = QtGui.QLabel('<img src="art/check.png" />')
+        
+        episodeBarLayout = QtGui.QGridLayout()
+        episodeBarLayout.addWidget(self.selectionIconFavorite, 0, 0)
+        episodeBarLayout.addWidget(self.selectionBtnFavorite, 0, 1)
+        episodeBarLayout.addWidget(self.selectionIconView, 1, 0)
+        episodeBarLayout.addWidget(self.selectionBtnView, 1, 1)
+        episodeBarLayout.addWidget(QtGui.QLabel('<img src="art/eye.png" />'), 2, 0)
+        episodeBarLayout.addWidget(self.selectionNumberView, 2, 1)
+        episodeBarLayout.addWidget(QtGui.QLabel('<img src="art/calendar.png" />'), 3, 0)
+        episodeBarLayout.addWidget(self.selectionLastView, 3, 1)
         
         bottomLayout = QtGui.QHBoxLayout()
         bottomLayout.addWidget(scrollArea)
@@ -253,7 +263,7 @@ class Main(QtGui.QMainWindow):
         
         # Menu "Episodes"
         episodesMenu = self.menubar.addMenu('Episodes')
-        episodesMenu.addAction(QIcon('art/refresh.png'), u'Recharger',
+        episodesMenu.addAction(QIcon('art/reload.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
         episodesMenu.addAction(QIcon('art/check.png'), u'Marquer comme vue',
                                self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
@@ -268,7 +278,7 @@ class Main(QtGui.QMainWindow):
         SWMenu.addAction(QIcon('art/help.png'), 'A propos', self.openAbout)
         if Debug.isEnabled():
             SWMenu.addSeparator()
-            SWMenu.addAction('Debug', self.openDebug)
+            SWMenu.addAction(QIcon('art/bug.png'), 'Debug', self.openDebug)
     
     
     def openUpdateWindow(self):
@@ -451,28 +461,27 @@ class Main(QtGui.QMainWindow):
                 title += '  -  %s' % firstAired
             self.selectionTitle.setText(title)
             self.selectionDescription.setText(episode.description)
-            nbView = episode.nbView
-            if nbView > 1:
-                self.selectionNumberView.setText('%d vues' % nbView)
+            if episode.nbView > 1:
+                self.selectionNumberView.setText('%d vues' % episode.nbView)
             else:
-                self.selectionNumberView.setText('%d vue' % nbView)
+                self.selectionNumberView.setText('%d vue' % episode.nbView)
             if episode.lastView:
                 lastView = datetime.strftime(episode.lastView, '%d/%m/%Y')
             else:
-                lastView = ''
+                lastView = 'Jamais vu'
             self.selectionLastView.setText(lastView)
             if episode.favorite:
                 self.selectionBtnFavorite.setText('Enlever des favoris')
-                self.selectionBtnFavorite.setIcon(QIcon('art/unstar.png'))
+                self.selectionIconFavorite.setText('<img src="art/star.png" />')
             else:
                 self.selectionBtnFavorite.setText('Ajouter aux favoris')
-                self.selectionBtnFavorite.setIcon(QIcon('art/star.png'))
+                self.selectionIconFavorite.setText('<img src="art/unstar.png" />')
             if episode.nbView == 0:
                 self.selectionBtnView.setText('Marquer comme vu')
-                self.selectionBtnView.setIcon(QIcon('art/check.png'))
+                self.selectionIconView.setText('<img src="art/uncheck.png" />')
             else:
                 self.selectionBtnView.setText('Marquer comme non vu')
-                self.selectionBtnView.setIcon(QIcon('art/uncheck.png'))
+                self.selectionIconView.setText('<img src="art/check.png" />')
         else:
             self.clearSelectionInfos()
     

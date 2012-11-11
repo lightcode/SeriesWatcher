@@ -41,7 +41,7 @@ class Serie(SQLObject):
     
     class sqlmeta:
         defaultOrder = 'pos'
-        #lazyUpdate = True
+        lazyUpdate = True
     
     def isLoaded(self):
         return self.loadCompleted
@@ -67,7 +67,7 @@ class Serie(SQLObject):
     def loadAvailableList(self):
         self.episodesAvailable = {}
         
-        if not self.path:
+        if not self.path and not os.path.isdir(self.path):
             return
         
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))

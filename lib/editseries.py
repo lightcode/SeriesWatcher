@@ -29,10 +29,10 @@ class ListSeries(QtGui.QWidget):
         
         tool = QtGui.QToolBar()
         tool.setStyleSheet('QToolBar { border:none; }')
-        tool.addAction(QIcon('art/add.png'), u'Ajouter une série', self.add)
+        tool.addAction(QIcon('art/plus.png'), u'Ajouter une série', self.add)
         tool.addSeparator()
-        tool.addAction(QIcon('art/up.png'), 'Monter', self.upItem)
-        tool.addAction(QIcon('art/down.png'), 'Descendre', self.downItem)
+        tool.addAction(QIcon('art/arrow-up.png'), 'Monter', self.upItem)
+        tool.addAction(QIcon('art/arrow-down.png'), 'Descendre', self.downItem)
         tool.addAction(QIcon('art/delete.png'), u'Supprimer', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()

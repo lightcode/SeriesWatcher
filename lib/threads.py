@@ -13,6 +13,7 @@ from search import *
 from thetvdb import TheTVDBSerie
 from const import *
 from models import Serie, Episode
+from sqlobject.dberrors import OperationalError
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
            'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead']
@@ -21,11 +22,19 @@ __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
 class SyncDBThead(QtCore.QThread):
     def run(self):
         while True:
-            for e in Episode.select():
+            for s in Serie.getSeries():
                 try:
-                    e.syncUpdate()
-                except sqlobject.dberrors.OperationalError as e:
-                    print 'SQLObject Error : %s' % e
+                    s.syncUpdate()
+                except OperationalError as msg:
+                    print 'SQLObject Error : %s' % msg
+            try:
+                for e in self.parent().currentSerie.episodes:
+                    try:
+                        e.syncUpdate()
+                    except sqlobject.dberrors.OperationalError as msg:
+                        print 'SQLObject Error : %s' % msg
+            except AttributeError:
+                pass
             self.msleep(500)
 
 
@@ -169,7 +178,8 @@ class LoaderThread(QtCore.QThread):
             currentSerieId = self.parent().currentSerieId()
             if currentSerieId != self.lastCurrentSerieId or self._forceReload:
                 try:
-                    self.serieLoaded.emit(Serie.getSeries()[currentSerieId])
+                    serie = Serie.getSeries()[currentSerieId]
+                    self.serieLoaded.emit(serie)
                 except IndexError:
                     pass
                 self.lastCurrentSerieId = currentSerieId
