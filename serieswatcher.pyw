@@ -31,7 +31,7 @@ class Main(QtGui.QMainWindow):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
         self.setMinimumSize(820, 600)
-        self.setWindowIcon(QIcon('art/sw.ico'))
+        self.setWindowIcon(QIcon('art/icon.png'))
         
         self.setup()
         Config.loadConfig()
@@ -226,6 +226,7 @@ class Main(QtGui.QMainWindow):
         self.footer = QtGui.QWidget()
         self.footer.setFixedHeight(130)
         self.footer.setLayout(footerLayout)
+        self.footer.hide()
         
         # Layout
         window = QtGui.QVBoxLayout()
@@ -784,7 +785,11 @@ app = QtGui.QApplication(sys.argv)
 
 locale = QtCore.QLocale.system().name()
 translator = QtCore.QTranslator()
-translator.load("qt_" + locale, QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+if os.path.splitext(sys.argv[0])[1] in ['.py', '.pyw']:
+    reptrad = unicode(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+else:
+    reptrad = unicode("translations")
+translator.load(QtCore.QString("qt_") + locale, reptrad)
 app.installTranslator(translator)
 
 window = Main()
