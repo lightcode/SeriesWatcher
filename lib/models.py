@@ -14,8 +14,11 @@ from datetime import datetime
 sys.path.append(os.path.abspath('.'))
 from sqlobject import *
 
+if not os.path.isdir(USER):
+    os.mkdir(USER)
+if not os.path.isdir(SERIES):
+    os.mkdir(SERIES)
 PATH_TO_DATABASE = os.path.abspath('user/series/series.sqlite')
-sqlhub.processConnection = connectionForURI('sqlite:///' + PATH_TO_DATABASE)
 
 
 class Serie(SQLObject):
@@ -144,7 +147,6 @@ class Episode(SQLObject):
     firstAired = DateCol(default=None)
     favorite = BoolCol(default=False)
     serie = ForeignKey('Serie')
-    
     path = None
     
     
@@ -211,7 +213,7 @@ class Episode(SQLObject):
         return u'%s%s/%s.jpg' % (SERIES_IMG, self.serie.uuid, self.number)
 
 
-
+sqlhub.processConnection = connectionForURI('sqlite:///' + PATH_TO_DATABASE)
 if not os.path.isfile(PATH_TO_DATABASE):
     Serie.createTable()
     Episode.createTable()

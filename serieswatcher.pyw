@@ -10,6 +10,11 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
+
+USER_DIR_FOUND = False
+if os.path.isdir('user'):
+    USER_DIR_FOUND = True
+
 from lib import desktop
 from lib.about import About
 from lib.addserie import AddSerie
@@ -193,11 +198,11 @@ class Main(QtGui.QMainWindow):
         self.selectionBtnFavorite = QtGui.QPushButton('')
         self.selectionBtnFavorite.setFixedWidth(160)
         self.selectionBtnFavorite.setFlat(True)
-        self.selectionBtnFavorite.setStyleSheet("text-align:left")
+        self.selectionBtnFavorite.setStyleSheet("text-align:left;padding-left:0px")
         self.selectionBtnFavorite.clicked.connect(self.toggleSelectionFavorite)
         self.selectionBtnView = QtGui.QPushButton('')
         self.selectionBtnView.setFlat(True)
-        self.selectionBtnView.setStyleSheet("text-align:left")
+        self.selectionBtnView.setStyleSheet("text-align:left;padding-left:0px")
         self.selectionBtnView.clicked.connect(self.toggleSelectionView)
         self.selectionNumberView = QtGui.QLabel('')
         self.selectionLastView = QtGui.QLabel('')
@@ -290,6 +295,9 @@ class Main(QtGui.QMainWindow):
                              QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
             import lib.upgrader
+        elif r == QMessageBox.No:
+            with open('user/series/VERSION', 'w+') as f:
+                f.write('1.3.0')
     
     
     def setup(self):
@@ -297,8 +305,11 @@ class Main(QtGui.QMainWindow):
             with open(VERSION_FILE) as vf:
                 if vf.read().strip() != VERSION:
                     self.openUpdateWindow()
-        else:
+        elif USER_DIR_FOUND:
             self.openUpdateWindow()
+        else:
+            with open('user/series/VERSION', 'w+') as f:
+                f.write('1.3.0')
         if not os.path.isdir(USER):
             os.mkdir(USER)
         if not os.path.isdir(SERIES):
@@ -433,13 +444,13 @@ class Main(QtGui.QMainWindow):
     
     def updateAllSeriesMenu(self):
         for e in range(Serie.getSeries()):
-            self.refreshSeries.addSerie(e)
+            self.refreshSeries.addSerie(e)    
     
     
-    def refreshSelectedEpisode(self):
-        indexes = self.episodes.selectedIndexes()
-        if len(indexes) == 1:
-            r, c = indexes[0].row(), indexes[0].column()
+    def refreshSelectedEpisodes(self):
+        items = self.episodes.selectedIndexes()
+        for item in items:
+            r, c = item.row(), item.column()
             self.episodes.cellWidget(r, c).refresh()
     
     
@@ -450,6 +461,14 @@ class Main(QtGui.QMainWindow):
             if (r, c) in self.map:
                 return self.map[r, c]
         return False
+    
+    
+    def getSelectedEpisodes(self):
+        items = self.episodes.selectedIndexes()
+        for item in items:
+            r, c = item.row(), item.column()
+            if (r, c) in self.map:
+                yield self.map[r, c]
     
     
     def refreshFooter(self):
@@ -615,25 +634,41 @@ class Main(QtGui.QMainWindow):
     #  Episode properties
     # ====================
     def toggleSelectionFavorite(self):
-        episode = self.getSelectedEpisode()
-        if episode:
-            if episode.favorite:
-                episode.setUnFavorite()
-            else:
-                episode.setFavorite()
-            self.refreshSelectedEpisode()
+        nbfav = nbunfav = 0
+        for episode in self.getSelectedEpisodes():
+            if episode:
+                if episode.favorite:
+                    nbfav += 1
+                else:
+                    nbunfav += 1
+        
+        for episode in self.getSelectedEpisodes():
+            if episode:
+                if nbfav > nbunfav:
+                    episode.setUnFavorite()
+                else:
+                    episode.setFavorite()
+            self.refreshSelectedEpisodes()
             self.refreshFooter()
             self.refreshCount()
     
     
     def toggleSelectionView(self):
-        episode = self.getSelectedEpisode()
-        if episode:
-            if episode.nbView == 0:
-                episode.setView()
-            else:
-                episode.setNotView()
-            self.refreshSelectedEpisode()
+        nbview = nbnotview = 0
+        for episode in self.getSelectedEpisodes():
+            if episode:
+                if episode.nbView > 0:
+                    nbview += 1
+                else:
+                    nbnotview += 1
+        
+        for episode in self.getSelectedEpisodes():
+            if episode:
+                if nbview > nbnotview:
+                    episode.setNotView()
+                else:
+                    episode.setView()
+            self.refreshSelectedEpisodes()
             self.refreshFooter()
             self.refreshCount()
     
