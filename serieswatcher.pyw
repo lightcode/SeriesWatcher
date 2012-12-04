@@ -68,6 +68,11 @@ class Main(QtGui.QMainWindow):
     def startTheads1(self):
         self.commandOpen = QtCore.QProcess()
         
+        self.refreshSeries = RefreshSeriesThread(self)
+        self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
+        self.refreshSeries.serieUpdated.connect(self.serieUpdated)
+        self.refreshSeries.start()
+        
         self.episodesLoader = EpisodesLoaderThread(self)
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
@@ -81,11 +86,6 @@ class Main(QtGui.QMainWindow):
     
     
     def startTheads2(self):
-        self.refreshSeries = RefreshSeriesThread(self)
-        self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
-        self.refreshSeries.serieUpdated.connect(self.serieUpdated)
-        self.refreshSeries.start()
-        
         self.checkSerieUpdate = CheckSerieUpdateThread(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
         self.checkSerieUpdate.start()
