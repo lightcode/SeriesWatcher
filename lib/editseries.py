@@ -12,10 +12,11 @@ class ListSeries(QtGui.QWidget):
     # Signals :
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')
     
-    _itemsDeleted = []
     
     def __init__(self, parent = None):
         QtGui.QWidget.__init__(self, parent)
+        
+        self._itemsDeleted = []
         
         self.listWidget = QtGui.QListWidget()
         for serie in Serie.getSeries():
