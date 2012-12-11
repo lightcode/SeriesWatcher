@@ -451,7 +451,9 @@ class Main(QtGui.QMainWindow):
         items = self.episodes.selectedIndexes()
         for item in items:
             r, c = item.row(), item.column()
-            self.episodes.cellWidget(r, c).refresh()
+            widget = self.episodes.cellWidget(r, c)
+            if widget:
+                widget.refresh()
     
     
     def getSelectedEpisode(self):
