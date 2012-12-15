@@ -221,6 +221,3 @@ if not os.path.isfile(PATH_TO_DATABASE):
 
 #Serie._connection.debug = True
 #Episode._connection.debug = True
-if __name__ == '__main__':
-    pass
-    print Serie.get(3).episodes

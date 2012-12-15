@@ -138,6 +138,10 @@ class RefreshSeriesThread(QtCore.QThread):
                 serie = serie
             )
         
+        toDelete = episodesDb - {e['number'] for e in episodeList}
+        for number in toDelete:
+            season, episode = map(int, number.split('-'))
+            Episode.deleteBy(serie=serie, season=season, episode=episode)
         self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
         
         # Miniature DL
