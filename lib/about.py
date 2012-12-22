@@ -5,8 +5,8 @@ from PyQt4 import QtCore, QtGui
 from const import TEXT_VERSION, RELEASE_DATE
 
 class About(QtGui.QDialog):
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(About, self).__init__(parent)
         self.setWindowTitle('A propos')
         
         ABOUT = [u"Series Watcher %s %s<br/>" % (TEXT_VERSION, RELEASE_DATE),

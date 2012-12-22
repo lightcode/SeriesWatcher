@@ -13,8 +13,8 @@ RANDOM_TIMES = [(u'Désactiver', 0),
                 ('3 mois', 7776000)]
 
 class Options(QtGui.QDialog):
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(Options, self).__init__(parent)
         self.setWindowTitle('Options')
         self.setMinimumWidth(500)
         self.setMinimumHeight(200)

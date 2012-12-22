@@ -39,12 +39,11 @@ class SyncDBThead(QtCore.QThread):
 
 
 class CheckSerieUpdateThread(QtCore.QThread):
-    # Signals :
-    updateRequired = QtCore.pyqtSignal(int)
     TIME_BETWEEN_UPDATE = 86400 # a day
+    updateRequired = QtCore.pyqtSignal(int)
     
-    def __init__(self, parent = None):
-        QtCore.QThread.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(CheckSerieUpdateThread, self).__init__(parent)
         UpdatesFile.loadUpdates()
     
     
@@ -86,8 +85,8 @@ class RefreshSeriesThread(QtCore.QThread):
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
     
-    def __init__(self, parent = None):
-        QtCore.QThread.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(RefreshSeriesThread, self).__init__(parent)
         self.toRefresh = []
     
     
@@ -167,9 +166,7 @@ class RefreshSeriesThread(QtCore.QThread):
 
 
 class LoaderThread(QtCore.QThread):
-    # Signals :
     serieLoaded = QtCore.pyqtSignal(Serie)
-    
     lastCurrentSerieId = -1
     _forceReload = False
     
@@ -193,11 +190,10 @@ class LoaderThread(QtCore.QThread):
 
 
 class SearchThread(QtCore.QThread):
-    # Signals :
     searchFinished = QtCore.pyqtSignal(list)
     
     def __init__(self, parent=None):
-        QtCore.QThread.__init__(self, parent)
+        super(SearchThread, self).__init__(parent)
         self.textSearch = ""
     
     
@@ -231,7 +227,6 @@ class SearchThread(QtCore.QThread):
 
 
 class EpisodesLoaderThread(QtCore.QThread):
-    # Signals :
     episodeLoaded = QtCore.pyqtSignal(tuple)
     episodes = []
     lastQuery = 0

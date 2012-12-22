@@ -9,7 +9,7 @@ from PyQt4.QtGui import QIcon
 
 class SelectFile(QtGui.QWidget):
     def __init__(self, path='', parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(SelectFile, self).__init__(parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
         btn.clicked.connect(self.selectFile)
@@ -36,7 +36,7 @@ class SelectFile(QtGui.QWidget):
 
 class SelectFolder(QtGui.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(SelectFolder, self).__init(parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
         btn.clicked.connect(self.selectFolder)
@@ -62,7 +62,8 @@ class SelectFolder(QtGui.QWidget):
 
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
-    def __init__(self, parent = None):
+    
+    def __init__(self, parent=None):
         super(FilterMenu, self).__init__('Filtrer', parent)
         self.setFlat(True)
         self.setMenu(self.menu())
@@ -147,16 +148,14 @@ class FilterMenu(QtGui.QPushButton):
 
 
 class EpisodesViewer(QtGui.QTableWidget):
-    # Signals :
+    nbColumn = 3
+    columnWidth = 260
+    rowHeight = 100
     pressEnter = QtCore.pyqtSignal('QModelIndex')
     refreshEpisodes = QtCore.pyqtSignal()
     viewStatusChanged = QtCore.pyqtSignal(bool)
     playClicked = QtCore.pyqtSignal()
     favoriteChanged = QtCore.pyqtSignal(bool)
-    
-    nbColumn = 3
-    columnWidth = 260
-    rowHeight = 100
     
     def __init__(self, parent = None):
         super(EpisodesViewer, self).__init__(parent)
@@ -260,7 +259,7 @@ class EpisodesViewer(QtGui.QTableWidget):
 
 class VideoItem(QtGui.QWidget):
     def __init__(self, episode):
-        QtGui.QWidget.__init__(self)
+        super(VideoItem, self).__init__()
         
         self.episode = episode
         

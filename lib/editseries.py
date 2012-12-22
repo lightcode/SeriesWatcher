@@ -9,11 +9,9 @@ from addserie import AddSerie
 from models import Serie, Episode
 
 class ListSeries(QtGui.QWidget):
-    # Signals :
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')
     
-    
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         
         self._itemsDeleted = []
@@ -127,11 +125,10 @@ class ListSeries(QtGui.QWidget):
 
 
 class EditSeries(QtGui.QDialog):
-    # Signals :
     edited = QtCore.pyqtSignal()
 
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(EditSeries, self).__init__(parent)
         self.setWindowTitle(u'Editer les séries')
         
         # Select serie pannel

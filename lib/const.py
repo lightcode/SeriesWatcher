@@ -6,7 +6,7 @@ import os.path
 PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
          'CONFIG_FILE', 'LAST_VERIF_PATH']
 __all__ = ['VERSION', 'TEXT_VERSION', 'PATHS', 'EXTENSIONS',
-           'VERSION_FILE'] + PATHS
+           'VERSION_FILE', 'ERROR_PLAYER_LOAD'] + PATHS
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 

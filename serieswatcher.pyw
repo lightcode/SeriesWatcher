@@ -66,6 +66,7 @@ class Main(QtGui.QMainWindow):
     
     
     def startTheads1(self):
+        """Start the first group of threads."""
         self.commandOpen = QtCore.QProcess()
         
         self.refreshSeries = RefreshSeriesThread(self)
@@ -86,6 +87,7 @@ class Main(QtGui.QMainWindow):
     
     
     def startTheads2(self):
+        """Start the second group of threads."""
         self.checkSerieUpdate = CheckSerieUpdateThread(self)
         self.checkSerieUpdate.updateRequired.connect(self.refreshSeries.addSerie)
         self.checkSerieUpdate.start()
@@ -95,6 +97,7 @@ class Main(QtGui.QMainWindow):
     
     
     def currentSerieId(self):
+        """Return the current serie ID."""
         return self.selectSerie.currentIndex()
     
     
@@ -102,6 +105,7 @@ class Main(QtGui.QMainWindow):
     #  Window Manager
     # =========================
     def createWindow(self):
+        """Draw the main window."""
         self.createMenu()
         
         self.setStyleSheet('QScrollArea { border:none; }')
@@ -254,6 +258,7 @@ class Main(QtGui.QMainWindow):
     
     
     def createMenu(self):
+        """Add menu bar in the window."""
         self.menubar = self.menuBar()
         
         # Menu "Series"
@@ -288,6 +293,7 @@ class Main(QtGui.QMainWindow):
     
     
     def openUpdateWindow(self):
+        """Open a window that ask if the program must update the database."""
         r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
                              u"trouvé une ancienne base de données. "
                              u"Voulez-vous l'importer dans la nouvelle "
@@ -301,6 +307,7 @@ class Main(QtGui.QMainWindow):
     
     
     def setup(self):
+        """Some check when the program open."""
         if os.path.isfile(VERSION_FILE):
             with open(VERSION_FILE) as vf:
                 if vf.read().strip() != VERSION:
@@ -564,7 +571,7 @@ class Main(QtGui.QMainWindow):
     
     
     def episodesDblClicked(self, n):
-        coord = n.row(), n.column()
+        coord = (n.row(), n.column())
         if coord in self.map:
             episode = self.map[coord]
             self.playEpisode(episode)
@@ -589,7 +596,7 @@ class Main(QtGui.QMainWindow):
     def playClicked(self):
         items = self.episodes.selectedIndexes()
         for item in items:
-            coord = item.row(), item.column()
+            coord = (item.row(), item.column())
             if coord in self.map:
                 episode = self.map[coord]
                 self.playIntegratedPlayer(episode)
@@ -734,7 +741,7 @@ class Main(QtGui.QMainWindow):
     
     
     def episodeLoaded(self, args):
-        x, y, episode, image = args
+        (x, y, episode, image) = args
         item = VideoItem(episode)
         item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
@@ -744,7 +751,7 @@ class Main(QtGui.QMainWindow):
         filterSeason = self.selectSeason.currentIndex() - 1
         filterID = self.filter.getFilterID()
         for e in self.currentSerie.episodes:
-            status, season = e.status, e.season
+            (status, season) = (e.status, e.season)
             if (filterSeason == -1 or filterSeason == season) \
                 and ((filterID == 0 and status in (1, 2)) \
                   or (filterID == 1 and status == 2) \

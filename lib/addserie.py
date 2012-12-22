@@ -7,16 +7,14 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
 from widgets import SelectFolder
 from thetvdb import TheTVDB
-from camelcase import getCamelCase
 from config import Config
 from models import Serie
 
 class AddSerie(QtGui.QDialog):
-    # Signals :
     serieAdded = QtCore.pyqtSignal()
     
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(AddSerie, self).__init__(parent)
         self.setWindowTitle(u'Ajouter une série')
         
         # Title & search
@@ -80,7 +78,7 @@ class AddSerie(QtGui.QDialog):
             infos = seriesFound[0]
         
         if len(seriesFound) > 0:
-            serieId, serieName, lang = infos
+            (serieId, serieName, lang) = infos
             self.lang.setText(lang)
             self.title.setText(serieName)
             self.theTVDB.setText(serieId)
