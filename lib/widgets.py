@@ -36,7 +36,7 @@ class SelectFile(QtGui.QWidget):
 
 class SelectFolder(QtGui.QWidget):
     def __init__(self, parent=None):
-        super(SelectFolder, self).__init(parent)
+        super(SelectFolder, self).__init__(parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
         btn.clicked.connect(self.selectFolder)

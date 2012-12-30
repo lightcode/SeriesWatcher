@@ -20,7 +20,8 @@ mkdir('user')
 olduser = 'user.backup/'
 oldseries = olduser + 'series/'
 
-shutil.copy(olduser + 'series-watcher.cfg', 'user/series-watcher.cfg')
+if os.path.isfile(olduser + 'series-watcher.cfg'):
+    shutil.copy(olduser + 'series-watcher.cfg', 'user/series-watcher.cfg')
 
 mkdir('user/series')
 mkdir('user/series/banners')
