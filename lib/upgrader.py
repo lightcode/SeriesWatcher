@@ -1,77 +1,69 @@
-#!/usr/bin/env python
-
-from glob import iglob as glob
+import glob
 import os
 import shutil
+from compatserie import Config as OldConfig
+from compatserie import Serie as OldSerie
+from models import Serie, Episode
 
+# 1.2 to 1.3 upgrader
 
-def mkdir(p):
-    if not os.path.isdir(p):
-        os.mkdir(p)
+def mkdir(path):
+    if not os.path.isdir(path):
+        os.mkdir(path)
 
-def move(src, dst):
-    try:
-        shutil.move(src, dst)
-    except:
-        pass
-
-# Create new folder `user`
-USR = 'user/'
-mkdir(USR)
-
-
-# Move the config file
-OLD_CFG = 'series-watcher.cfg'
-NEW_CFG = USR + 'series-watcher.cfg'
-move(OLD_CFG, NEW_CFG)
-
-
-# Create new folder `user/series`
-SERIES = 'user/series/'
-mkdir(SERIES)
-
-
-# Move old `img` in new folder
-IMG_OLD = 'database/img'
-IMG_NEW = SERIES + 'img/'
-move(IMG_OLD, IMG_NEW)
-
-
-# Move old `banners` in new folder
-BANNERS_OLD = 'database/banners'
-BANNERS_NEW = SERIES + 'banners/'
-move(BANNERS_OLD, BANNERS_NEW)
-
-
-# Move old `lastVerif` in new folder
-UPD_OLD = 'database/updates.pkl'
-UPD_NEW = SERIES + 'updates.pkl'
-move(UPD_OLD, UPD_NEW)
-
-
-# Move old `lastVerif` in new folder
-LV_OLD = 'database/lastVerif.txt'
-LV_NEW = SERIES + 'lastVerif.txt'
-move(LV_OLD, LV_NEW)
-
-
-# Move old `view` in new folder
-VIEW_OLD = 'database/view-*'
-VIEW_NEW = SERIES + '/view/'
-mkdir(VIEW_NEW)
-for f in glob(VIEW_OLD):
-    move(f, VIEW_NEW  + os.path.basename(f))
-
-# Move old 'series DB' in new folder
-SERIES_DB_OLD = 'database/*.pkl'
-SERIES_DB_NEW = SERIES + 'database/'
-mkdir(SERIES_DB_NEW)
-for f in glob(SERIES_DB_OLD):
-    move(f, SERIES_DB_NEW  + os.path.basename(f))
-
-
-# Delete old database
 try:
-    shutil.rmtree('database')
+    shutil.move('user/', 'user.backup')
 except:
     pass
+
+mkdir('user')
+olduser = 'user.backup/'
+oldseries = olduser + 'series/'
+
+if os.path.isfile(olduser + 'series-watcher.cfg'):
+    shutil.copy(olduser + 'series-watcher.cfg', 'user/series-watcher.cfg')
+
+mkdir('user/series')
+mkdir('user/series/banners')
+mkdir('user/series/img')
+
+# Create new DB file
+if not os.path.isfile('user/series/series.sqlite'):
+    Serie.createTable()
+    Episode.createTable()
+
+
+OldConfig.loadConfig()
+for pos, oldserieconfig in enumerate(OldConfig.series):
+    uuid, title, path, thetvdbid, lang = oldserieconfig
+    # Move old directory
+    srcimg = 'user.backup/series/img/%s' % uuid
+    dstimg = 'user/series/img/%s' % uuid
+    if os.path.isdir(srcimg) and not os.path.isdir(dstimg):
+        shutil.copytree(srcimg, dstimg)
+    srcbanner = 'user.backup/series/banners/%s.jpg' % uuid
+    dstbanner = 'user/series/banners/%s.jpg' % uuid
+    if os.path.isfile(srcbanner) and not os.path.isfile(dstbanner):
+        shutil.copy(srcbanner, dstbanner)
+    
+    oserie = OldSerie(oldserieconfig)
+    oserie.loadSerie()
+    oserie.loadEpisodes()
+    
+    newserie = Serie(uuid=uuid, title=title, path=path, lang=lang,
+          tvdbID=thetvdbid, pos=pos)
+    
+    # Import episodes
+    for episode in oserie.episodes:
+        nbView = 0
+        if episode['status'] == 1:
+            nbView = 1
+        
+        Episode(title=episode['title'], description=episode['desc'],
+                season=episode['season'], episode=episode['episode'],
+                nbView=nbView, firstAired=episode['firstAired'],
+                serie=newserie)
+    
+    # Create file version
+    with open('user/series/VERSION', 'w+') as f:
+        f.write('1.3.0')

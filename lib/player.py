@@ -23,7 +23,7 @@ class VLCWidget(QtGui.QFrame):
     mouseMoved = QtCore.pyqtSignal()
     
     def __init__(self, parent=None):
-        QtGui.QFrame.__init__(self, parent)
+        super(VLCWidget, self).__init__(parent)
         self.setMouseTracking(True)
         # the UI player
         self._palette = self.palette()
@@ -39,7 +39,7 @@ class VLCWidget(QtGui.QFrame):
 
 class Episode(QtGui.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(Episode, self).__init__(parent)
         
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
@@ -65,9 +65,9 @@ class Episode(QtGui.QWidget):
 
 
 
-class Options(QtGui.QDialog):
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+class OptionsPlayer(QtGui.QDialog):
+    def __init__(self, parent=None):
+        super(OptionsVLC, self).__init__(OptionsPlayer)
         self.setWindowTitle('Options')
         self.parent = parent
         
@@ -264,7 +264,7 @@ class Player(QtGui.QMainWindow):
             self.setWindowState(self._afterFullScreen)
         else:
             self._afterFullScreen = self.windowState()
-            self.screenBtn.setIcon(QIcon('art/minimise.png'))
+            self.screenBtn.setIcon(QIcon('art/fullscreen-exit.png'))
             self.setWindowState(Qt.WindowFullScreen)
     
     
@@ -392,7 +392,7 @@ class Player(QtGui.QMainWindow):
         
         if self.mediaPlayer.is_playing() == 0:
             self.timer.stop()
-            # FIX : when videos don't play
+            # Fix. When videos don't play
             if percent <= 1 and self._playerState == self.PLAY:
                 self.play()
             elif self._playerState != self.PAUSE:
@@ -400,7 +400,7 @@ class Player(QtGui.QMainWindow):
                     self.stop(self.STOP)
                 if self._playerState == self.STOP:
                     Debug.add(Debug.INFO, 'updateUI : nextEpisode()')
-                    if percent >= 99: # video is at the end
+                    if percent >= 99: # Video is at the end
                         self.videoFinished()
     
     
@@ -416,7 +416,7 @@ class Player(QtGui.QMainWindow):
     
     
     def showOptions(self):
-        self.options = Options(self)
+        self.options = OptionsPlayer(self)
         self.options.show()
     
     
@@ -442,16 +442,16 @@ class Player(QtGui.QMainWindow):
         tool = QtGui.QToolBar()
         self.playButton = tool.addAction(QIcon('art/play.png'), 'Play',
                                          self.playPause)
-        tool.addAction(QIcon('art/previous.png'), u'Précédent',
+        tool.addAction(QIcon('art/arrow-left.png'), u'Précédent',
                        self.previousEpisode)
         tool.addAction(QIcon('art/stop.png'), 'Stop', self.stop)
-        tool.addAction(QIcon('art/next.png'), 'Suivant', self.nextEpisode)
+        tool.addAction(QIcon('art/arrow-right.png'), 'Suivant', self.nextEpisode)
         tool.addSeparator()
         
         self.playListBtn = tool.addAction(QIcon('art/playlist.png'),
                                           "Playlist", self.showPlayList)
         self.playListBtn.setCheckable(True)
-        self.autoPlay = tool.addAction(QIcon('art/refresh.png'),
+        self.autoPlay = tool.addAction(QIcon('art/reload.png'),
                                        "Activer la lecture automatique")
         self.autoPlay.setCheckable(True)
         

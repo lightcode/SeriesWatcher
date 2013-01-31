@@ -9,25 +9,25 @@ from PyQt4.QtGui import QIcon
 
 class SelectFile(QtGui.QWidget):
     def __init__(self, path='', parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(SelectFile, self).__init__(parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
-        btn.clicked.connect(self.selectFolder)
+        btn.clicked.connect(self.selectFile)
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.label)
         layout.addWidget(btn)
         self.setLayout(layout)
-        
         self.setPath(path)
     
     
-    def selectFolder(self):
-        path = QtGui.QFileDialog.getOpenFileName(self)
+    def selectFile(self):
+        directory = os.path.basename(self.path())
+        path = QtGui.QFileDialog.getOpenFileName(self, directory=directory)
         self.label.setText(path)
     
     
     def path(self):
-        return self.label.text()
+        return str(self.label.text())
     
     
     def setPath(self, path):
@@ -36,7 +36,7 @@ class SelectFile(QtGui.QWidget):
 
 class SelectFolder(QtGui.QWidget):
     def __init__(self, parent=None):
-        QtGui.QWidget.__init__(self, parent)
+        super(SelectFolder, self).__init__(parent)
         self.label = QtGui.QLineEdit()
         btn = QtGui.QPushButton('Parcourir')
         btn.clicked.connect(self.selectFolder)
@@ -47,12 +47,12 @@ class SelectFolder(QtGui.QWidget):
     
     
     def selectFolder(self):
-        path = QtGui.QFileDialog.getExistingDirectory(self)
+        path = QtGui.QFileDialog.getExistingDirectory(self, directory=self.path())
         self.label.setText(path)
     
     
     def path(self):
-        return self.label.text()
+        return str(self.label.text())
     
     
     def setPath(self, path):
@@ -62,7 +62,8 @@ class SelectFolder(QtGui.QWidget):
 
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
-    def __init__(self, parent = None):
+    
+    def __init__(self, parent=None):
         super(FilterMenu, self).__init__('Filtrer', parent)
         self.setFlat(True)
         self.setMenu(self.menu())
@@ -80,17 +81,22 @@ class FilterMenu(QtGui.QPushButton):
         setattr(self.new, 'filterID', 1)
         self.new.setCheckable(True)
         
+        self.favorite = QtGui.QAction('Favoris', self)
+        setattr(self.favorite, 'filterID', 2)
+        self.favorite.setCheckable(True)
+        
         self.notDL = QtGui.QAction(u'Episodes non disponibles', self)
-        setattr(self.notDL, 'filterID', 2)
+        setattr(self.notDL, 'filterID', 3)
         self.notDL.setCheckable(True)
         
         self.total = QtGui.QAction(u'Tous', self)
-        setattr(self.total, 'filterID', 3)
+        setattr(self.total, 'filterID', 4)
         self.total.setCheckable(True)
         
         filters = QtGui.QActionGroup(self)
         filters.addAction(self.dl)
         filters.addAction(self.new)
+        filters.addAction(self.favorite)
         filters.addAction(self.notDL)
         filters.addAction(self.total)
         filters.triggered.connect(self.filterTriggered)
@@ -110,10 +116,12 @@ class FilterMenu(QtGui.QPushButton):
             return 0
         if self.new.isChecked():
             return 1
-        if self.notDL.isChecked():
+        if self.favorite.isChecked():
             return 2
-        if self.total.isChecked():
+        if self.notDL.isChecked():
             return 3
+        if self.total.isChecked():
+            return 4
     
     
     def getFilterAction(self):
@@ -123,13 +131,16 @@ class FilterMenu(QtGui.QPushButton):
             return self.new
         if self.notDL.isChecked():
             return self.notDL
+        if self.favorite.isChecked():
+            return self.favorite
         if self.total.isChecked():
             return self.total
     
     
-    def setCounters(self, nbTotal, nbNotDL, nbDL, nbNew):
+    def setCounters(self, nbTotal, nbNotDL, nbDL, nbNew, favorite):
         self.dl.setText(u'Episodes disponibles (%d)' % nbDL)
         self.new.setText(u'Nouveaux (%d)' % nbNew)
+        self.favorite.setText(u'Favoris (%d)' % favorite)
         self.notDL.setText(u'Episodes non disponibles (%d)' % nbNotDL)
         self.total.setText(u'Tous (%d)' % nbTotal)
         self.setText(self.getFilterAction().text())
@@ -137,16 +148,14 @@ class FilterMenu(QtGui.QPushButton):
 
 
 class EpisodesViewer(QtGui.QTableWidget):
-    # Signals :
-    pressEnter = QtCore.pyqtSignal('QModelIndex')
-    refreshEpisodes = QtCore.pyqtSignal()
-    markedAsView = QtCore.pyqtSignal()
-    markedAsNotView = QtCore.pyqtSignal()
-    playClicked = QtCore.pyqtSignal()
-    
     nbColumn = 3
     columnWidth = 260
     rowHeight = 100
+    pressEnter = QtCore.pyqtSignal('QModelIndex')
+    refreshEpisodes = QtCore.pyqtSignal()
+    viewStatusChanged = QtCore.pyqtSignal(bool)
+    playClicked = QtCore.pyqtSignal()
+    favoriteChanged = QtCore.pyqtSignal(bool)
     
     def __init__(self, parent = None):
         super(EpisodesViewer, self).__init__(parent)
@@ -164,20 +173,40 @@ class EpisodesViewer(QtGui.QTableWidget):
     
     
     def contextMenu(self, pos):
-        nbNone = 0
+        nbEpisode = 0
         for item in self.selectedIndexes():
             (r, c) = (item.row(), item.column())
-            if not self.cellWidget(r, c):
-                nbNone += 1
-        if nbNone == len(self.selectedIndexes()):
+            if self.cellWidget(r, c):
+                nbEpisode += 1
+        if nbEpisode == 0:
             return
         
+        btnMarkAsView = btnFavorite = True
+        if nbEpisode == 1:
+            episode = self.cellWidget(r, c).episode
+            btnFavorite = not episode.favorite
+            btnMarkAsView = not (episode.nbView > 0)
+        
         menu = QtGui.QMenu()
-        menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
-        menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
+        if btnMarkAsView or nbEpisode > 1:
+            menu.addAction(QIcon('art/check.png'), 'Marquer comme vu', self.markAsView)
+        if not btnMarkAsView or nbEpisode > 1:
+            menu.addAction(QIcon('art/uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
         menu.addAction(QIcon('art/play.png'), 'Play', self.playClicked)
+        if btnFavorite or nbEpisode > 1:
+            menu.addAction(QIcon('art/star.png'), 'Ajouter aux favoris', self.favorite)
+        if not btnFavorite or nbEpisode > 1:
+            menu.addAction(QIcon('art/unstar.png'), 'Enlever des favoris', self.unfavorite)
         menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))
+    
+    
+    def favorite(self):
+        self.favoriteChanged.emit(True)
+    
+    
+    def unfavorite(self):
+        self.favoriteChanged.emit(False)
     
     
     def copyTitle(self):
@@ -190,11 +219,11 @@ class EpisodesViewer(QtGui.QTableWidget):
     
     
     def markAsView(self):
-        self.markedAsView.emit()
+        self.viewStatusChanged.emit(True)
     
     
     def markAsNotView(self):
-        self.markedAsNotView.emit()
+        self.viewStatusChanged.emit(False)
     
     
     def setRowCount(self, nbRows):
@@ -229,13 +258,17 @@ class EpisodesViewer(QtGui.QTableWidget):
 
 
 class VideoItem(QtGui.QWidget):
-    def __init__(self, titleStr):
-        QtGui.QWidget.__init__(self)
+    def __init__(self, episode):
+        super(VideoItem, self).__init__()
+        
+        self.episode = episode
         
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
         
-        self.title = QtGui.QLabel(titleStr)
+        title = '<b>%s</b><br/>%s' % (episode.number, episode.title)
+        
+        self.title = QtGui.QLabel(title)
         self.title.setAlignment(Qt.AlignTop)
         self.title.setStyleSheet('padding-top:10px')
         self.title.setMaximumHeight(55)
@@ -253,6 +286,16 @@ class VideoItem(QtGui.QWidget):
         cell.addLayout(text)
         
         self.setLayout(cell)
+        
+        # Set params :
+        self.setStatus(episode.status)
+        self.setFavorite(episode.favorite)
+    
+    
+    def refresh(self):
+        episode = self.episode
+        self.setStatus(episode.status)
+        self.setFavorite(episode.favorite)
     
     
     def setImage(self, image):
@@ -263,6 +306,14 @@ class VideoItem(QtGui.QWidget):
     
     def setTitle(self, titleStr):
         self.title.setText(titleStr)
+    
+    
+    def setFavorite(self, value):
+        if value:
+            title = '<b>%s <img src="art/star.min.png"/></b><br/>%s' % (self.episode.number, self.episode.title)
+        else:
+            title = '<b>%s</b><br/>%s' % (self.episode.number, self.episode.title)
+        self.title.setText(title)
     
     
     def setStatus(self, status):

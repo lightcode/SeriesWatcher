@@ -1,4 +1,4 @@
-Programme en version 1.2.
+Programme en version 1.3.
 
 # Qu'est-ce que Series Watcher ?
 
@@ -25,11 +25,11 @@ Enfin, vous pouvez ouvrir le fichier serieswatcher.pyw.
 Si PyQt4 n'est pas installé, vous pouvez faire : `sudo apt-get install python-qt4`
 
 
-# Mise à jour depuis la version 1.x
+# Mise à jour depuis la version 1.2
 
 Pour mettre à jour Series Watcher, il faut :
 
-- se rendre dans le dossier de Series Watcher 1.x, et de copier le dossier `database` et le fichier `series-watcher.cfg` dans le dossier de Series Watcher 1.2 ;
+- se rendre dans le dossier de Series Watcher 1.2, et de copier le dossier `database` et le fichier `series-watcher.cfg` dans le dossier de Series Watcher 1.3 ;
 - la mise à jour devrait s'exécuter automatiquement.
 
 

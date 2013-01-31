@@ -37,39 +37,50 @@ class TheTVDBSerie(TheTVDB):
     URL_BANNER = 'http://thetvdb.com/banners/'
     URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
     miniatureToDL = []
+    dom = None
     
-    def __init__(self, serieInfos):
-        self.serieInfos = serieInfos
+    def __init__(self, serie):
+        # This is to adapt this API for the new database
+        self.serieInfos = (serie.uuid, None, None, serie.tvdbID, serie.lang)
     
     
     def downloadFullSerie(self):
         TVDBID = self.serieInfos[3]
         lang = self.serieInfos[4]
         xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, TVDBID, lang)
-        self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
+        try:
+            self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
+        except IOError:
+            print 'Download serie informations error.'
     
     
     def getLastUpdate(self):
         TVDBID = self.serieInfos[3]
         lang = self.serieInfos[4]
         xmlFile = '%s%s/%s.xml' % (self.URL_ROOT, TVDBID, lang)
-        self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
-        series = self.dom.getElementsByTagName('Series')[0]
-        return int(self._getData(series, 'lastupdated'))
+        try:
+            self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
+        except IOError:
+            print 'Download serie informations error.'
+        else:
+            series = self.dom.getElementsByTagName('Series')[0]
+            return int(self._getData(series, 'lastupdated'))
     
     
     def getInfosSerie(self):
         '''Return the serie informations'''
+        if self.dom is None:
+            return
+        
         infos = {}
         name = self.serieInfos[0]
         series = self.dom.getElementsByTagName('Series')[0]
         infos['firstAired'] = self._getData(series, 'FirstAired')
-        infos['desc'] = self._getData(series, 'Overview')
-        infos['status'] = self._getData(series, 'Status')
+        infos['description'] = self._getData(series, 'Overview')
         banner = self._getData(series, 'banner')
         infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
         bannerPath = '%s%s.jpg' % (SERIES_BANNERS, name)
-        if not os.path.isfile(bannerPath) and banner != '':
+        if banner != '' and not os.path.isfile(bannerPath):
             try:
                 o = urllib.urlopen(self.URL_BANNER + banner)
                 img = o.read()

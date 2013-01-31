@@ -37,8 +37,8 @@ class DebugWindow(QtGui.QDialog):
     LEVELS = ['Info', 'Erreur']
     lastID = -1
     
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(DebugWindow, self).__init__(parent)
         self.setWindowTitle('Debug')
         self.resize(800, 600)
         

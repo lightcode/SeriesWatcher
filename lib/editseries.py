@@ -6,31 +6,32 @@ from PyQt4.QtGui import QIcon
 from config import Config
 from widgets import SelectFolder
 from addserie import AddSerie
+from models import Serie, Episode
 
 class ListSeries(QtGui.QWidget):
-    # Signals :
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')
     
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         QtGui.QWidget.__init__(self, parent)
         
+        self._itemsDeleted = []
+        
         self.listWidget = QtGui.QListWidget()
-        for serie in Config.series:
-            name, title, path, TVDBID, lang = serie
-            item = QtGui.QListWidgetItem(title)
-            setattr(item, 'name', name)
-            setattr(item, 'path', path)
-            setattr(item, 'lang', lang)
-            setattr(item, 'TVDBID', TVDBID)
+        for serie in Serie.getSeries():
+            item = QtGui.QListWidgetItem(serie.title)
+            setattr(item, 'uuid', serie.uuid)
+            setattr(item, 'path', serie.path)
+            setattr(item, 'lang', serie.lang)
+            setattr(item, 'TVDBID', serie.tvdbID)
             self.listWidget.addItem(item)
         self.listWidget.itemSelectionChanged.connect(self._itemSelectionChanged)
         
         tool = QtGui.QToolBar()
         tool.setStyleSheet('QToolBar { border:none; }')
-        tool.addAction(QIcon('art/add.png'), u'Ajouter une série', self.add)
+        tool.addAction(QIcon('art/plus.png'), u'Ajouter une série', self.add)
         tool.addSeparator()
-        tool.addAction(QIcon('art/up.png'), 'Monter', self.upItem)
-        tool.addAction(QIcon('art/down.png'), 'Descendre', self.downItem)
+        tool.addAction(QIcon('art/arrow-up.png'), 'Monter', self.upItem)
+        tool.addAction(QIcon('art/arrow-down.png'), 'Descendre', self.downItem)
         tool.addAction(QIcon('art/delete.png'), u'Supprimer', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()
@@ -52,12 +53,17 @@ class ListSeries(QtGui.QWidget):
     def delete(self):
         currentIndex = self.listWidget.currentIndex().row()
         item = self.listWidget.takeItem(currentIndex)
+        self._itemsDeleted.append(item)
         del item
     
     
-    def serieAdded(self, name, title, TVDBID, lang, path):
+    def getItemsDeleted(self):
+        return self._itemsDeleted
+    
+    
+    def serieAdded(self, uuid, title, TVDBID, lang, path):
         item = QtGui.QListWidgetItem(title)
-        setattr(item, 'name', name)
+        setattr(item, 'uuid', uuid)
         setattr(item, 'path', path)
         setattr(item, 'lang', lang)
         setattr(item, 'TVDBID', TVDBID)
@@ -109,21 +115,20 @@ class ListSeries(QtGui.QWidget):
         items = []
         for i in xrange(nb):
             title = unicode(self.listWidget.item(i).text())
-            name = self.listWidget.item(i).name
-            path = self.listWidget.item(i).path
-            lang = self.listWidget.item(i).lang
+            uuid = str(self.listWidget.item(i).uuid)
+            path = unicode(self.listWidget.item(i).path)
+            lang = unicode(self.listWidget.item(i).lang)
             TVDBID = self.listWidget.item(i).TVDBID
-            items.append([name, title, path, TVDBID, lang])
+            items.append([uuid, title, path, TVDBID, lang])
         return items
 
 
 
 class EditSeries(QtGui.QDialog):
-    # Signals :
     edited = QtCore.pyqtSignal()
 
-    def __init__(self, parent = None):
-        QtGui.QDialog.__init__(self, parent)
+    def __init__(self, parent=None):
+        super(EditSeries, self).__init__(parent)
         self.setWindowTitle(u'Editer les séries')
         
         # Select serie pannel
@@ -181,7 +186,17 @@ class EditSeries(QtGui.QDialog):
     
     
     def save(self):
-        Config.series = self.listSeries.getItems()
-        Config.save()
+        for pos, serie in enumerate(self.listSeries.getItems()):
+            uuid, title, path, tvdbID, lang = serie
+            sdb = list(Serie.select(Serie.q.uuid==uuid))[0]
+            sdb.title = title
+            sdb.path = path
+            sdb.tvdbID = tvdbID
+            sdb.lang = lang
+            sdb.pos = pos
+        for item in self.listSeries.getItemsDeleted():
+            sdb = list(Serie.select(Serie.q.uuid==item.uuid))[0]
+            Episode.deleteBy(serie=sdb)
+            Serie.delete(sdb.id)
         self.edited.emit()
         self.close()
