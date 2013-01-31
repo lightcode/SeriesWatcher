@@ -10,8 +10,6 @@ import re
 from itertools import chain
 from glob import iglob
 from datetime import datetime
-
-sys.path.append(os.path.abspath('.'))
 from sqlobject import *
 
 if not os.path.isdir(USER):
@@ -46,8 +44,21 @@ class Serie(SQLObject):
         defaultOrder = 'pos'
         lazyUpdate = True
     
+    
     def isLoaded(self):
         return self.loadCompleted
+    
+    
+    @classmethod
+    def getSummary(self):
+        print 'rtrt'
+        serieProperties = [
+            'title', 'description', 'lang',
+            'tvdbID', 'pos',
+        ]
+        for s in self.getSeries():
+            print '--'
+            yield [getattr(s, p) for p in serieProperties]
     
     
     def setLoaded(self, v):
@@ -148,6 +159,7 @@ class Episode(SQLObject):
     favorite = BoolCol(default=False)
     serie = ForeignKey('Serie')
     path = None
+    lastUpdate = TimestampCol()
     
     
     class sqlmeta:
@@ -167,6 +179,7 @@ class Episode(SQLObject):
                 self.serie.nbNotView -= 1
                 self.serie.nbView += 1
             self.nbView += 1
+            self._setLastUpdate()
     
     
     def setNotView(self):
@@ -175,6 +188,7 @@ class Episode(SQLObject):
             self.serie.nbView -= 1
             self.lastView = None
             self.nbView = 0
+            self._setLastUpdate()
     
     
     def isAvailable(self):
@@ -185,12 +199,18 @@ class Episode(SQLObject):
         if not self.favorite:
             self.favorite = True
             self.serie.nbFavorites += 1
+            self._setLastUpdate()
     
     
     def setUnFavorite(self):
         if self.favorite:
             self.favorite = False
             self.serie.nbFavorites -= 1
+            self._setLastUpdate()
+    
+    
+    def _setLastUpdate(self):
+        self.lastUpdate = datetime.now()
     
     
     def _get_status(self):
@@ -214,6 +234,10 @@ class Episode(SQLObject):
 
 
 sqlhub.processConnection = connectionForURI('sqlite:///' + PATH_TO_DATABASE)
+cols = [i.name for i in sqlhub.processConnection.columnsFromSchema("episode", Episode)] 
+if 'lastUpdate' not in cols:
+    Episode.sqlmeta.delColumn('lastUpdate')
+    Episode.sqlmeta.addColumn(TimestampCol('lastUpdate'), changeSchema=True)
 if not os.path.isfile(PATH_TO_DATABASE):
     Serie.createTable()
     Episode.createTable()

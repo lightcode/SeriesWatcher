@@ -45,6 +45,9 @@ class Config(object):
         cls.config['player'] = 1
         cls.config['debug'] = 0
         cls.config['random_duration'] = 0
+        cls.config['sync_server'] = None
+        cls.config['sync_user'] = None
+        cls.config['sync_password'] = None
         
         # Load the options
         if config.has_section('options'):

@@ -25,6 +25,7 @@ from lib.editseries import EditSeries
 from lib.models import Serie, Episode
 from lib.options import Options
 from lib.player import Player
+from lib.swsync import SyncSWThead
 from lib.threads import *
 from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
 
@@ -94,6 +95,9 @@ class Main(QtGui.QMainWindow):
         
         self.syncDBThead = SyncDBThead(self)
         self.syncDBThead.start()
+        
+        self.syncSWThead = SyncSWThead(self)
+        self.syncSWThead.start()
     
     
     def currentSerieId(self):

@@ -4,6 +4,7 @@ import shutil
 from compatserie import Config as OldConfig
 from compatserie import Serie as OldSerie
 from models import Serie, Episode
+from const import VERSION
 
 # 1.2 to 1.3 upgrader
 
@@ -66,4 +67,4 @@ for pos, oldserieconfig in enumerate(OldConfig.series):
     
     # Create file version
     with open('user/series/VERSION', 'w+') as f:
-        f.write('1.3.0')
+        f.write(VERSION)

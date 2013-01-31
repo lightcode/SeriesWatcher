@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from hashlib import sha512
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
 from widgets import SelectFile
-
 
 RANDOM_TIMES = [(u'Désactiver', 0),
                 ('15 jours', 1296000),
@@ -53,7 +53,7 @@ class Options(QtGui.QDialog):
         groupPlayer.setLayout(form)
         
         
-        # Debug option        
+        # Debug option
         self.enablePlayer = QtGui.QCheckBox(u'Activer le debug')
         if int(Config.config['debug']):
             self.enablePlayer.setChecked(True)
@@ -66,17 +66,39 @@ class Options(QtGui.QDialog):
         groupDebug = QtGui.QGroupBox(u'Debug')
         groupDebug.setLayout(form)
         
-        
         buttonBox = QtGui.QDialogButtonBox()
         buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
         buttonBox.accepted.connect(self.save)
         buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
         buttonBox.rejected.connect(self.close)
         
+        layout1 = QtGui.QVBoxLayout()
+        layout1.addWidget(groupSW)
+        layout1.addWidget(groupPlayer)
+        layout1.addWidget(groupDebug)
+        
+        tab1 = QtGui.QWidget()
+        tab1.setLayout(layout1)
+        
+        self.syncServer = QtGui.QLineEdit(Config.config['sync_server'])
+        self.syncUser = QtGui.QLineEdit(Config.config['sync_user'])
+        self.syncPassword = QtGui.QLineEdit()
+        self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
+        
+        layout2 = QtGui.QFormLayout()
+        layout2.addRow('Serveur', self.syncServer)
+        layout2.addRow("Nom d'utilisateur", self.syncUser)
+        layout2.addRow('Mot de passe', self.syncPassword)
+        
+        tab2 = QtGui.QWidget()
+        tab2.setLayout(layout2)
+        
+        tab = QtGui.QTabWidget()
+        tab.addTab(tab1, u'Général')
+        tab.addTab(tab2, 'Synchronisation')
+        
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(groupSW)
-        layout.addWidget(groupPlayer)
-        layout.addWidget(groupDebug)
+        layout.addWidget(tab)
         layout.addWidget(buttonBox)
         
         self.setLayout(layout)
@@ -104,6 +126,7 @@ class Options(QtGui.QDialog):
             if self.__dict__['player%s' % n].isChecked():
                 return n
     
+    
     def getRandomValue(self):
         return RANDOM_TIMES[self.randomDuration.currentIndex()][1]
     
@@ -125,6 +148,12 @@ class Options(QtGui.QDialog):
         else:    
             Config.setOption('debug', 0)
         Config.setOption('random_duration', self.getRandomValue())
+        
+        Config.setOption('sync_server', self.syncServer.text())
+        Config.setOption('sync_user', self.syncUser.text())
+        if self.syncPassword.text():
+            Config.setOption('sync_password', sha512(self.syncPassword.text()).hexdigest())
+        
         Config.save()
         self.close()
 

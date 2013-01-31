@@ -81,7 +81,6 @@ class CheckSerieUpdateThread(QtCore.QThread):
 
 
 class RefreshSeriesThread(QtCore.QThread):
-    # Signals :
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
     
