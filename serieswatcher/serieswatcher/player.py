@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import user
 import sys
 import time
 from PyQt4 import QtCore, QtGui
@@ -13,7 +12,7 @@ from debug import Debug
 # Import VLC
 path = os.getcwd()
 try:
-    import vlc
+    from .. import vlc
 except:
     vlc = None
 os.chdir(path)

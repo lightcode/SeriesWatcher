@@ -3,7 +3,6 @@
 
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon
-from config import Config
 from widgets import SelectFolder
 from addserie import AddSerie
 from models import Serie, Episode

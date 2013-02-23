@@ -8,7 +8,6 @@ from itertools import chain
 from glob import iglob
 import os
 import re
-import sys
 from const import *
 
 ROOT = os.path.abspath('.') + '/'

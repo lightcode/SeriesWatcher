@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import os.path
 from uuid import uuid1
 from const import *
@@ -9,7 +8,6 @@ from datetime import datetime, date
 import re
 from itertools import chain
 from glob import iglob
-from datetime import datetime
 from sqlobject import *
 
 if not os.path.isdir(USER):

@@ -10,24 +10,26 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
+import serieswatcher.desktop
+
+sys.path.insert(0, os.path.abspath('serieswatcher/'))
 
 USER_DIR_FOUND = False
 if os.path.isdir('user'):
     USER_DIR_FOUND = True
 
-from lib import desktop
-from lib.about import About
-from lib.addserie import AddSerie
-from lib.config import Config
-from lib.const import *
-from lib.debug import Debug, DebugWindow
-from lib.editseries import EditSeries
-from lib.models import Serie, Episode
-from lib.options import Options
-from lib.player import Player
-from lib.swsync import SyncSWThead
-from lib.threads import *
-from lib.widgets import EpisodesViewer, VideoItem, FilterMenu
+from serieswatcher.serieswatcher.about import About
+from serieswatcher.serieswatcher.addserie import AddSerie
+from serieswatcher.serieswatcher.config import Config
+from serieswatcher.serieswatcher.const import *
+from serieswatcher.serieswatcher.debug import Debug, DebugWindow
+from serieswatcher.serieswatcher.editseries import EditSeries
+from serieswatcher.serieswatcher.models import Serie
+from serieswatcher.serieswatcher.options import Options
+from serieswatcher.serieswatcher.player import Player
+from serieswatcher.serieswatcher.sync import SyncSWThead
+from serieswatcher.serieswatcher.threads import *
+from serieswatcher.serieswatcher.widgets import EpisodesViewer, VideoItem, FilterMenu
 
 
 class Main(QtGui.QMainWindow):
@@ -304,7 +306,7 @@ class Main(QtGui.QMainWindow):
                              u"version ?",
                              QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
-            import lib.upgrader
+            import serieswatcher.serieswatcher.upgrader
         elif r == QMessageBox.No:
             with open('user/series/VERSION', 'w+') as f:
                 f.write('1.3.0')
@@ -319,7 +321,7 @@ class Main(QtGui.QMainWindow):
         elif USER_DIR_FOUND:
             self.openUpdateWindow()
         else:
-            with open('user/series/VERSION', 'w+') as f:
+            with open(VERSION_FILE, 'w+') as f:
                 f.write('1.3.0')
         if not os.path.isdir(USER):
             os.mkdir(USER)
@@ -828,18 +830,18 @@ class Main(QtGui.QMainWindow):
             self.loaderThread.forceReload()
 
 
-
-app = QtGui.QApplication(sys.argv)
-
-locale = QtCore.QLocale.system().name()
-translator = QtCore.QTranslator()
-if os.path.splitext(sys.argv[0])[1] in ['.py', '.pyw']:
-    reptrad = unicode(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
-else:
-    reptrad = unicode("translations")
-translator.load(QtCore.QString("qt_") + locale, reptrad)
-app.installTranslator(translator)
-
-window = Main()
-window.show()
-sys.exit(app.exec_())
+if __name__ == '__main__':
+    app = QtGui.QApplication(sys.argv)
+    
+    locale = QtCore.QLocale.system().name()
+    translator = QtCore.QTranslator()
+    if os.path.splitext(sys.argv[0])[1] in ['.py', '.pyw']:
+        reptrad = unicode(QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath))
+    else:
+        reptrad = unicode("translations")
+    translator.load(QtCore.QString("qt_") + locale, reptrad)
+    app.installTranslator(translator)
+    
+    window = Main()
+    window.show()
+    sys.exit(app.exec_())

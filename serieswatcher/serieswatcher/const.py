@@ -12,7 +12,7 @@ EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
 TEXT_VERSION = u'1.4 dev'
 VERSION = '1.4.0'
-RELEASE_DATE = u'Décembre 2012'
+RELEASE_DATE = u'Février 2013'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'
@@ -27,6 +27,6 @@ LAST_VERIF_PATH = SERIES + 'lastVerif.txt'
 REFRESH_FILE = SERIES + 'updates.pkl'
 VERSION_FILE = SERIES + 'VERSION'
 
-ERROR_PLAYER_LOAD = u"Le lecteur intégré ne peut pas être démarrer car" \
+ERROR_PLAYER_LOAD = u"Le lecteur intégré ne peut pas démarrer car" \
                   + u" la bibliothèque VLC ne s'est pas chargée" \
                   + u" correctement."

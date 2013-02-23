@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from uuid import uuid1
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
 from widgets import SelectFolder
 from thetvdb import TheTVDB
-from config import Config
 from models import Serie
 
 class AddSerie(QtGui.QDialog):

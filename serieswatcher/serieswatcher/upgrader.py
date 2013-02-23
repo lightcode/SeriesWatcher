@@ -1,4 +1,3 @@
-import glob
 import os
 import shutil
 from compatserie import Config as OldConfig

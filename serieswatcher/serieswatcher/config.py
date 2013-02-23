@@ -2,8 +2,7 @@
 
 import os.path
 import codecs
-import sys
-from configparser import SafeConfigParser
+from ..configparser import SafeConfigParser
 from const import *
 
 class Config(object):

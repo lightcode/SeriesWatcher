@@ -3,17 +3,17 @@
 
 import os
 import urllib
-import urllib2
 import xml.dom.minidom
-from const import SERIES_BANNERS
 
 class TheTVDB:
-    URL_ROOT = 'http://www.thetvdb.com/api/'
+    URL_API = 'http://thetvdb.com/api/'
+    URL_BANNER = 'http://thetvdb.com/banners/'
     
-    def searchSearie(self, userInput):
-        userInput = unicode(userInput).encode('utf8')
-        url = self.URL_ROOT + 'GetSeries.php?seriesname=%s&language=%s'
-        url = url % (userInput, 'all')
+    def searchSearie(self, serieName):
+        """Search a serie on TVDB by its name."""
+        serieName = unicode(serieName).encode('utf8')
+        url = self.URL_API + 'GetSeries.php?seriesname=%s&language=%s'
+        url = url % (serieName, 'all')
         search = xml.dom.minidom.parse(urllib.urlopen(url))
         seriesFound = search.getElementsByTagName('Series')
         series = []
@@ -26,6 +26,7 @@ class TheTVDB:
     
     
     def _getData(self, elmt, tagName, default=''):
+        """Shortcut to get value in a node."""
         try:
             return elmt.getElementsByTagName(tagName)[0].firstChild.nodeValue
         except AttributeError:
@@ -34,30 +35,27 @@ class TheTVDB:
 
 
 class TheTVDBSerie(TheTVDB):
-    URL_BANNER = 'http://thetvdb.com/banners/'
-    URL_ROOT = 'http://www.thetvdb.com/api/F034441142EF8F93/series/'
+    API_KEY = 'F034441142EF8F93'
+    URL_SERIE = '%s%s/series/' % (TheTVDB.URL_API, API_KEY)
     miniatureToDL = []
     dom = None
     
-    def __init__(self, serie):
-        # This is to adapt this API for the new database
-        self.serieInfos = (serie.uuid, None, None, serie.tvdbID, serie.lang)
+    def __init__(self, tvdbID, lang):
+        self.tvdbID, self.lang = tvdbID, lang
     
     
     def downloadFullSerie(self):
-        TVDBID = self.serieInfos[3]
-        lang = self.serieInfos[4]
-        xmlFile = '%s%s/all/%s.xml' % (self.URL_ROOT, TVDBID, lang)
+        """Download the full serie in this object."""
+        xmlFile = '%s%s/all/%s.xml' % (self.URL_SERIE, self.tvdbID, self.lang)
         try:
             self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
         except IOError:
             print 'Download serie informations error.'
     
     
-    def getLastUpdate(self):
-        TVDBID = self.serieInfos[3]
-        lang = self.serieInfos[4]
-        xmlFile = '%s%s/%s.xml' % (self.URL_ROOT, TVDBID, lang)
+    def getLastUpdated(self):
+        """Return the timestamp of the last updated."""
+        xmlFile = '%s%s/%s.xml' % (self.URL_SERIE, self.tvdbID, self.lang)
         try:
             self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
         except IOError:
@@ -68,35 +66,35 @@ class TheTVDBSerie(TheTVDB):
     
     
     def getInfosSerie(self):
-        '''Return the serie informations'''
+        """Return the serie informations."""
         if self.dom is None:
             return
-        
         infos = {}
-        name = self.serieInfos[0]
         series = self.dom.getElementsByTagName('Series')[0]
         infos['firstAired'] = self._getData(series, 'FirstAired')
         infos['description'] = self._getData(series, 'Overview')
-        banner = self._getData(series, 'banner')
         infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
-        bannerPath = '%s%s.jpg' % (SERIES_BANNERS, name)
+        return infos
+    
+    
+    def downloadBanner(self, bannerPath):
+        """Download the banner in the hard drive."""
+        series = self.dom.getElementsByTagName('Series')[0]
+        banner = self._getData(series, 'banner')
         if banner != '' and not os.path.isfile(bannerPath):
             try:
-                o = urllib.urlopen(self.URL_BANNER + banner)
-                img = o.read()
+                img = urllib.urlopen(self.URL_BANNER + banner).read()
                 with open(bannerPath, 'wb+') as f:
                     f.write(img)
             except:
                 pass
-        return infos
     
     
     def downloadAllImg(self):
         for imgPath, urlMin in self.miniatureToDL:
             if not os.path.isfile(imgPath):
                 try:
-                    o = urllib.urlopen(self.URL_BANNER + urlMin)
-                    img = o.read()
+                    img = urllib.urlopen(self.URL_BANNER + urlMin).read()
                     with open(imgPath, 'wb+') as f:
                         f.write(img)
                 except:

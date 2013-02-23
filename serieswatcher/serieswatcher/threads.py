@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
-import cPickle as pickle
 from datetime import datetime
 import os.path
 import time
 import xml
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
-from config import Config
 from updatesfile import UpdatesFile
 from search import *
 from thetvdb import TheTVDBSerie
@@ -68,9 +66,9 @@ class CheckSerieUpdateThread(QtCore.QThread):
             for localeID, serie in enumerate(Serie.getSeries()):
                 localTime = serie.lastUpdate
                 
-                tvDb = TheTVDBSerie(serie)
+                tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
                 try:
-                    remoteTime = datetime.fromtimestamp(tvDb.getLastUpdate())
+                    remoteTime = datetime.fromtimestamp(tvDb.getLastUpdated())
                 except TypeError:
                     print 'Get last update failed.'
                 else:
@@ -93,15 +91,17 @@ class RefreshSeriesThread(QtCore.QThread):
         serie = Serie.getSeries()[serieLocalID]
         self.serieUpdateStatus.emit(serieLocalID, serie.title, 0)
         
-        tvDb = TheTVDBSerie(serie)
+        tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         try:
             tvDb.downloadFullSerie()
+            print 'downloadFullSerie'
         except xml.parsers.expat.ExpatError:
             print "Error download"
             return False
-        
         # Info serie
         serieInfos = tvDb.getInfosSerie()
+        bannerPath = '%s%s.jpg' % (SERIES_BANNERS, serie.uuid)
+        tvDb.downloadBanner(bannerPath)
         
         if serieInfos is None:
             return

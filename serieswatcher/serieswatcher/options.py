@@ -6,6 +6,7 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
 from widgets import SelectFile
+from subscribe import SubscribeWindow
 
 RANDOM_TIMES = [(u'Désactiver', 0),
                 ('15 jours', 1296000),
@@ -66,12 +67,6 @@ class Options(QtGui.QDialog):
         groupDebug = QtGui.QGroupBox(u'Debug')
         groupDebug.setLayout(form)
         
-        buttonBox = QtGui.QDialogButtonBox()
-        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
-        buttonBox.accepted.connect(self.save)
-        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
-        buttonBox.rejected.connect(self.close)
-        
         layout1 = QtGui.QVBoxLayout()
         layout1.addWidget(groupSW)
         layout1.addWidget(groupPlayer)
@@ -80,13 +75,22 @@ class Options(QtGui.QDialog):
         tab1 = QtGui.QWidget()
         tab1.setLayout(layout1)
         
+        # Synchronisation
         self.syncServer = QtGui.QLineEdit(Config.config['sync_server'])
         self.syncUser = QtGui.QLineEdit(Config.config['sync_user'])
         self.syncPassword = QtGui.QLineEdit()
         self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
         
+        self.subscribeBtn = QtGui.QPushButton("S'inscrire")
+        self.subscribeBtn.clicked.connect(self.openSubscribeWindow)
+        ly = QtGui.QHBoxLayout()
+        ly.addWidget(self.syncServer)
+        ly.addWidget(self.subscribeBtn)
+        w = QtGui.QWidget()
+        w.setLayout(ly)
+        
         layout2 = QtGui.QFormLayout()
-        layout2.addRow('Serveur', self.syncServer)
+        layout2.addRow('Serveur', w)
         layout2.addRow("Nom d'utilisateur", self.syncUser)
         layout2.addRow('Mot de passe', self.syncPassword)
         
@@ -96,6 +100,12 @@ class Options(QtGui.QDialog):
         tab = QtGui.QTabWidget()
         tab.addTab(tab1, u'Général')
         tab.addTab(tab2, 'Synchronisation')
+        
+        buttonBox = QtGui.QDialogButtonBox()
+        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox.accepted.connect(self.save)
+        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        buttonBox.rejected.connect(self.close)
         
         layout = QtGui.QVBoxLayout()
         layout.addWidget(tab)
@@ -107,6 +117,11 @@ class Options(QtGui.QDialog):
         self.timer.setInterval(200)
         self.timer.timeout.connect(self.playerChanged)
         self.timer.start()
+    
+    
+    def openSubscribeWindow(self):
+        sw = SubscribeWindow(self)
+        sw.show()
     
     
     def setPlayer(self, value):
