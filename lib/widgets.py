@@ -31,7 +31,8 @@ class SelectFile(QtGui.QWidget):
     
     
     def setPath(self, path):
-        self.label.setText(path)
+        if path:
+            self.label.setText(path)
 
 
 class SelectFolder(QtGui.QWidget):
