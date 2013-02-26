@@ -36,7 +36,7 @@ class Main(QtGui.QMainWindow):
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
         self.setMinimumSize(820, 600)
-        self.setWindowIcon(QIcon('art/icon.png'))
+        self.setWindowIcon(QIcon('art/sw.ico'))
         
         self.setup()
         Config.loadConfig()
@@ -450,8 +450,8 @@ class Main(QtGui.QMainWindow):
     
     
     def updateAllSeriesMenu(self):
-        for e in range(Serie.getSeries()):
-            self.refreshSeries.addSerie(e)    
+        for i, e in enumerate(Serie.getSeries()):
+            self.refreshSeries.addSerie(i)
     
     
     def refreshSelectedEpisodes(self):
@@ -518,9 +518,7 @@ class Main(QtGui.QMainWindow):
     def serieAdded(self):
         nbSeries = len(Serie.getSeries())
         self.reloadSelectSerie()
-        self.selectSerie.setCurrentIndex(nbSeries - 1)
-        if nbSeries == 1:
-            self.loaderThread.forceReload()
+        self.selectSerie.setCurrentIndex(nbSeries)
     
     
     def reloadSelectSerie(self):

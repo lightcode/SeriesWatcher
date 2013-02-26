@@ -10,9 +10,9 @@ __all__ = ['VERSION', 'TEXT_VERSION', 'PATHS', 'EXTENSIONS',
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.3'
+TEXT_VERSION = u'1.3.1'
 VERSION = '1.3.0'
-RELEASE_DATE = u'Janvier 2013'
+RELEASE_DATE = u'Février 2013'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'

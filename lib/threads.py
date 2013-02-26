@@ -14,6 +14,7 @@ from thetvdb import TheTVDBSerie
 from const import *
 from models import Serie, Episode
 from sqlobject.dberrors import OperationalError
+from sqlobject.sqlbuilder import AND
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
            'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead']
@@ -122,20 +123,25 @@ class RefreshSeriesThread(QtCore.QThread):
         # Info episode
         episodeList = tvDb.getEpisodes(imgDir)
         for e in episodeList:
-            if e['number'] in episodesDb:
-                continue
             if e['firstAired']:
                 firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
             else:
                 firstAired = None
-            Episode(
-                title = unicode(e['title']),
-                description = unicode(e['desc']),
-                season = int(e['season']),
-                episode = int(e['episode']),
-                firstAired = firstAired,
-                serie = serie
-            )
+            if e['number'] in episodesDb:
+                episode = list(Episode.select(AND(Episode.q.season==int(e['season']),
+                    Episode.q.episode==int(e['episode']), Episode.q.serie==serie)))[0]
+                episode.firstAired = firstAired
+                episode.title = unicode(e['title'])
+                episode.description = unicode(e['desc'])
+            else:
+                Episode(
+                    title = unicode(e['title']),
+                    description = unicode(e['desc']),
+                    season = int(e['season']),
+                    episode = int(e['episode']),
+                    firstAired = firstAired,
+                    serie = serie
+                )
         
         toDelete = episodesDb - {e['number'] for e in episodeList}
         for number in toDelete:

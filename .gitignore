@@ -11,6 +11,6 @@
 /dist
 /setup
 /test*
-/setup.py
+/setup*.py
 TODO*
 count.py
