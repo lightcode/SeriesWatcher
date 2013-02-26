@@ -12,9 +12,23 @@ from thetvdb import TheTVDBSerie
 from const import *
 from models import Serie, Episode
 from sqlobject.dberrors import OperationalError
+from sqlobject.sqlbuilder import AND
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead']
+           'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead', 'RemoteSyncThead']
+
+
+class RemoteSyncThead(QtCore.QThread):
+    def run(self):
+        # 1. Connect to the API
+        
+        # 2. Get the series summary for this user
+        
+        # 3. Update the local database
+        
+        # 4. Send to the server updates
+        pass
+
 
 
 class SyncDBThead(QtCore.QThread):
@@ -94,10 +108,10 @@ class RefreshSeriesThread(QtCore.QThread):
         tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         try:
             tvDb.downloadFullSerie()
-            print 'downloadFullSerie'
         except xml.parsers.expat.ExpatError:
             print "Error download"
             return False
+        
         # Info serie
         serieInfos = tvDb.getInfosSerie()
         bannerPath = '%s%s.jpg' % (SERIES_BANNERS, serie.uuid)
@@ -121,20 +135,25 @@ class RefreshSeriesThread(QtCore.QThread):
         # Info episode
         episodeList = tvDb.getEpisodes(imgDir)
         for e in episodeList:
-            if e['number'] in episodesDb:
-                continue
             if e['firstAired']:
                 firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
             else:
                 firstAired = None
-            Episode(
-                title = unicode(e['title']),
-                description = unicode(e['desc']),
-                season = int(e['season']),
-                episode = int(e['episode']),
-                firstAired = firstAired,
-                serie = serie
-            )
+            if e['number'] in episodesDb:
+                episode = list(Episode.select(AND(Episode.q.season==int(e['season']),
+                    Episode.q.episode==int(e['episode']), Episode.q.serie==serie)))[0]
+                episode.firstAired = firstAired
+                episode.title = unicode(e['title'])
+                episode.description = unicode(e['desc'])
+            else:
+                Episode(
+                    title = unicode(e['title']),
+                    description = unicode(e['desc']),
+                    season = int(e['season']),
+                    episode = int(e['episode']),
+                    firstAired = firstAired,
+                    serie = serie
+                )
         
         toDelete = episodesDb - {e['number'] for e in episodeList}
         for number in toDelete:

@@ -8,13 +8,17 @@ from datetime import datetime, date
 import re
 from itertools import chain
 from glob import iglob
+import sys
+
+sys.path.insert(0, os.path.abspath('..'))
+
+
 from sqlobject import *
 
 if not os.path.isdir(USER):
     os.mkdir(USER)
 if not os.path.isdir(SERIES):
     os.mkdir(SERIES)
-PATH_TO_DATABASE = os.path.abspath('user/series/series.sqlite')
 
 
 class Serie(SQLObject):
@@ -231,15 +235,20 @@ class Episode(SQLObject):
         return u'%s%s/%s.jpg' % (SERIES_IMG, self.serie.uuid, self.number)
 
 
-sqlhub.processConnection = connectionForURI('sqlite:///' + PATH_TO_DATABASE)
+sqlhub.processConnection = connectionForURI('sqlite:///' + SERIES_DATABASE)
+
+if not os.path.isfile(SERIES_DATABASE):
+    Serie.createTable()
+    Episode.createTable()
+
+# Move the 1.3 database into 1.4 (DEV)
 cols = [i.name for i in sqlhub.processConnection.columnsFromSchema("episode", Episode)] 
 if 'lastUpdate' not in cols:
     Episode.sqlmeta.delColumn('lastUpdate')
     Episode.sqlmeta.addColumn(TimestampCol('lastUpdate'), changeSchema=True)
-if not os.path.isfile(PATH_TO_DATABASE):
-    Serie.createTable()
-    Episode.createTable()
 
+
+#print list(Episode.select(Episode.q.episode==1))
 
 #Serie._connection.debug = True
 #Episode._connection.debug = True

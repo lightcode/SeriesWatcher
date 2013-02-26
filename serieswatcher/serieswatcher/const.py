@@ -4,7 +4,7 @@
 import os.path
 
 PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
-         'CONFIG_FILE', 'LAST_VERIF_PATH']
+         'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE']
 __all__ = ['VERSION', 'TEXT_VERSION', 'PATHS', 'EXTENSIONS',
            'VERSION_FILE', 'ERROR_PLAYER_LOAD'] + PATHS
 
@@ -21,6 +21,7 @@ USER = ROOT + 'user/'
 SERIES = USER + 'series/'
 SERIES_IMG = SERIES + 'img/'
 SERIES_BANNERS = SERIES + 'banners/'
+SERIES_DATABASE = SERIES + 'series.sqlite'
 
 CONFIG_FILE = USER + 'series-watcher.cfg'
 LAST_VERIF_PATH = SERIES + 'lastVerif.txt'

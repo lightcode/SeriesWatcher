@@ -10,26 +10,27 @@ import time
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
-import serieswatcher.desktop
 
 sys.path.insert(0, os.path.abspath('serieswatcher/'))
 
+from serieswatcher.const import USER
+
 USER_DIR_FOUND = False
-if os.path.isdir('user'):
+if os.path.isdir(USER):
     USER_DIR_FOUND = True
 
-from serieswatcher.serieswatcher.about import About
-from serieswatcher.serieswatcher.addserie import AddSerie
-from serieswatcher.serieswatcher.config import Config
-from serieswatcher.serieswatcher.const import *
-from serieswatcher.serieswatcher.debug import Debug, DebugWindow
-from serieswatcher.serieswatcher.editseries import EditSeries
-from serieswatcher.serieswatcher.models import Serie
-from serieswatcher.serieswatcher.options import Options
-from serieswatcher.serieswatcher.player import Player
-from serieswatcher.serieswatcher.sync import SyncSWThead
-from serieswatcher.serieswatcher.threads import *
-from serieswatcher.serieswatcher.widgets import EpisodesViewer, VideoItem, FilterMenu
+import desktop
+from serieswatcher.about import About
+from serieswatcher.addserie import AddSerie
+from serieswatcher.config import Config
+from serieswatcher.const import *
+from serieswatcher.debug import Debug, DebugWindow
+from serieswatcher.editseries import EditSeries
+from serieswatcher.models import Serie
+from serieswatcher.options import Options
+from serieswatcher.player import Player
+from serieswatcher.threads import *
+from serieswatcher.widgets import EpisodesViewer, VideoItem, FilterMenu
 
 
 class Main(QtGui.QMainWindow):
@@ -98,8 +99,8 @@ class Main(QtGui.QMainWindow):
         self.syncDBThead = SyncDBThead(self)
         self.syncDBThead.start()
         
-        self.syncSWThead = SyncSWThead(self)
-        self.syncSWThead.start()
+        self.remoteSyncThead = RemoteSyncThead(self)
+        self.remoteSyncThead.start()
     
     
     def currentSerieId(self):
@@ -306,10 +307,10 @@ class Main(QtGui.QMainWindow):
                              u"version ?",
                              QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
-            import serieswatcher.serieswatcher.upgrader
+            import serieswatcher.upgrader
         elif r == QMessageBox.No:
             with open('user/series/VERSION', 'w+') as f:
-                f.write('1.3.0')
+                f.write(VERSION)
     
     
     def setup(self):
@@ -322,7 +323,7 @@ class Main(QtGui.QMainWindow):
             self.openUpdateWindow()
         else:
             with open(VERSION_FILE, 'w+') as f:
-                f.write('1.3.0')
+                f.write(VERSION)
         if not os.path.isdir(USER):
             os.mkdir(USER)
         if not os.path.isdir(SERIES):
@@ -351,21 +352,28 @@ class Main(QtGui.QMainWindow):
     
     
     def playFirstEpisode(self):
-        firstNewEpisode = None
-        minSeason = minEpisode = 0
-        for e in self.map.itervalues():
-            if e.status == 2:
-                season, episode = e.season, e.episode
-                if (minSeason > season) \
-                 or (minSeason == season and minEpisode > episode) \
-                 or (minSeason == 0 and minEpisode == 0):
-                    firstNewEpisode = e
-                    minSeason, minEpisode = season, episode
-        
-        if firstNewEpisode:
+        # Try to watch the first not viewed episode
+        newEpisodes = (e for e in self.map.itervalues() if e.status == 2)
+        try:
+            firstNewEpisode = min(newEpisodes, key=lambda e: e.number)
             self.playEpisode(firstNewEpisode)
             return True
-        return False
+        except ValueError:
+            pass
+        
+        # Try to watch the episode after last episode viewed
+        try:
+            episodes = (e for e in self.map.itervalues() if e.lastView)
+            lastEpisode = max(episodes, key=lambda e: e.lastView).number
+        except ValueError:
+            return False
+        
+        try:
+            nextEpisodes = \
+                (e for e in self.map.itervalues() if e.number > lastEpisode)
+            self.playEpisode(min(nextEpisodes, key=lambda e: e.number))
+        except ValueError:
+            return False
     
     
     def playRandomEpisode(self):
@@ -456,8 +464,8 @@ class Main(QtGui.QMainWindow):
     
     
     def updateAllSeriesMenu(self):
-        for e in range(Serie.getSeries()):
-            self.refreshSeries.addSerie(e)    
+        for i, e in enumerate(Serie.getSeries()):
+            self.refreshSeries.addSerie(i)
     
     
     def refreshSelectedEpisodes(self):
@@ -739,11 +747,11 @@ class Main(QtGui.QMainWindow):
         c = u"Série vue à %d %% | %d %% d'épisodes disponibles" \
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
-        
+        '''DEV
         if nbNotView > 0:
             self.btnPlay.setEnabled(True)
         else:
-            self.btnPlay.setEnabled(False)
+            self.btnPlay.setEnabled(False)'''
     
     
     def episodeLoaded(self, args):

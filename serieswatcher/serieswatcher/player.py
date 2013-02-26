@@ -12,7 +12,7 @@ from debug import Debug
 # Import VLC
 path = os.getcwd()
 try:
-    from .. import vlc
+    import vlc
 except:
     vlc = None
 os.chdir(path)
