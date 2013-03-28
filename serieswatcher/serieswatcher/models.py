@@ -51,17 +51,16 @@ class Serie(SQLObject):
         return self.loadCompleted
     
     
+    '''Not used
     @classmethod
     def getSummary(self):
-        print 'rtrt'
         serieProperties = [
             'title', 'description', 'lang',
             'tvdbID', 'pos',
         ]
         for s in self.getSeries():
-            print '--'
             yield [getattr(s, p) for p in serieProperties]
-    
+    '''
     
     def setLoaded(self, v):
         self.loadCompleted = v
@@ -105,7 +104,7 @@ class Serie(SQLObject):
         nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = 0
         nbFavorites = nbNotView = nbView = 0
         nbSeason = 0
-        for i, e in enumerate(self.episodes):
+        for e in self.episodes:
             number = e.number
             nbSeason = max(nbSeason, e.season)
             if e.season > 0:
@@ -246,9 +245,6 @@ cols = [i.name for i in sqlhub.processConnection.columnsFromSchema("episode", Ep
 if 'lastUpdate' not in cols:
     Episode.sqlmeta.delColumn('lastUpdate')
     Episode.sqlmeta.addColumn(TimestampCol('lastUpdate'), changeSchema=True)
-
-
-#print list(Episode.select(Episode.q.episode==1))
 
 #Serie._connection.debug = True
 #Episode._connection.debug = True

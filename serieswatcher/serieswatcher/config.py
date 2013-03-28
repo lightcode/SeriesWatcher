@@ -51,6 +51,7 @@ class Config(object):
         # Load the options
         if config.has_section('options'):
             for key, value in config.items('options'):
+                value = None if value == 'None' else value
                 cls.config[key] = value
 
 

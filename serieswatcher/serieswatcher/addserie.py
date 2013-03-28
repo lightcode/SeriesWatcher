@@ -4,9 +4,10 @@
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
-from widgets import SelectFolder
+from widgets.selectfolder import SelectFolder
 from thetvdb import TheTVDB
 from models import Serie
+from languagescodes import codeToLocal
 
 class AddSerie(QtGui.QDialog):
     serieAdded = QtCore.pyqtSignal()
@@ -14,72 +15,129 @@ class AddSerie(QtGui.QDialog):
     def __init__(self, parent=None):
         super(AddSerie, self).__init__(parent)
         self.setWindowTitle(u'Ajouter une série')
+        self.setMinimumSize(400, 350)
         
+        ######################
+        # First panel
+        ######################
         # Title & search
-        self.title = QtGui.QLineEdit()
         search = QtGui.QPushButton('Rechercher')
         search.clicked.connect(self.search)
+        self.searchTitle = QtGui.QLineEdit()
+        self.searchTitle.returnPressed.connect(search.click)
+        self.searchTitle.setPlaceholderText(u'Titre de la série...')
         title = QtGui.QHBoxLayout()
-        title.addWidget(self.title)
+        title.addWidget(self.searchTitle)
         title.addWidget(search)
+        searchLayout = QtGui.QVBoxLayout()
+        searchLayout.addLayout(title)
+        groupSearch = QtGui.QGroupBox(u'Recherchez votre série')
+        groupSearch.setLayout(searchLayout)
         
-        self.theTVDB = QtGui.QLineEdit()
-        self.lang = QtGui.QLineEdit()
-        self.selectFolder = SelectFolder()
+        # Select the serie
+        self.selectSerie = QtGui.QListWidget()
+        self.selectSerie.currentItemChanged.connect(self.reloadForwardBtn)
+        selectLayout = QtGui.QVBoxLayout()
+        selectLayout.addWidget(self.selectSerie)
+        groupSelect = QtGui.QGroupBox(u'Sélectionner votre série')
+        groupSelect.setLayout(selectLayout)
         
-        groupSerie = QtGui.QGroupBox(u'Information de la série')
-        form = QtGui.QFormLayout()
-        form.addRow('Titre', title)
-        form.addRow('ID OpenTV', self.theTVDB)
-        form.addRow('Langue', self.lang)
-        groupSerie.setLayout(form)
-        
-        groupDownload = QtGui.QGroupBox(u"Répertoire d'épisodes")
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(self.selectFolder)
-        groupDownload.setLayout(layout)
-        
+        # Button box
         buttonBox = QtGui.QDialogButtonBox()
-        buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
-        buttonBox.accepted.connect(self.validate)
         buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        self.forwardBtn = buttonBox.addButton('Suivant', QtGui.QDialogButtonBox.AcceptRole)
+        self.forwardBtn.clicked.connect(self.goSecondPane)
+        self.forwardBtn.setDisabled(True)
         buttonBox.rejected.connect(self.close)
         
-        layout = QtGui.QVBoxLayout()
-        layout.addWidget(groupSerie)
-        layout.addWidget(groupDownload)
-        layout.addWidget(buttonBox)
+        # Layouts
+        firstPaneLayout = QtGui.QVBoxLayout()
+        firstPaneLayout.addWidget(groupSearch)
+        firstPaneLayout.addWidget(groupSelect)
+        firstPaneLayout.addWidget(buttonBox)
+        firstPane = QtGui.QWidget()
+        firstPane.setLayout(firstPaneLayout)
         
-        self.setLayout(layout)
+        ######################
+        # Second panel
+        ######################
+        # Serie Information
+        self.lang = QtGui.QComboBox()
+        self.title = QtGui.QLineEdit()
+        form = QtGui.QFormLayout()
+        form.addRow('Titre', self.title)
+        form.addRow('Langue', self.lang)
+        groupSerie = QtGui.QGroupBox(u'Information de la série')
+        groupSerie.setLayout(form)
+        
+        # Folder selection
+        self.selectFolder = SelectFolder()
+        layoutDir = QtGui.QVBoxLayout()
+        layoutDir.addWidget(self.selectFolder)
+        groupDirectory = QtGui.QGroupBox(u'Répertoire')
+        groupDirectory.setLayout(layoutDir)
+        
+        # Button box
+        buttonBox = QtGui.QDialogButtonBox()
+        firstLayoutBtn = buttonBox.addButton(u'Précédent', QtGui.QDialogButtonBox.ActionRole)
+        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
+        buttonBox.addButton(u'Terminé', QtGui.QDialogButtonBox.AcceptRole)
+        firstLayoutBtn.clicked.connect(self.goFirstPane)
+        buttonBox.rejected.connect(self.close)
+        buttonBox.accepted.connect(self.validate)
+        
+        # Layouts
+        secondPaneLayout = QtGui.QVBoxLayout()
+        secondPaneLayout.addWidget(groupSerie)
+        secondPaneLayout.addWidget(groupDirectory)
+        secondPaneLayout.addWidget(buttonBox)
+        secondPane = QtGui.QWidget()
+        secondPane.setLayout(secondPaneLayout)
+        
+        ##############################
+        # Create the stacked widget
+        ##############################
+        self.stackedWidget = QtGui.QStackedLayout(self)
+        self.stackedWidget.addWidget(firstPane)
+        self.stackedWidget.addWidget(secondPane)
+        
+        self.setLayout(self.stackedWidget)
+    
+    
+    def reloadForwardBtn(self):
+        self.forwardBtn.setDisabled(False)
+    
+    
+    def goFirstPane(self):
+        self.stackedWidget.setCurrentIndex(0)
+    
+    
+    def goSecondPane(self):
+        item = self.selectSerie.currentItem()
+        if item:
+            tvdbid, title, lang = item.serie
+            self.title.setText(title)
+            self.lang.clear()
+            for serie in self.seriesFound:
+                if serie[0] == tvdbid:
+                    self.lang.addItem(codeToLocal(serie[2]), QtCore.QVariant(serie[2]))
+            self.stackedWidget.setCurrentIndex(1)
     
     
     def search(self):
-        userInput = self.title.text()
+        userInput = self.searchTitle.text()
         bdd = TheTVDB()
-        seriesFound = bdd.searchSearie(userInput)
-        self.choiceSerie(seriesFound)
-    
-    
-    def choiceSerie(self, seriesFound):
-        if len(seriesFound) > 1:
-            titles = []
-            for serie in seriesFound:
-                titles.append(u'%s (%s)' % (serie[1], serie[2]))
-            
-            title = u'Ajouter une série'
-            label = u'Choisissez votre série :'
-            r = QtGui.QInputDialog.getItem(self, title, label, titles, 0, False)
-            select = unicode(r[0])
-            index = titles.index(select)
-            infos = seriesFound[index]
-        elif len(seriesFound) == 1:
-            infos = seriesFound[0]
+        self.seriesFound = bdd.searchSearie(userInput)
         
-        if len(seriesFound) > 0:
-            (serieId, serieName, lang) = infos
-            self.lang.setText(lang)
-            self.title.setText(serieName)
-            self.theTVDB.setText(serieId)
+        self.selectSerie.clear()
+        if self.seriesFound:
+            s = []
+            for serie in self.seriesFound:
+                if not [_s for _s in s if _s[1] == serie[1]]:
+                    item = QtGui.QListWidgetItem(serie[1])
+                    setattr(item, 'serie', serie)
+                    self.selectSerie.addItem(item)
+                    s.append(serie)
         else:
             title = 'Erreur'
             message = u'Aucune série correspondante.'
@@ -87,29 +145,17 @@ class AddSerie(QtGui.QDialog):
     
     
     def validate(self):
-        nbErrors = 0
-        
         title = unicode(self.title.text())
-        if title == '':
-            nbErrors += 1
-        
-        try:
-            tvdbID = int(self.theTVDB.text())
-        except ValueError:
-            nbErrors += 1
-        
-        lang = unicode(self.lang.text())
-        if lang == '':
-            nbErrors += 1
-        
+        lang = unicode(self.lang.itemData(self.lang.currentIndex()).toString())
         path = unicode(self.selectFolder.path())
         
-        if nbErrors > 0:
+        if title == '':
             title = u"Données incorrectes"
             message = u"Certaines données sont erronées."
             QMessageBox.critical(self, title, message)
         else:
             pos = len(Serie.getSeries())
+            tvdbID = int(self.selectSerie.currentItem().serie[0])
             Serie(pos=pos, title=title, tvdbID=tvdbID, lang=lang, path=path)
             self.serieAdded.emit()
             self.close()

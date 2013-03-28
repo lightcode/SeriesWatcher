@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import shutil
+import os
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon
-from widgets import SelectFolder
+from widgets.selectfolder import SelectFolder
 from addserie import AddSerie
 from models import Serie, Episode
+from const import SERIES_IMG, ICONS, SERIES_BANNERS
 
 class ListSeries(QtGui.QWidget):
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')
@@ -27,11 +30,11 @@ class ListSeries(QtGui.QWidget):
         
         tool = QtGui.QToolBar()
         tool.setStyleSheet('QToolBar { border:none; }')
-        tool.addAction(QIcon('art/plus.png'), u'Ajouter une série', self.add)
+        tool.addAction(QIcon(ICONS + 'plus.png'), u'Ajouter une série', self.add)
         tool.addSeparator()
-        tool.addAction(QIcon('art/arrow-up.png'), 'Monter', self.upItem)
-        tool.addAction(QIcon('art/arrow-down.png'), 'Descendre', self.downItem)
-        tool.addAction(QIcon('art/delete.png'), u'Supprimer', self.delete)
+        tool.addAction(QIcon(ICONS + 'arrow-up.png'), 'Monter', self.upItem)
+        tool.addAction(QIcon(ICONS + 'arrow-down.png'), 'Descendre', self.downItem)
+        tool.addAction(QIcon(ICONS + 'delete.png'), u'Supprimer', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()
         layoutButton.addWidget(tool)
@@ -197,5 +200,11 @@ class EditSeries(QtGui.QDialog):
             sdb = list(Serie.select(Serie.q.uuid==item.uuid))[0]
             Episode.deleteBy(serie=sdb)
             Serie.delete(sdb.id)
+            img = '%s/%s' % (SERIES_IMG, item.uuid)
+            if os.path.isdir(img):
+                shutil.rmtree('%s/%s' % (SERIES_IMG, item.uuid))
+            banners = '%s/%s.jpg' % (SERIES_BANNERS, item.uuid)
+            if os.path.isfile(banners):
+                os.remove(banners)
         self.edited.emit()
         self.close()

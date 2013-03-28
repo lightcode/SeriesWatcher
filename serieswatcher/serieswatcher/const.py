@@ -3,10 +3,11 @@
 
 import os.path
 
-PATHS = ['USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
-         'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE']
-__all__ = ['VERSION', 'TEXT_VERSION', 'PATHS', 'EXTENSIONS',
-           'VERSION_FILE', 'ERROR_PLAYER_LOAD'] + PATHS
+__all__ = ['VERSION', 'TEXT_VERSION', 'EXTENSIONS',
+           'VERSION_FILE', 'ERROR_PLAYER_LOAD',
+           'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
+           'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE',
+           'THEME', 'ICONS']
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
@@ -22,6 +23,10 @@ SERIES = USER + 'series/'
 SERIES_IMG = SERIES + 'img/'
 SERIES_BANNERS = SERIES + 'banners/'
 SERIES_DATABASE = SERIES + 'series.sqlite'
+
+THEMES = ROOT + 'themes/'
+THEME = THEMES + 'default/'
+ICONS = THEME + 'icons/'
 
 CONFIG_FILE = USER + 'series-watcher.cfg'
 LAST_VERIF_PATH = SERIES + 'lastVerif.txt'

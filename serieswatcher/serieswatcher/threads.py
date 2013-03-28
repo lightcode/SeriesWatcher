@@ -15,7 +15,7 @@ from sqlobject.dberrors import OperationalError
 from sqlobject.sqlbuilder import AND
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdateThread', 'LoaderThread', 'SyncDBThead', 'RemoteSyncThead']
+           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead', 'RemoteSyncThead']
 
 
 class RemoteSyncThead(QtCore.QThread):
@@ -48,6 +48,7 @@ class SyncDBThead(QtCore.QThread):
             except AttributeError:
                 pass
             self.msleep(500)
+
 
 
 class CheckSerieUpdateThread(QtCore.QThread):
@@ -183,7 +184,7 @@ class RefreshSeriesThread(QtCore.QThread):
 
 
 
-class LoaderThread(QtCore.QThread):
+class SerieLoaderThread(QtCore.QThread):
     serieLoaded = QtCore.pyqtSignal(Serie)
     lastCurrentSerieId = -1
     _forceReload = False
@@ -255,7 +256,7 @@ class EpisodesLoaderThread(QtCore.QThread):
             if qId == self.lastQuery:
                 image = QtGui.QImage(imgPath)
                 if image != QtGui.QImage():
-                    image = image.scaled(120, 90, *param)
+                    image = image.scaled(120, 120, *param)
                 self.episodeLoaded.emit((x, y, episode, image))
     
     

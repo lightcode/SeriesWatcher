@@ -13,12 +13,19 @@ class RemoteSyncApi(object):
         self._token = None
     
     
-    def _makeGetRequest(self, ressource, params={}):
+    def _makeRequest(self, method, url, params, headers={}):
         if self._token:
             params.update({'token': self._token})
         params = urllib.urlencode(params)
         conn = httplib.HTTPConnection(self._server)
-        conn.request("GET", '%s?%s' % (ressource, params))
+        
+        if method == 'GET':
+            conn.request('GET', '%s?%s' % (url, params))
+        elif method == 'POST':
+            conn.request("POST", url, params, headers)
+        else:
+            print 'Not implemented'
+        
         response = conn.getresponse()
         data = response.read()
         res = {}
@@ -32,24 +39,13 @@ class RemoteSyncApi(object):
         return res
     
     
-    def _makePostRequest(self, ressource, params={}):
-        if self._token:
-            params.update({'token': self._token})
-        params = urllib.urlencode(params)
+    def _makeGetRequest(self, url, params={}):
+        return self._makeRequest('GET', url, params)
+    
+    
+    def _makePostRequest(self, url, params={}):
         headers = {"Content-type": "application/x-www-form-urlencoded"}
-        conn = httplib.HTTPConnection(self._server)
-        conn.request("POST", ressource, params, headers)
-        response = conn.getresponse()
-        data = response.read()
-        res = {}
-        res['status'] = response.status
-        if response.status == 200:
-            try:
-                res.update(json.loads(data))
-            except ValueError:
-                res['status'] = 500
-                return res
-        return res
+        return self._makeRequest('POST', url, params, headers)
     
     
     def authenticate(self):

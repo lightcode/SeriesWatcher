@@ -5,13 +5,14 @@ from hashlib import sha512
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from config import Config
-from widgets import SelectFile
-from subscribe import SubscribeWindow
+from widgets.selectfile import SelectFile
+
 
 RANDOM_TIMES = [(u'Désactiver', 0),
                 ('15 jours', 1296000),
                 ('1 mois', 2592000),
                 ('3 mois', 7776000)]
+
 
 class Options(QtGui.QDialog):
     def __init__(self, parent=None):
@@ -81,16 +82,8 @@ class Options(QtGui.QDialog):
         self.syncPassword = QtGui.QLineEdit()
         self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
         
-        self.subscribeBtn = QtGui.QPushButton("S'inscrire")
-        self.subscribeBtn.clicked.connect(self.openSubscribeWindow)
-        ly = QtGui.QHBoxLayout()
-        ly.addWidget(self.syncServer)
-        ly.addWidget(self.subscribeBtn)
-        w = QtGui.QWidget()
-        w.setLayout(ly)
-        
         layout2 = QtGui.QFormLayout()
-        layout2.addRow('Serveur', w)
+        layout2.addRow('Serveur', self.syncServer)
         layout2.addRow("Nom d'utilisateur", self.syncUser)
         layout2.addRow('Mot de passe', self.syncPassword)
         
@@ -171,12 +164,3 @@ class Options(QtGui.QDialog):
         
         Config.save()
         self.close()
-
-
-if __name__ == "__main__":
-    import sys
-    Config.loadConfig()
-    app = QtGui.QApplication(sys.argv)
-    options = Options()
-    options.show()
-    sys.exit(app.exec_())

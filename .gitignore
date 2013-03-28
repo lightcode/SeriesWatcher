@@ -1,14 +1,15 @@
 *.pyc
 *.pyo
 *.komodoproject
+/user*
+/dist
 *Thumbs.db
 .gitignore
-/user*
 /olddatabases
 /build
 /dist
 /setup
 /test*
-/setup.py
+/setup*.py
 TODO*
 count.py
