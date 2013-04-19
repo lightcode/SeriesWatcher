@@ -393,16 +393,20 @@ class Main(QtGui.QMainWindow):
         try:
             episodes = (e for e in self.map.itervalues() if e.lastView)
             lastEpisode = max(episodes, key=lambda e: e.lastView).number
-        except ValueError:
-            return False
-        
-        try:
             nextEpisodes = \
                 (e for e in self.map.itervalues() if e.number > lastEpisode)
             self.playEpisode(min(nextEpisodes, key=lambda e: e.number))
+            return True
         except ValueError:
-            return False
-    
+            pass
+        
+        try:
+            nextEpisodes = (e for e in self.map.itervalues())
+            self.playEpisode(min(nextEpisodes, key=lambda e: e.number))
+            return True
+        except ValueError:
+            pass
+        return False
     
     def playRandomEpisode(self):
         '''Play a random episode.'''
@@ -651,6 +655,7 @@ class Main(QtGui.QMainWindow):
     
     
     def searchFinished(self, listEpisodes):
+        '''Triggered when the search is finish.'''
         if self.searchBar.text() == '':
             self.refreshScreen()
         else:

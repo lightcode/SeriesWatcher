@@ -47,8 +47,8 @@ class Options(QtGui.QDialog):
         buttonGroup.addButton(self.player3)
         
         form = QtGui.QFormLayout()
-        form.addRow(self.player1)
         form.addRow(self.player2)
+        form.addRow(self.player1)
         form.addRow(self.player3)
         form.addRow(self.cmdOpen)
         

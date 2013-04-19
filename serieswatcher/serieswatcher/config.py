@@ -46,7 +46,7 @@ class Config(object):
         # The default config
         cls.config = {}
         cls.config['command_open'] = None
-        cls.config['player'] = 1
+        cls.config['player'] = 2
         cls.config['debug'] = 0
         cls.config['random_duration'] = 0
         cls.config['sync_server'] = None
@@ -58,8 +58,3 @@ class Config(object):
             for key, value in config.items('options'):
                 value = None if value == 'None' else value
                 cls.config[key] = value
-
-
-
-if __name__ == '__main__':
-    Config.loadConfig()
