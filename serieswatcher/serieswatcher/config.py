@@ -6,6 +6,8 @@ from configparser import SafeConfigParser
 from const import *
 
 class Config(object):
+    '''Singleton to handle the configuration file and use
+    it in the all program.'''
     _instance = None
     def __new__(cls): 
         if cls._instance is None:
@@ -15,11 +17,13 @@ class Config(object):
     
     @classmethod
     def setOption(cls, key, value):
+        '''Set an option.'''
         cls.config[key] = value
     
     
     @classmethod
     def save(cls):
+        '''Save the all configuration in the config file.'''
         config = SafeConfigParser()
         
         # Make option section
@@ -34,6 +38,7 @@ class Config(object):
     
     @classmethod
     def loadConfig(cls):
+        '''Load the all configuration from the config file.'''
         config = SafeConfigParser()
         if os.path.isfile(CONFIG_FILE):
             config.read_file(codecs.open(CONFIG_FILE, encoding='utf-8'))

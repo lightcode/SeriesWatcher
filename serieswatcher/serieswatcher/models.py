@@ -11,8 +11,6 @@ from glob import iglob
 import sys
 
 sys.path.insert(0, os.path.abspath('..'))
-
-
 from sqlobject import *
 
 if not os.path.isdir(USER):
@@ -22,6 +20,9 @@ if not os.path.isdir(SERIES):
 
 
 class Serie(SQLObject):
+    '''Model Serie.'''
+    PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
+    
     uuid = StringCol(default=lambda : str(uuid1()))
     title = UnicodeCol()
     description = UnicodeCol(default='')
@@ -48,38 +49,31 @@ class Serie(SQLObject):
     
     
     def isLoaded(self):
+        '''Return True if the serie is completly loaded from TVDB.'''
         return self.loadCompleted
     
     
-    '''Not used
-    @classmethod
-    def getSummary(self):
-        serieProperties = [
-            'title', 'description', 'lang',
-            'tvdbID', 'pos',
-        ]
-        for s in self.getSeries():
-            yield [getattr(s, p) for p in serieProperties]
-    '''
-    
     def setLoaded(self, v):
+        '''Mark the serie as loaded.'''
         self.loadCompleted = v
     
     
     @classmethod
     def deleteSeriesCache(cls):
+        '''Clear the cache.'''
         cls._seriesCache = None
     
     
     @classmethod
     def getSeries(cls):
+        '''Returns the list of series.'''
         if cls._seriesCache is None:
             cls._seriesCache = list(cls.select())
         return cls._seriesCache
     
     
-    PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
     def loadAvailableList(self):
+        '''Load the serie's episodes in the path registred in the database.'''
         self.episodesAvailable = {}
         
         if not self.path and not os.path.isdir(self.path):
@@ -100,6 +94,7 @@ class Serie(SQLObject):
     
     
     def loadEpisodes(self):
+        '''Load episodes from the database and cache them.'''
         self._cacheEpisodes = None
         nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = 0
         nbFavorites = nbNotView = nbView = 0
@@ -133,16 +128,19 @@ class Serie(SQLObject):
     
     
     def loadSerie(self):
+        '''Load available episodes list and load episodes.'''
         self.loadAvailableList()
         self.loadEpisodes()
     
     
     def _get_bannerPath(self):
+        '''Returns the path to the banner image.'''
         return SERIES_BANNERS + '%s.jpg' % self.uuid
     
     
     _cacheEpisodes = None
     def _get_episodes(self):
+        '''Returns the episode list.'''
         if self._cacheEpisodes is None:
             self._cacheEpisodes = list(Episode.select(Episode.q.serieID==self.id))
         return self._cacheEpisodes
@@ -150,6 +148,7 @@ class Serie(SQLObject):
 
 
 class Episode(SQLObject):
+    '''Model Episode.'''
     title = UnicodeCol()
     description = UnicodeCol()
     season = IntCol()
@@ -169,12 +168,14 @@ class Episode(SQLObject):
     
     
     def userPlayed(self):
+        '''Set the date and add view on the episode.'''
         if self.isAvailable():
             self.lastView = datetime.now()
-            self.setView()
+            self.addView()
     
     
-    def setView(self):
+    def addView(self):
+        '''Add a view and refresh counters.'''
         if self.isAvailable():
             if self.nbView == 0:
                 self.serie.nbNotView -= 1
@@ -183,7 +184,18 @@ class Episode(SQLObject):
             self._setLastUpdate()
     
     
+    def setView(self):
+        '''Set the view number at 1 if the episode is not view.'''
+        if self.isAvailable():
+            if self.nbView == 0:
+                self.serie.nbNotView -= 1
+                self.serie.nbView += 1
+                self.nbView = 1
+                self._setLastUpdate()
+    
+    
     def setNotView(self):
+        '''Unmark the episode as view.'''
         if self.nbView > 0 and self.isAvailable():
             self.serie.nbNotView += 1
             self.serie.nbView -= 1
@@ -193,10 +205,12 @@ class Episode(SQLObject):
     
     
     def isAvailable(self):
+        '''Return true if the episode is in the hard drive.'''
         return self.path is not None
     
     
     def setFavorite(self):
+        '''Mark the episode as favorite.'''
         if not self.favorite:
             self.favorite = True
             self.serie.nbFavorites += 1
@@ -204,6 +218,7 @@ class Episode(SQLObject):
     
     
     def setUnFavorite(self):
+        '''Unmark the episode as favorite.'''
         if self.favorite:
             self.favorite = False
             self.serie.nbFavorites -= 1
@@ -211,10 +226,16 @@ class Episode(SQLObject):
     
     
     def _setLastUpdate(self):
+        '''Set the last view date at now.'''
         self.lastUpdate = datetime.now()
     
     
     def _get_status(self):
+        '''Return the status of episode.
+                1 -> Not in the hard drive
+                2 -> In the hard drive but not view
+                3 -> First aired date in the future
+        '''
         status = 0
         if self.path is not None:
             status = 1
@@ -227,24 +248,21 @@ class Episode(SQLObject):
     
     
     def _get_number(self):
+        '''Return the formated episode number.'''
         return '%02d-%02d' % (self.season, self.episode)
     
     
     def _get_cover(self):
+        '''Return the path to the episode cover.'''
         return u'%s%s/%s.jpg' % (SERIES_IMG, self.serie.uuid, self.number)
 
 
-sqlhub.processConnection = connectionForURI('sqlite:///' + SERIES_DATABASE)
-
-if not os.path.isfile(SERIES_DATABASE):
-    Serie.createTable()
-    Episode.createTable()
-
-# Move the 1.3 database into 1.4 (DEV)
-cols = [i.name for i in sqlhub.processConnection.columnsFromSchema("episode", Episode)] 
-if 'lastUpdate' not in cols:
-    Episode.sqlmeta.delColumn('lastUpdate')
-    Episode.sqlmeta.addColumn(TimestampCol('lastUpdate'), changeSchema=True)
-
+def databaseConnect():
+    sqlhub.processConnection = connectionForURI('sqlite:///' + SERIES_DATABASE)
+    
+    if not os.path.isfile(SERIES_DATABASE):
+        Serie.createTable()
+        Episode.createTable()
+    
 #Serie._connection.debug = True
 #Episode._connection.debug = True

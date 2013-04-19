@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox
 from widgets.selectfolder import SelectFolder
 from thetvdb import TheTVDB
@@ -10,9 +9,11 @@ from models import Serie
 from languagescodes import codeToLocal
 
 class AddSerie(QtGui.QDialog):
+    '''Class to manipulate the window "Add serie".'''
     serieAdded = QtCore.pyqtSignal()
     
     def __init__(self, parent=None):
+        '''Create the layout of the window "Add serie".'''
         super(AddSerie, self).__init__(parent)
         self.setWindowTitle(u'Ajouter une série')
         self.setMinimumSize(400, 350)
@@ -36,7 +37,7 @@ class AddSerie(QtGui.QDialog):
         
         # Select the serie
         self.selectSerie = QtGui.QListWidget()
-        self.selectSerie.currentItemChanged.connect(self.reloadForwardBtn)
+        self.selectSerie.currentItemChanged.connect(self.disableForwardBtn)
         selectLayout = QtGui.QVBoxLayout()
         selectLayout.addWidget(self.selectSerie)
         groupSelect = QtGui.QGroupBox(u'Sélectionner votre série')
@@ -104,15 +105,18 @@ class AddSerie(QtGui.QDialog):
         self.setLayout(self.stackedWidget)
     
     
-    def reloadForwardBtn(self):
+    def disableForwardBtn(self):
+        '''Disable the forward button.'''
         self.forwardBtn.setDisabled(False)
     
     
     def goFirstPane(self):
+        '''Show the first pane.'''
         self.stackedWidget.setCurrentIndex(0)
     
     
     def goSecondPane(self):
+        '''Show the second pane.'''
         item = self.selectSerie.currentItem()
         if item:
             tvdbid, title, lang = item.serie
@@ -125,6 +129,7 @@ class AddSerie(QtGui.QDialog):
     
     
     def search(self):
+        '''Perform a search on the TVDB.com.'''
         userInput = self.searchTitle.text()
         bdd = TheTVDB()
         self.seriesFound = bdd.searchSearie(userInput)
@@ -145,6 +150,7 @@ class AddSerie(QtGui.QDialog):
     
     
     def validate(self):
+        '''Check if the form is complete.'''
         title = unicode(self.title.text())
         lang = unicode(self.lang.itemData(self.lang.currentIndex()).toString())
         path = unicode(self.selectFolder.path())

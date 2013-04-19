@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from hashlib import sha512
+#from hashlib import sha512
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import Qt
 from config import Config
 from widgets.selectfile import SelectFile
 
@@ -15,7 +14,10 @@ RANDOM_TIMES = [(u'Désactiver', 0),
 
 
 class Options(QtGui.QDialog):
+    '''Class to handle the option window.'''
+    
     def __init__(self, parent=None):
+        '''Initialize the option window.'''
         super(Options, self).__init__(parent)
         self.setWindowTitle('Options')
         self.setMinimumWidth(500)
@@ -30,7 +32,6 @@ class Options(QtGui.QDialog):
                     self.randomDuration)
         groupSW = QtGui.QGroupBox(u'Series Watcher')
         groupSW.setLayout(form)
-        
         
         # Player Choice
         self.cmdOpen = SelectFile(Config.config['command_open'])
@@ -73,26 +74,26 @@ class Options(QtGui.QDialog):
         layout1.addWidget(groupPlayer)
         layout1.addWidget(groupDebug)
         
-        tab1 = QtGui.QWidget()
-        tab1.setLayout(layout1)
+        #tab1 = QtGui.QWidget()
+        #tab1.setLayout(layout1)
         
         # Synchronisation
-        self.syncServer = QtGui.QLineEdit(Config.config['sync_server'])
-        self.syncUser = QtGui.QLineEdit(Config.config['sync_user'])
-        self.syncPassword = QtGui.QLineEdit()
-        self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
+        #self.syncServer = QtGui.QLineEdit(Config.config['sync_server'])
+        #self.syncUser = QtGui.QLineEdit(Config.config['sync_user'])
+        #self.syncPassword = QtGui.QLineEdit()
+        #self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
+        #
+        #layout2 = QtGui.QFormLayout()
+        #layout2.addRow('Serveur', self.syncServer)
+        #layout2.addRow("Nom d'utilisateur", self.syncUser)
+        #layout2.addRow('Mot de passe', self.syncPassword)
         
-        layout2 = QtGui.QFormLayout()
-        layout2.addRow('Serveur', self.syncServer)
-        layout2.addRow("Nom d'utilisateur", self.syncUser)
-        layout2.addRow('Mot de passe', self.syncPassword)
+        #tab2 = QtGui.QWidget()
+        #tab2.setLayout(layout2)
         
-        tab2 = QtGui.QWidget()
-        tab2.setLayout(layout2)
-        
-        tab = QtGui.QTabWidget()
-        tab.addTab(tab1, u'Général')
-        tab.addTab(tab2, 'Synchronisation')
+        #tab = QtGui.QTabWidget()
+        #tab.addTab(tab1, u'Général')
+        #tab.addTab(tab2, 'Synchronisation')
         
         buttonBox = QtGui.QDialogButtonBox()
         buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
@@ -101,7 +102,8 @@ class Options(QtGui.QDialog):
         buttonBox.rejected.connect(self.close)
         
         layout = QtGui.QVBoxLayout()
-        layout.addWidget(tab)
+        layout.addLayout(layout1)
+        #layout.addWidget(tab)
         layout.addWidget(buttonBox)
         
         self.setLayout(layout)
@@ -112,34 +114,34 @@ class Options(QtGui.QDialog):
         self.timer.start()
     
     
-    def openSubscribeWindow(self):
-        sw = SubscribeWindow(self)
-        sw.show()
-    
-    
-    def setPlayer(self, value):
-        if 4 > value > 0:
-            self.__dict__['player%s' % value].setChecked(True)
-    
-    
     def playerChanged(self):
+        '''Triggered when the user select another player.'''
         if self.player() == 3:
             self.cmdOpen.setDisabled(False)
         else:
             self.cmdOpen.setDisabled(True)
     
     
+    def setPlayer(self, value):
+        '''Select the player in the interface.'''
+        if 4 > value > 0:
+            self.__dict__['player%s' % value].setChecked(True)
+    
+    
     def player(self):
+        '''Return the player number selected.'''
         for n in range(1, 4):
             if self.__dict__['player%s' % n].isChecked():
                 return n
     
     
     def getRandomValue(self):
+        '''Return the random value selected.'''
         return RANDOM_TIMES[self.randomDuration.currentIndex()][1]
     
     
     def setRandomDuration(self, value):
+        '''Set the random duration in the interface.'''
         for pos, v in enumerate(RANDOM_TIMES):
             t, d = v
             if d == int(value):
@@ -148,6 +150,7 @@ class Options(QtGui.QDialog):
     
     
     def save(self):
+        '''Save the configuration.'''
         cmdOpen = str(self.cmdOpen.path())
         Config.setOption('command_open', cmdOpen)
         Config.setOption('player', self.player())
@@ -157,10 +160,11 @@ class Options(QtGui.QDialog):
             Config.setOption('debug', 0)
         Config.setOption('random_duration', self.getRandomValue())
         
-        Config.setOption('sync_server', self.syncServer.text())
-        Config.setOption('sync_user', self.syncUser.text())
-        if self.syncPassword.text():
-            Config.setOption('sync_password', sha512(self.syncPassword.text()).hexdigest())
+        #Config.setOption('sync_server', self.syncServer.text())
+        #Config.setOption('sync_user', self.syncUser.text())
+        #if self.syncPassword.text():
+        #    Config.setOption('sync_password',
+        #                      sha512(self.syncPassword.text()).hexdigest())
         
         Config.save()
         self.close()
