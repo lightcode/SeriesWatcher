@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from models import Serie
+from thetvdb import TheTVDB
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QMessageBox
-from widgets.selectfolder import SelectFolder
-from thetvdb import TheTVDB
-from models import Serie
 from languagescodes import codeToLocal
+from .widgets.selectfolder import SelectFolder
+
 
 class AddSerie(QtGui.QDialog):
     '''Class to manipulate the window "Add serie".'''
@@ -104,16 +105,13 @@ class AddSerie(QtGui.QDialog):
         
         self.setLayout(self.stackedWidget)
     
-    
     def disableForwardBtn(self):
         '''Disable the forward button.'''
         self.forwardBtn.setDisabled(False)
     
-    
     def goFirstPane(self):
         '''Show the first pane.'''
         self.stackedWidget.setCurrentIndex(0)
-    
     
     def goSecondPane(self):
         '''Show the second pane.'''
@@ -126,7 +124,6 @@ class AddSerie(QtGui.QDialog):
                 if serie[0] == tvdbid:
                     self.lang.addItem(codeToLocal(serie[2]), QtCore.QVariant(serie[2]))
             self.stackedWidget.setCurrentIndex(1)
-    
     
     def search(self):
         '''Perform a search on the TVDB.com.'''
@@ -147,7 +144,6 @@ class AddSerie(QtGui.QDialog):
             title = 'Erreur'
             message = u'Aucune série correspondante.'
             QMessageBox.critical(self, title, message)
-    
     
     def validate(self):
         '''Check if the form is complete.'''

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
+from PyQt4 import QtCore, QtGui
 from ..const import ICONS
 
 class EpisodesViewer(QtGui.QTableWidget):
@@ -30,7 +30,6 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.resizeTimer.setInterval(200)
         self.resizeTimer.timeout.connect(self.updateSize)
         self.resizeTimer.start()
-    
     
     def contextMenu(self, pos):
         nbEpisode = 0
@@ -60,14 +59,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))
     
-    
     def favorite(self):
         self.favoriteChanged.emit(True)
     
-    
     def unfavorite(self):
         self.favoriteChanged.emit(False)
-    
     
     def copyTitle(self):
         self.pressPaper = QtGui.QApplication.clipboard()
@@ -77,24 +73,19 @@ class EpisodesViewer(QtGui.QTableWidget):
             title = self.cellWidget(r, c).title.text()[17:]
             self.pressPaper.setText(title)
     
-    
     def markAsView(self):
         self.viewStatusChanged.emit(True)
     
-    
     def markAsNotView(self):
         self.viewStatusChanged.emit(False)
-    
     
     def setRowCount(self, nbRows):
         QtGui.QTableWidget.setRowCount(self, nbRows)
         [self.setRowHeight(i, self.rowHeight) for i in xrange(nbRows)]
     
-    
     def setColumnCount(self, nbColumn):
         QtGui.QTableWidget.setColumnCount(self, nbColumn)
         [self.setColumnWidth(i, self.columnWidth) for i in xrange(nbColumn)]
-    
     
     def keyPressEvent(self, e):
         QtGui.QTableWidget.keyPressEvent(self, e)
@@ -102,13 +93,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         if key == Qt.Key_Enter or key == Qt.Key_Return:
             self.pressEnter.emit(self.currentIndex())
     
-    
     def updateSize(self):
         oldNbColumn = self.columnCount()
         self.setColumnCount(self.nbColumn)
         if oldNbColumn != self.nbColumn:
             self.refreshEpisodes.emit()
-    
     
     def resizeEvent(self, size):
         QtGui.QTableWidget.resizeEvent(self, size)

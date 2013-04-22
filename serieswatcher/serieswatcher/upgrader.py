@@ -3,6 +3,7 @@
 import os
 from const import VERSION_FILE, USER
 
+
 def upgradeTo13():
     import upgraders.upgradeto13
 

@@ -3,7 +3,10 @@
 
 from PyQt4 import QtCore, QtGui
 
+
 class Debug(object):
+    '''Class to save debug message.'''
+    
     INFO, ERROR = 0, 1
     _instance = None
     LOG_FILE = 'errors.log'
@@ -15,20 +18,20 @@ class Debug(object):
             cls._instance = object.__new__(cls)
         return cls._instance
     
-    
     @classmethod
     def add(cls, level, *message):
+        '''Add a new message in the debugger.'''
         m = ' '.join(map(unicode, message))
         cls.logs.append((level, m))
     
-    
     @classmethod
     def setEnabled(cls, booleen):
+        '''Enable or disable the debugger.'''
         cls.enable = booleen
-    
     
     @classmethod
     def isEnabled(cls):
+        '''Return True if the debugger is enabled.'''
         return cls.enable
 
 
@@ -59,7 +62,6 @@ class DebugWindow(QtGui.QDialog):
         self.timer.setInterval(200)
         self.timer.timeout.connect(self.updateLogs)
         self.timer.start()
-    
     
     def updateLogs(self):
         for i, l in enumerate(Debug.logs):

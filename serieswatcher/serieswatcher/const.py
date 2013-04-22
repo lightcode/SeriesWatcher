@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os.path
-
 __all__ = ['VERSION', 'TEXT_VERSION', 'EXTENSIONS',
            'VERSION_FILE', 'ERROR_PLAYER_LOAD',
            'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
            'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE',
            'THEME', 'ICONS']
+
+import os.path
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from config import Config
 #from hashlib import sha512
 from PyQt4 import QtCore, QtGui
-from config import Config
-from widgets.selectfile import SelectFile
+from .widgets.selectfile import SelectFile
 
 
 RANDOM_TIMES = [(u'Désactiver', 0),
@@ -113,7 +113,6 @@ class Options(QtGui.QDialog):
         self.timer.timeout.connect(self.playerChanged)
         self.timer.start()
     
-    
     def playerChanged(self):
         '''Triggered when the user select another player.'''
         if self.player() == 3:
@@ -121,12 +120,10 @@ class Options(QtGui.QDialog):
         else:
             self.cmdOpen.setDisabled(True)
     
-    
     def setPlayer(self, value):
         '''Select the player in the interface.'''
         if 4 > value > 0:
             self.__dict__['player%s' % value].setChecked(True)
-    
     
     def player(self):
         '''Return the player number selected.'''
@@ -134,11 +131,9 @@ class Options(QtGui.QDialog):
             if self.__dict__['player%s' % n].isChecked():
                 return n
     
-    
     def getRandomValue(self):
         '''Return the random value selected.'''
         return RANDOM_TIMES[self.randomDuration.currentIndex()][1]
-    
     
     def setRandomDuration(self, value):
         '''Set the random duration in the interface.'''
@@ -147,7 +142,6 @@ class Options(QtGui.QDialog):
             if d == int(value):
                 self.randomDuration.setCurrentIndex(pos)
                 return
-    
     
     def save(self):
         '''Save the configuration.'''

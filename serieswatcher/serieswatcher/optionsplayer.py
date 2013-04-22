@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from PyQt4 import QtGui
 
 
@@ -39,11 +40,9 @@ class OptionsPlayer(QtGui.QDialog):
         layout.addRow('Audio', self.audio)    
         self.setLayout(layout)
     
-    
     def changeST(self, new):
         '''Triggered when the user select the subtitle.'''
         self.parent.mediaPlayer.video_set_spu(new)
-    
     
     def changeAudio(self, new):
         '''Triggered when the user select the audio track.'''

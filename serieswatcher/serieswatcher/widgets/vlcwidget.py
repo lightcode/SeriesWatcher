@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QColor, QPalette
 
@@ -13,7 +14,6 @@ class VLCWidget(QtGui.QFrame):
         self._palette.setColor(QPalette.Window, QColor(0, 0, 0))
         self.setPalette(self._palette)
         self.setAutoFillBackground(True)
-    
     
     def mouseMoveEvent(self, e):
         self.mouseMoved.emit()

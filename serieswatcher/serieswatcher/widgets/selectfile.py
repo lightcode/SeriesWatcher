@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
+from PyQt4 import QtCore, QtGui
 
 
 class SelectFile(QtGui.QWidget):
@@ -19,16 +19,13 @@ class SelectFile(QtGui.QWidget):
         self.setLayout(layout)
         self.setPath(path)
     
-    
     def selectFile(self):
         directory = os.path.basename(self.path())
         path = QtGui.QFileDialog.getOpenFileName(self, directory=directory)
         self.label.setText(path)
     
-    
     def path(self):
         return str(self.label.text())
-    
     
     def setPath(self, path):
         if not path:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon
+from PyQt4 import QtCore, QtGui
 from ..addserie import AddSerie
 from ..const import SERIES_IMG, ICONS, SERIES_BANNERS
 from ..models import Serie
@@ -27,10 +27,12 @@ class ListSeries(QtGui.QWidget):
         
         tool = QtGui.QToolBar()
         tool.setStyleSheet('QToolBar { border:none; }')
-        tool.addAction(QIcon(ICONS + 'plus.png'), u'Ajouter une série', self.add)
+        tool.addAction(QIcon(ICONS + 'plus.png'),
+                       u'Ajouter une série', self.add)
         tool.addSeparator()
         tool.addAction(QIcon(ICONS + 'arrow-up.png'), 'Monter', self.upItem)
-        tool.addAction(QIcon(ICONS + 'arrow-down.png'), 'Descendre', self.downItem)
+        tool.addAction(QIcon(ICONS + 'arrow-down.png'),
+                       'Descendre', self.downItem)
         tool.addAction(QIcon(ICONS + 'delete.png'), u'Supprimer', self.delete)
         
         layoutButton = QtGui.QHBoxLayout()
@@ -42,12 +44,10 @@ class ListSeries(QtGui.QWidget):
         
         self.setLayout(layoutList)
     
-    
     def add(self):
         addSerie = AddSerie(self)
         addSerie.serieAdded.connect(self.serieAdded)
         addSerie.open()
-    
     
     def delete(self):
         currentIndex = self.listWidget.currentIndex().row()
@@ -55,10 +55,8 @@ class ListSeries(QtGui.QWidget):
         self._itemsDeleted.append(item)
         del item
     
-    
     def getItemsDeleted(self):
         return self._itemsDeleted
-    
     
     def serieAdded(self, uuid, title, TVDBID, lang, path):
         item = QtGui.QListWidgetItem(title)
@@ -68,7 +66,6 @@ class ListSeries(QtGui.QWidget):
         setattr(item, 'TVDBID', TVDBID)
         self.listWidget.addItem(item)
     
-    
     def _itemSelectionChanged(self):
         currentIndex = self.listWidget.currentIndex().row()
         title = self.listWidget.item(currentIndex).text()
@@ -76,13 +73,11 @@ class ListSeries(QtGui.QWidget):
         lang = self.listWidget.item(currentIndex).lang
         self.itemSelectionChanged.emit(title, path, lang)
     
-    
     def upItem(self):
         currentIndex = self.listWidget.currentIndex().row()
         currentItem = self.listWidget.takeItem(currentIndex)
         self.listWidget.insertItem(currentIndex - 1, currentItem)
         self.listWidget.setCurrentRow(currentIndex - 1)
-    
     
     def downItem(self):
         currentIndex = self.listWidget.currentIndex().row()
@@ -90,24 +85,20 @@ class ListSeries(QtGui.QWidget):
         self.listWidget.insertItem(currentIndex + 1, currentItem)
         self.listWidget.setCurrentRow(currentIndex + 1)
     
-    
     def setTitle(self, title):
         currentIndex = self.listWidget.currentIndex().row()
         currentItem = self.listWidget.item(currentIndex)
         currentItem.setText(title)
-    
     
     def setLang(self, lang):
         currentIndex = self.listWidget.currentIndex().row()
         currentItem = self.listWidget.item(currentIndex)
         currentItem.lang = lang
     
-    
     def setPath(self, path):
         currentIndex = self.listWidget.currentIndex().row()
         currentItem = self.listWidget.item(currentIndex)
         currentItem.path = path
-    
     
     def getItems(self):
         nb = self.listWidget.count()

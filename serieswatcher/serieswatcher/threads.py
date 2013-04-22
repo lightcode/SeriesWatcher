@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 
-from datetime import datetime
+__all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
+           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead',
+           'RemoteSyncThead']
+
 import os.path
 import time
 import xml
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
-from updatesfile import UpdatesFile
-from search import *
-from thetvdb import TheTVDBSerie
-from const import *
-from models import Serie, Episode
-from sqlobject.dberrors import OperationalError
+from datetime import datetime
+from PyQt4 import QtCore, QtGui
 from sqlobject.sqlbuilder import AND
-
-__all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead', 'RemoteSyncThead']
+from sqlobject.dberrors import OperationalError
+from .const import *
+from .models import Serie, Episode
+from .search import *
+from .thetvdb import TheTVDBSerie
 
 
 class RemoteSyncThead(QtCore.QThread):
@@ -28,7 +28,6 @@ class RemoteSyncThead(QtCore.QThread):
         
         # 4. Send to the server updates
         pass
-
 
 
 class SyncDBThead(QtCore.QThread):
@@ -50,15 +49,12 @@ class SyncDBThead(QtCore.QThread):
             self.msleep(500)
 
 
-
 class CheckSerieUpdateThread(QtCore.QThread):
     TIME_BETWEEN_UPDATE = 86400 # a day
     updateRequired = QtCore.pyqtSignal(int)
     
     def __init__(self, parent=None):
         super(CheckSerieUpdateThread, self).__init__(parent)
-        UpdatesFile.loadUpdates()
-    
     
     def getLastVerification(self):
         try:
@@ -69,11 +65,9 @@ class CheckSerieUpdateThread(QtCore.QThread):
         except ValueError:
             return 0
     
-    
     def updateLastVerif(self):
         with open(LAST_VERIF_PATH, 'w+') as f:
             f.write("%d" % time.time())
-    
     
     def run(self):
         lastVerification = self.getLastVerification()
@@ -92,7 +86,6 @@ class CheckSerieUpdateThread(QtCore.QThread):
             self.updateLastVerif()
 
 
-
 class RefreshSeriesThread(QtCore.QThread):
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
@@ -100,7 +93,6 @@ class RefreshSeriesThread(QtCore.QThread):
     def __init__(self, parent=None):
         super(RefreshSeriesThread, self).__init__(parent)
         self.toRefresh = []
-    
     
     def downloadConfiguration(self, serieLocalID):
         serie = Serie.getSeries()[serieLocalID]
@@ -122,7 +114,8 @@ class RefreshSeriesThread(QtCore.QThread):
             return
         
         serie.description = serieInfos['description']
-        serie.firstAired = datetime.strptime(serieInfos['firstAired'], '%Y-%m-%d')
+        serie.firstAired = datetime.strptime(serieInfos['firstAired'],
+                                             '%Y-%m-%d')
         serie.lastUpdated = int(serieInfos['lastUpdated'])
         self.serieUpdateStatus.emit(serieLocalID, serie.title, 1)
         
@@ -141,8 +134,10 @@ class RefreshSeriesThread(QtCore.QThread):
             else:
                 firstAired = None
             if e['number'] in episodesDb:
-                episode = list(Episode.select(AND(Episode.q.season==int(e['season']),
-                    Episode.q.episode==int(e['episode']), Episode.q.serie==serie)))[0]
+                episode = list(Episode.select(
+                    AND(Episode.q.season==int(e['season']),
+                    Episode.q.episode==int(e['episode']),
+                    Episode.q.serie==serie)))[0]
                 episode.firstAired = firstAired
                 episode.title = unicode(e['title'])
                 episode.description = unicode(e['desc'])
@@ -169,11 +164,9 @@ class RefreshSeriesThread(QtCore.QThread):
         serie.lastUpdate = datetime.now()
         serie.setLoaded(True)
 
-
     def addSerie(self, serieLocalID):
         if serieLocalID not in self.toRefresh:
             self.toRefresh.append(serieLocalID)
-    
     
     def run(self):
         while True:
@@ -183,7 +176,6 @@ class RefreshSeriesThread(QtCore.QThread):
             self.msleep(50)
 
 
-
 class SerieLoaderThread(QtCore.QThread):
     serieLoaded = QtCore.pyqtSignal(Serie)
     lastCurrentSerieId = -1
@@ -191,7 +183,6 @@ class SerieLoaderThread(QtCore.QThread):
     
     def forceReload(self):
         self._forceReload = True
-    
     
     def run(self):
         while True:
@@ -207,23 +198,20 @@ class SerieLoaderThread(QtCore.QThread):
             self.msleep(100)
 
 
-
 class SearchThread(QtCore.QThread):
     searchFinished = QtCore.pyqtSignal(list)
     
     def __init__(self, parent=None):
         super(SearchThread, self).__init__(parent)
-        self.textSearch = ""
-    
+        self.textSearch = ''
     
     def run(self):
-        textSearch = ""
+        textSearch = ''
         while True:
             if textSearch != self.textSearch:
                 textSearch = self.textSearch
                 self.search(textSearch)
             self.msleep(100)
-    
     
     def search(self, textSearch):
         listEpisodes = []
@@ -239,10 +227,8 @@ class SearchThread(QtCore.QThread):
         listEpisodes = [e for t, e in listEpisodes]
         self.searchFinished.emit(listEpisodes)
 
-
     def changeText(self, search):
         self.textSearch = search
-
 
 
 class EpisodesLoaderThread(QtCore.QThread):
@@ -259,10 +245,8 @@ class EpisodesLoaderThread(QtCore.QThread):
                     image = image.scaled(120, 120, *param)
                 self.episodeLoaded.emit((x, y, episode, image))
     
-    
     def newQuery(self):
         self.lastQuery += 1
-    
     
     def addEpisode(self, x, y, episode, imgPath):
         self.episodes.append((self.lastQuery, x, y, episode, imgPath))

@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+
 import os
 import shutil
-from ..compatserie import Config as OldConfig
-from ..compatserie import Serie as OldSerie
+from .compatserie import Config as OldConfig
+from .compatserie import Serie as OldSerie
 from ..models import Serie, Episode
 from ..const import VERSION_FILE
 

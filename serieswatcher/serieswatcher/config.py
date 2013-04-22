@@ -1,25 +1,26 @@
 #!/usr/bin/env python
 
-import os.path
 import codecs
+import os.path
 from configparser import SafeConfigParser
-from const import *
+from .const import *
+
 
 class Config(object):
     '''Singleton to handle the configuration file and use
-    it in the all program.'''
+    it in the all program.
+    '''
+    
     _instance = None
     def __new__(cls): 
         if cls._instance is None:
             cls._instance = object.__new__(cls)
         return cls._instance
     
-    
     @classmethod
     def setOption(cls, key, value):
         '''Set an option.'''
         cls.config[key] = value
-    
     
     @classmethod
     def save(cls):
@@ -32,9 +33,8 @@ class Config(object):
             config.set('options', str(key), unicode(value))
         
         # Write the config
-        with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
+        with codecs.open(CONFIG_FILE, 'w+', encoding='utf8') as f:
             config.write(f)
-    
     
     @classmethod
     def loadConfig(cls):

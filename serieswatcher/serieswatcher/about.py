@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 from PyQt4 import QtCore, QtGui
-from const import TEXT_VERSION, RELEASE_DATE
+from .const import TEXT_VERSION, RELEASE_DATE
+
 
 class About(QtGui.QDialog):
     '''Class to create the window "about".'''
+    
     def __init__(self, parent=None):
         '''Create the window "about".'''
         super(About, self).__init__(parent)

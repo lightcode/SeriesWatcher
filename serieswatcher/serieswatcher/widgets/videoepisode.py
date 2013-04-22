@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-from PyQt4 import QtCore, QtGui
+
 from PyQt4.QtCore import Qt
+from PyQt4 import QtCore, QtGui
 
 
 class Episode(QtGui.QWidget):
@@ -26,12 +27,10 @@ class Episode(QtGui.QWidget):
         self.setLayout(l)
         self.layout().setContentsMargins(0, 0, 0, 0)
     
-    
     def setImage(self, path):
         pix = QtGui.QPixmap(path)
         pix = pix.scaled(120, 90, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.img.setPixmap(pix)
-    
     
     def setTitle(self, title):
         self.title.setText(title)

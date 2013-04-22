@@ -5,12 +5,13 @@ import os
 import urllib
 import xml.dom.minidom
 
+
 class TheTVDB:
     URL_API = 'http://thetvdb.com/api/'
     URL_BANNER = 'http://thetvdb.com/banners/'
     
     def searchSearie(self, serieName):
-        """Search a serie on TVDB by its name."""
+        '''Search a serie on TVDB by its name.'''
         serieName = unicode(serieName).encode('utf8')
         url = self.URL_API + 'GetSeries.php?seriesname=%s&language=%s'
         url = url % (serieName, 'all')
@@ -24,14 +25,12 @@ class TheTVDB:
             series.append((serieId, title, lang))
         return series
     
-    
     def _getData(self, elmt, tagName, default=''):
-        """Shortcut to get value in a node."""
+        '''Shortcut to get value in a node.'''
         try:
             return elmt.getElementsByTagName(tagName)[0].firstChild.nodeValue
         except AttributeError:
             return default
-
 
 
 class TheTVDBSerie(TheTVDB):
@@ -42,19 +41,17 @@ class TheTVDBSerie(TheTVDB):
     
     def __init__(self, tvdbID, lang):
         self.tvdbID, self.lang = tvdbID, lang
-    
-    
+        
     def downloadFullSerie(self):
-        """Download the full serie in this object."""
+        '''Download the full serie in this object.'''
         xmlFile = '%s%s/all/%s.xml' % (self.URL_SERIE, self.tvdbID, self.lang)
         try:
             self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
         except IOError:
             print 'Download serie informations error.'
     
-    
     def getLastUpdated(self):
-        """Return the timestamp of the last updated."""
+        '''Return the timestamp of the last updated.'''
         xmlFile = '%s%s/%s.xml' % (self.URL_SERIE, self.tvdbID, self.lang)
         try:
             self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlFile))
@@ -64,9 +61,8 @@ class TheTVDBSerie(TheTVDB):
             series = self.dom.getElementsByTagName('Series')[0]
             return int(self._getData(series, 'lastupdated'))
     
-    
     def getInfosSerie(self):
-        """Return the serie informations."""
+        '''Return the serie informations.'''
         if self.dom is None:
             return
         infos = {}
@@ -76,9 +72,8 @@ class TheTVDBSerie(TheTVDB):
         infos['lastUpdated'] = int(self._getData(series, 'lastupdated'))
         return infos
     
-    
     def downloadBanner(self, bannerPath):
-        """Download the banner in the hard drive."""
+        '''Download the banner in the hard drive.'''
         series = self.dom.getElementsByTagName('Series')[0]
         banner = self._getData(series, 'banner')
         if banner != '' and not os.path.isfile(bannerPath):
@@ -89,7 +84,6 @@ class TheTVDBSerie(TheTVDB):
             except:
                 pass
     
-    
     def downloadAllImg(self):
         for imgPath, urlMin in self.miniatureToDL:
             if not os.path.isfile(imgPath):
@@ -99,7 +93,6 @@ class TheTVDBSerie(TheTVDB):
                         f.write(img)
                 except:
                     print 'Error download episode cover.'
-    
     
     def getEpisodes(self, imgDir):
         self.miniatureToDL = []

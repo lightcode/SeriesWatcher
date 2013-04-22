@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
+from PyQt4 import QtCore, QtGui
 from ..const import ICONS
 
 
@@ -43,18 +43,15 @@ class VideoItem(QtGui.QWidget):
         self.setStatus(episode.status)
         self.setFavorite(episode.favorite)
     
-    
     def refresh(self):
         episode = self.episode
         self.setStatus(episode.status)
         self.setFavorite(episode.favorite)
     
-    
     def setImage(self, image):
         pixmap = QtGui.QPixmap()
         pixmap.convertFromImage(image)
         self.img.setPixmap(pixmap)
-    
     
     def setTitle(self, titleStr):
         maxWidth = self.title.width() * 1.5
@@ -63,14 +60,12 @@ class VideoItem(QtGui.QWidget):
         titleStr = fontm.elidedText(titleStr, Qt.ElideRight, maxWidth)
         self.title.setText(titleStr)
     
-    
     def setFavorite(self, value):
         if value:
             head = '<b>%s <img src="%sstar.min.png"/></b>' % (self.episode.number, ICONS)
         else:
             head = '<b>%s</b>' % (self.episode.number)
         self.head.setText(head)
-    
     
     def setStatus(self, status):
         self.infos.setProperty('class', 'status')
@@ -84,5 +79,6 @@ class VideoItem(QtGui.QWidget):
         elif status == 3:
             self.infos.setProperty('status', 'original')
             text = u'Inédit'
-        self.infos.setStyleSheet('') # Force the CSS refresh
+        # Force the CSS refresh
+        self.infos.setStyleSheet('')
         self.infos.setText(text)

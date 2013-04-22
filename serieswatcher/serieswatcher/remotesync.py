@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import json
-import httplib
 import urllib
+import httplib
 
 
 KEY = '64bd795efb2dc7c1ab9eeeafec3c9884c345fc6bad4c9328d841fd8efccc7626'
@@ -11,7 +11,6 @@ class RemoteSyncApi(object):
     def __init__(self, server):
         self._server = server
         self._token = None
-    
     
     def _makeRequest(self, method, url, params, headers={}):
         if self._token:
@@ -38,15 +37,12 @@ class RemoteSyncApi(object):
                 return res
         return res
     
-    
     def _makeGetRequest(self, url, params={}):
         return self._makeRequest('GET', url, params)
-    
     
     def _makePostRequest(self, url, params={}):
         headers = {"Content-type": "application/x-www-form-urlencoded"}
         return self._makeRequest('POST', url, params, headers)
-    
     
     def authenticate(self):
         r = self._makePostRequest("/auth/connection", {'key': KEY})

@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import os.path
-from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
+from PyQt4 import QtCore, QtGui
 
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
@@ -14,7 +14,6 @@ class FilterMenu(QtGui.QPushButton):
         self.setFlat(True)
         self.setMenu(self.menu())
         self.setFixedWidth(180)
-    
     
     def menu(self):
         self.dl = QtGui.QAction(u'Disponibles', self)
@@ -51,16 +50,13 @@ class FilterMenu(QtGui.QPushButton):
         self._menu.addActions(filters.actions())
         return self._menu
     
-    
     def filterTriggered(self, action):
         self.setText(action.text())
         self.filterChanged.emit()
 
-
     def setSelection(self, action):
         action.setChecked(True)
         self.filterTriggered(action)
-
     
     def getFilterID(self):
         if self.dl.isChecked():
@@ -74,7 +70,6 @@ class FilterMenu(QtGui.QPushButton):
         if self.all.isChecked():
             return 4
     
-    
     def getFilterAction(self):
         if self.dl.isChecked():
             return self.dl
@@ -86,7 +81,6 @@ class FilterMenu(QtGui.QPushButton):
             return self.favorite
         if self.all.isChecked():
             return self.all
-    
     
     def setCounters(self, nball, nbNotDL, nbDL, nbNew, favorite):
         self.dl.setText(u'Disponibles (%d)' % nbDL)

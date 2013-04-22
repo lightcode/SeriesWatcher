@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import shutil
 import os
+import shutil
 from PyQt4 import QtCore, QtGui
-from widgets.selectfolder import SelectFolder
-from widgets.listseries import ListSeries
-from models import Serie, Episode
-from const import SERIES_IMG, SERIES_BANNERS
+from .const import SERIES_IMG, SERIES_BANNERS
+from .models import Serie, Episode
+from .widgets.listseries import ListSeries
+from .widgets.selectfolder import SelectFolder
+
 
 class EditSeries(QtGui.QDialog):
     '''Class to create and manipulate the window "Edit serie".'''
@@ -65,14 +66,12 @@ class EditSeries(QtGui.QDialog):
         # Select the first serie
         self.listSeries.listWidget.setCurrentRow(0)
     
-    
     def itemSelectionChanged(self, title, path, lang):
         '''Trigged when the selection change. Update informations
         in the form.'''
         self.title.setText(title)
         self.lang.setText(lang)
         self.path.setPath(path)
-    
     
     def save(self):
         '''Save the modifications in the database.'''

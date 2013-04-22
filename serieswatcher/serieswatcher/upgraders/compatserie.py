@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
-import codecs
-from configparser import SafeConfigParser
-import cPickle as pickle
-from datetime import datetime
-from itertools import chain
-from glob import iglob
 import os
 import re
+import codecs
+import cPickle as pickle
 from const import *
+from glob import iglob
+from itertools import chain
+from datetime import datetime
+from configparser import SafeConfigParser
 
 ROOT = os.path.abspath('.') + '/'
 USER = ROOT + 'user.backup/'
@@ -28,8 +28,7 @@ class Config(object):
     def __new__(cls): 
         if cls._instance is None:
             cls._instance = object.__new__(cls)
-        return cls._instance
-    
+        return cls._instance    
     
     @classmethod
     def addSerie(cls, *serie):
@@ -38,11 +37,9 @@ class Config(object):
         cls.series.append(serie)
         cls.save()
     
-    
     @classmethod
     def setOption(cls, key, value):
         cls.config[key] = value
-    
     
     @classmethod
     def save(cls):
@@ -65,7 +62,6 @@ class Config(object):
         # Write the config
         with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
             config.write(f)
-    
     
     @classmethod
     def loadConfig(cls):
@@ -95,7 +91,6 @@ class Config(object):
                 cls.series.append([section, title, videos, theTvDb, lang])
 
 
-
 class Serie(object):
     EXTENSION = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
     downloadedEpisode = {}
@@ -107,7 +102,6 @@ class Serie(object):
         self.name, self.title, self.path, self.TVDBID, self.lang = param
         self.loadDownloadedList()
         self.loadEpisodesViewed()
-    
     
     PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
     def loadDownloadedList(self):
@@ -129,7 +123,6 @@ class Serie(object):
                         episodeID = '%02d-%02d' % \
                                     (int(numbers[0]), int(numbers[2]))
                         self.downloadedEpisode[episodeID] = f
-    
     
     def loadEpisodes(self):
         nbSeason = nbEpisodeDL = nbEpisodeNew = nbEpisodeTotal = 0
@@ -168,7 +161,6 @@ class Serie(object):
         self.infos['nbEpisodeDL'] = nbEpisodeDL
         self.infos['nbEpisodeTotal'] = nbEpisodeTotal
     
-    
     def loadSerie(self):
         pkl = '%s%s.pkl' % (SERIES_DB, self.name)
         if os.path.isfile(pkl):
@@ -186,14 +178,11 @@ class Serie(object):
         else:
             raise ValueError()
     
-    
     def __getitem__(cls, key):
         return cls.infos[key]
     
-    
     def __setitem__(cls, key, value):
         cls.infos[key] = value
-    
     
     # =========================
     #  Episode viewed manager
@@ -206,7 +195,6 @@ class Serie(object):
                 self.episodesViewed = set(pickle.load(pklFile))
         except IOError:
             pass
-    
     
     def episodesViewedSave(self):
         pkl = '%s/view-%s.pkl' % (SERIES_VIEW, self.name)

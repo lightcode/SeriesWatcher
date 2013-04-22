@@ -1,20 +1,13 @@
 #!/usr/bin/env python
 
-import unicodedata
-import re
-
 __all__ = ['decompose', 'search', 'search2']
 
-def remove_accents(input_str):
-    nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+import re
 
 
-PATTERN = re.compile(r"(\w{2,})")
+PATTERN = re.compile(r"(\w{2,})", flags=re.I|re.U)
 def decompose(string):
-    words = remove_accents(string).lower()
     return re.findall(PATTERN, words)
-
 
 def search(user, entry):
     user = decompose(user)
@@ -25,7 +18,6 @@ def search(user, entry):
         else:
             return False
     return True
-
 
 def search2(user, entry):
     user = decompose(user)

@@ -17,20 +17,30 @@ Il faut installer :
 - [Python 2.7](http://python.org/ftp/python/2.7.3/python-2.7.3.msi)
 - [PyQt 4.9 pour Python 2.7](http://sourceforge.net/projects/pyqt/files/PyQt4/PyQt-4.9.5/PyQt-Py2.7-x86-gpl-4.9.5-1.exe/download)
 
-Enfin, vous pouvez ouvrir le fichier serieswatcher.pyw.
+Enfin, vous pouvez exécuter le fichier `serieswatcher.pyw`.
 
 
 ## Pour Linux
 
-Si PyQt4 n'est pas installé, vous pouvez faire : `sudo apt-get install python-qt4`
+Télécharger les sources de Series Watcher. Si PyQt4 n'est pas installé sur votre machine, vous pouvez faire :
+
+    sudo apt-get install python-qt4
+
+Pour lancer Series Watcher, vous devez éxecuter le fichier `serieswatcher.pyw` :
+
+    python2.7 serieswatcher.pyw
 
 
-# Mise à jour depuis la version 1.2
+# Mise à jour
 
-Pour mettre à jour Series Watcher, il faut :
+## Avant la 1.2
 
-- se rendre dans le dossier de Series Watcher 1.2, et de copier le dossier `database` et le fichier `series-watcher.cfg` dans le dossier de Series Watcher 1.3 ;
-- la mise à jour devrait s'exécuter automatiquement.
+Déplacer les fichiers `series-watcher.cfg` et `database` de Series Watcher 1.1 dans le nouveau dossier de Series Watcher. Ouvrez ensuite Series Watcher normalement.
+
+
+## Après la 1.2
+
+Pour mettre à jour Series Watcher, il faut extraire les fichiers de l’archive ZIP de la nouvelle version dans un dossier. Ensuite il faut déplacer le dossier `user` de l’ancienne installation dans le nouveau dossier. Ouvrez ensuite Series Watcher et cliquez sur « Oui » pour mettre à jour l’ancienne base de données.
 
 
 # Fonctionnalités additionnelles
