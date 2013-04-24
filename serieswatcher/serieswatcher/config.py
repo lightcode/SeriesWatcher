@@ -7,10 +7,11 @@ from .const import *
 
 
 class Config(object):
-    '''Singleton to handle the configuration file and use
+    """Singleton to handle the configuration file and use
     it in the all program.
-    '''
+    """
     
+    config = {}
     _instance = None
     def __new__(cls): 
         if cls._instance is None:
@@ -19,12 +20,12 @@ class Config(object):
     
     @classmethod
     def setOption(cls, key, value):
-        '''Set an option.'''
+        """Set an option."""
         cls.config[key] = value
     
     @classmethod
     def save(cls):
-        '''Save the all configuration in the config file.'''
+        """Save the all configuration in the config file."""
         config = SafeConfigParser()
         
         # Make option section
@@ -38,10 +39,11 @@ class Config(object):
     
     @classmethod
     def loadConfig(cls):
-        '''Load the all configuration from the config file.'''
+        """Load the all configuration from the config file."""
         config = SafeConfigParser()
         if os.path.isfile(CONFIG_FILE):
-            config.read_file(codecs.open(CONFIG_FILE, encoding='utf-8'))
+            with codecs.open(CONFIG_FILE, encoding='utf8') as file_:
+                config.read_file(file_)
         
         # The default config
         cls.config = {}
@@ -52,6 +54,7 @@ class Config(object):
         cls.config['sync_server'] = None
         cls.config['sync_user'] = None
         cls.config['sync_password'] = None
+        cls.config['languages'] = 'fr,en'
         
         # Load the options
         if config.has_section('options'):

@@ -58,12 +58,12 @@ class ListSeries(QtGui.QWidget):
     def getItemsDeleted(self):
         return self._itemsDeleted
     
-    def serieAdded(self, uuid, title, TVDBID, lang, path):
-        item = QtGui.QListWidgetItem(title)
-        setattr(item, 'uuid', uuid)
-        setattr(item, 'path', path)
-        setattr(item, 'lang', lang)
-        setattr(item, 'TVDBID', TVDBID)
+    def serieAdded(self, serie):
+        item = QtGui.QListWidgetItem(serie.title)
+        setattr(item, 'uuid', serie.uuid)
+        setattr(item, 'path', serie.path)
+        setattr(item, 'lang', serie.lang)
+        setattr(item, 'TVDBID', serie.tvdbID)
         self.listWidget.addItem(item)
     
     def _itemSelectionChanged(self):

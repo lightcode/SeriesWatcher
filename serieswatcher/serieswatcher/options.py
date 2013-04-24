@@ -14,10 +14,10 @@ RANDOM_TIMES = [(u'Désactiver', 0),
 
 
 class Options(QtGui.QDialog):
-    '''Class to handle the option window.'''
+    """Class to handle the option window."""
     
     def __init__(self, parent=None):
-        '''Initialize the option window.'''
+        """Initialize the option window."""
         super(Options, self).__init__(parent)
         self.setWindowTitle('Options')
         self.setMinimumWidth(500)
@@ -114,29 +114,29 @@ class Options(QtGui.QDialog):
         self.timer.start()
     
     def playerChanged(self):
-        '''Triggered when the user select another player.'''
+        """Triggered when the user select another player."""
         if self.player() == 3:
             self.cmdOpen.setDisabled(False)
         else:
             self.cmdOpen.setDisabled(True)
     
     def setPlayer(self, value):
-        '''Select the player in the interface.'''
+        """Select the player in the interface."""
         if 4 > value > 0:
             self.__dict__['player%s' % value].setChecked(True)
     
     def player(self):
-        '''Return the player number selected.'''
+        """Return the player number selected."""
         for n in range(1, 4):
             if self.__dict__['player%s' % n].isChecked():
                 return n
     
     def getRandomValue(self):
-        '''Return the random value selected.'''
+        """Return the random value selected."""
         return RANDOM_TIMES[self.randomDuration.currentIndex()][1]
     
     def setRandomDuration(self, value):
-        '''Set the random duration in the interface.'''
+        """Set the random duration in the interface."""
         for pos, v in enumerate(RANDOM_TIMES):
             t, d = v
             if d == int(value):
@@ -144,7 +144,7 @@ class Options(QtGui.QDialog):
                 return
     
     def save(self):
-        '''Save the configuration.'''
+        """Save the configuration."""
         cmdOpen = str(self.cmdOpen.path())
         Config.setOption('command_open', cmdOpen)
         Config.setOption('player', self.player())

@@ -11,11 +11,11 @@ from .widgets.selectfolder import SelectFolder
 
 
 class EditSeries(QtGui.QDialog):
-    '''Class to create and manipulate the window "Edit serie".'''
+    """Class to create and manipulate the window 'Edit serie'."""
     edited = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        '''Create the window layout.'''
+        """Create the window layout."""
         super(EditSeries, self).__init__(parent)
         self.setWindowTitle(u'Editer les séries')
         
@@ -67,14 +67,15 @@ class EditSeries(QtGui.QDialog):
         self.listSeries.listWidget.setCurrentRow(0)
     
     def itemSelectionChanged(self, title, path, lang):
-        '''Trigged when the selection change. Update informations
-        in the form.'''
+        """Trigged when the selection change. Update informations
+        in the form.
+        """
         self.title.setText(title)
         self.lang.setText(lang)
         self.path.setPath(path)
     
     def save(self):
-        '''Save the modifications in the database.'''
+        """Save the modifications in the database."""
         for pos, serie in enumerate(self.listSeries.getItems()):
             uuid, title, path, tvdbID, lang = serie
             sdb = list(Serie.select(Serie.q.uuid==uuid))[0]

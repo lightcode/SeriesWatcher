@@ -13,7 +13,6 @@ from .optionsplayer import OptionsPlayer
 from .widgets.videoepisode import Episode
 from .widgets.vlcwidget import VLCWidget
 
-
 # Import VLC
 path = os.getcwd()
 try:
@@ -24,7 +23,7 @@ os.chdir(path)
 
 
 class Player(QtGui.QMainWindow):
-    '''Class to handle the window player.'''
+    """Class to handle the window player."""
     
     VLCLoaded = False
     TIME_HIDE_BAR = 2000
@@ -33,7 +32,7 @@ class Player(QtGui.QMainWindow):
                           '--no-video-title-show', '--no-plugins-cache'])
     
     def __init__(self, parent=None):
-        '''Initialize the player video.'''
+        """Initialize the player video."""
         QtGui.QMainWindow.__init__(self, parent)
         self._playList = []
         self._playerState = self.STOP
@@ -52,7 +51,7 @@ class Player(QtGui.QMainWindow):
             self.setStyleSheet(style.read())
     
     def showBar(self):
-        '''Show the player bar.'''
+        """Show the player bar."""
         self.bar.show()
         self.currentEpisodeWidget.show()
         QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, self.tryHide)
@@ -60,7 +59,7 @@ class Player(QtGui.QMainWindow):
         self.videoFrame.setCursor(Qt.ArrowCursor)
     
     def tryHide(self):
-        '''Try to hide the player bar.'''
+        """Try to hide the player bar."""
         totalTime = int(time.clock() - self._timeShow) * 1000
         if totalTime >= self.TIME_HIDE_BAR:
             self.bar.hide()
@@ -70,7 +69,7 @@ class Player(QtGui.QMainWindow):
             QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, self.tryHide)
     
     def nextEpisode(self):
-        '''Try to play the next episode.'''
+        """Try to play the next episode."""
         if self.currentEpisode < len(self._playList) - 1:
             Debug.add(Debug.INFO, 'nextEpisode(1)')
             self.currentEpisode += 1
@@ -100,31 +99,31 @@ class Player(QtGui.QMainWindow):
         return True
     
     def previousEpisode(self):
-        '''Triggered when the user click on the previous
+        """Triggered when the user click on the previous
         episode button.
-        '''
+        """
         if self.currentEpisode > 0:
             self.currentEpisode -= 1
             return self.playFile()
     
     def resizeEvent(self, e):
-        '''Triggered when the user resize the window.'''
+        """Triggered when the user resize the window."""
         QtGui.QMainWindow.resizeEvent(self, e)
         self.drawBar()
     
     def mouseDoubleClickEvent(self, e):
-        '''Triggered when the user double click on the video.'''
+        """Triggered when the user double click on the video."""
         self.fullScreen()
     
     def wheelEvent(self, e):
-        '''Triggered when the user turn his mouse wheel.'''
+        """Triggered when the user turn his mouse wheel."""
         if e.delta() > 0:
             self.volumeUp()
         elif e.delta() < 0:
             self.volumeDown()
     
     def showPlayList(self):
-        '''Show the playlist.'''
+        """Show the playlist."""
         if self.playListBtn.isChecked():
             self.playList.show()
             pos = self.playList.geometry()
@@ -142,13 +141,13 @@ class Player(QtGui.QMainWindow):
             self.playList.hide()
     
     def showCurrentEpisode(self):
-        '''Show the current episode bar.'''
+        """Show the current episode bar."""
         self.currentEpisodeWidget.show()
         QtCore.QTimer.singleShot(self.TIME_HIDE_BAR,
                                  self.currentEpisodeWidget.hide)
     
     def closeEvent(self, e):
-        '''Triggered when the user close the window.'''
+        """Triggered when the user close the window."""
         self.timer.stop()
         self.currentEpisode = -1
         self.stop()
@@ -162,7 +161,7 @@ class Player(QtGui.QMainWindow):
         QtGui.QMainWindow.closeEvent(self, e)
     
     def drawBar(self):
-        '''Draw the bar on the window.'''
+        """Draw the bar on the window."""
         totalWidth = self.videoFrame.width()
         w = totalWidth - 60 if totalWidth < 750 else 750
         self.bar.resize(w, 100)
@@ -180,19 +179,19 @@ class Player(QtGui.QMainWindow):
         self.currentEpisodeWidget.move(x, 25)
     
     def volumeUp(self):
-        '''Triggered when the user change the volume.'''
+        """Triggered when the user change the volume."""
         volume = self.volumeSlider.value() + 5
         volume = 100 if volume > 100 else volume
         self.volumeSlider.setValue(volume)
     
     def volumeDown(self):
-        '''Triggered when the user change the volume.'''
+        """Triggered when the user change the volume."""
         volume = self.volumeSlider.value() - 5
         volume = 0 if volume < 0 else volume
         self.volumeSlider.setValue(volume)
     
     def fullScreen(self):
-        '''Toggle the window in full screen.'''
+        """Toggle the window in full screen."""
         if self.windowState() == Qt.WindowFullScreen:
             self.screenBtn.setIcon(QIcon(ICONS + 'fullscreen.png'))
             self.setWindowState(self._afterFullScreen)
@@ -202,7 +201,7 @@ class Player(QtGui.QMainWindow):
             self.setWindowState(Qt.WindowFullScreen)
     
     def playPause(self):
-        '''Toggle the video in pause or play.'''
+        """Toggle the video in pause or play."""
         if self.mediaPlayer.is_playing():
             self.mediaPlayer.pause()
             self.playButton.setText("Play")
@@ -212,7 +211,7 @@ class Player(QtGui.QMainWindow):
             self.play()
     
     def play(self):
-        '''Play the video.'''
+        """Play the video."""
         if self.mediaPlayer.play() == -1:
             self.playFile()
             return
@@ -222,14 +221,14 @@ class Player(QtGui.QMainWindow):
         self._playerState = self.PLAY
     
     def stop(self, state=USER_STOP):
-        '''Stop the video.'''
+        """Stop the video."""
         self._playerState = state
         self.mediaPlayer.stop()
         self.playButton.setText("Play")
         self.playButton.setIcon(QIcon(ICONS + "play.png"))
     
     def playFile(self):
-        '''Open the file and play it.'''
+        """Open the file and play it."""
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
@@ -248,7 +247,7 @@ class Player(QtGui.QMainWindow):
             self.playList.blockSignals(False)
     
     def openFile(self, fileName):
-        '''Open the file.'''
+        """Open the file."""
         self.showCurrentEpisode()
         fileName = 'file:///' + fileName
         media = self.instance.media_new(unicode(fileName))
@@ -262,7 +261,7 @@ class Player(QtGui.QMainWindow):
             self.totalTime.setText(textTime)
     
     def addToPlayList(self, number, title, path, imgPath):
-        '''Add the episode in the playlist.'''
+        """Add the episode in the playlist."""
         fullTitle = '<b>%s</b> %s' % (number, title)
         self._playList.append([fullTitle, path, imgPath])
         item = QtGui.QListWidgetItem(title)
@@ -273,20 +272,20 @@ class Player(QtGui.QMainWindow):
                   self.currentEpisode)
     
     def tryToPlay(self):
-        '''Try to play the episode.'''
+        """Try to play the episode."""
         if self._playerState == self.STOP:
             Debug.add(Debug.INFO, 'tryToPlay')
             self.nextEpisode()
     
     def setBtnVolume(self, volume):
-        '''Change the image on the button.'''
+        """Change the image on the button."""
         if volume < 50:
             self.volumeBtn.setIcon(QIcon(ICONS + 'volume-medium.png'))
         else:
             self.volumeBtn.setIcon(QIcon(ICONS + 'volume-high.png'))
     
     def toggleVolume(self):
-        '''Toggle the volume on mute or not mute.'''
+        """Toggle the volume on mute or not mute."""
         self.mediaPlayer.audio_toggle_mute()
         if self.mediaPlayer.audio_get_mute():
             self.volumeBtn.setIcon(QIcon(ICONS + 'volume-mute.png'))
@@ -296,16 +295,16 @@ class Player(QtGui.QMainWindow):
             self.volumeSlider.setDisabled(False)
     
     def setVolume(self, volume):
-        '''Set volume.'''
+        """Set volume."""
         self.mediaPlayer.audio_set_volume(volume)
         self.setBtnVolume(volume)
     
     def setPosition(self, position):
-        '''Set the current position in the video.'''
+        """Set the current position in the video."""
         self.mediaPlayer.set_position(position / 1000.0)
     
     def _timeToText(self, time):
-        '''Format the time.'''
+        """Format the time."""
         time = int(time)
         s = time % 60
         m = (time // 60) % 60
@@ -316,7 +315,7 @@ class Player(QtGui.QMainWindow):
             return '%02d:%02d:%02d' % (h, m, s)
     
     def updateUI(self):
-        '''Refresh the user interface.'''
+        """Refresh the user interface."""
         percent = self.mediaPlayer.get_position() * 1000
         self.positionSlider.setValue(percent)
         
@@ -343,23 +342,23 @@ class Player(QtGui.QMainWindow):
                         self.videoFinished()
     
     def videoFinished(self):
-        '''Triggered when the video finish.'''
+        """Triggered when the video finish."""
         if not self.nextEpisode():
             self.close()
     
     def changeEpisode(self):
-        '''Select the current in the playlist and play it.'''
+        """Select the current in the playlist and play it."""
         newItem = self.playList.currentRow()
         self.currentEpisode = newItem
         self.playFile()
     
     def showOptions(self):
-        '''Open the video window.'''
+        """Open the video window."""
         self.options = OptionsPlayer(self)
         self.options.show()
     
     def createUI(self):
-        '''Make the window interface.'''
+        """Make the window interface."""
         self.videoFrame = VLCWidget()
         self.videoFrame.mouseMoved.connect(self.showBar)
         

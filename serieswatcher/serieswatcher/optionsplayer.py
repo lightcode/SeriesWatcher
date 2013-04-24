@@ -4,10 +4,10 @@ from PyQt4 import QtGui
 
 
 class OptionsPlayer(QtGui.QDialog):
-    '''Class to handle the window option for the player.'''
+    """Class to handle the window option for the player."""
     
     def __init__(self, parent=None):
-        '''Initialize the window option for the player.'''
+        """Initialize the window option for the player."""
         super(OptionsPlayer, self).__init__(parent)
         self.setWindowTitle('Options')
         self.parent = parent
@@ -41,9 +41,9 @@ class OptionsPlayer(QtGui.QDialog):
         self.setLayout(layout)
     
     def changeST(self, new):
-        '''Triggered when the user select the subtitle.'''
+        """Triggered when the user select the subtitle."""
         self.parent.mediaPlayer.video_set_spu(new)
     
     def changeAudio(self, new):
-        '''Triggered when the user select the audio track.'''
+        """Triggered when the user select the audio track."""
         self.parent.mediaPlayer.audio_set_track(new)

@@ -4,9 +4,9 @@ __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
            'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead',
            'RemoteSyncThead']
 
-import os.path
-import time
 import xml
+import time
+import os.path
 from PyQt4.QtCore import Qt
 from datetime import datetime
 from PyQt4 import QtCore, QtGui
@@ -19,6 +19,9 @@ from .thetvdb import TheTVDBSerie
 
 
 class RemoteSyncThead(QtCore.QThread):
+    """Thread to synchronize the local database to a
+    remote database.
+    """
     def run(self):
         # 1. Connect to the API
         
@@ -31,6 +34,9 @@ class RemoteSyncThead(QtCore.QThread):
 
 
 class SyncDBThead(QtCore.QThread):
+    """Thread to commit changes in a serie to the
+    local database.
+    """
     def run(self):
         while True:
             for s in Serie.getSeries():
@@ -50,6 +56,9 @@ class SyncDBThead(QtCore.QThread):
 
 
 class CheckSerieUpdateThread(QtCore.QThread):
+    """Thread to check updates on the series database and
+    synchronize with the local database.
+    """
     TIME_BETWEEN_UPDATE = 86400 # a day
     updateRequired = QtCore.pyqtSignal(int)
     
@@ -74,10 +83,9 @@ class CheckSerieUpdateThread(QtCore.QThread):
         if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
             for localeID, serie in enumerate(Serie.getSeries()):
                 localTime = serie.lastUpdate
-                
                 tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
                 try:
-                    remoteTime = datetime.fromtimestamp(tvDb.getLastUpdated())
+                    remoteTime = datetime.fromtimestamp(tvDb.last_update())
                 except TypeError:
                     print 'Get last update failed.'
                 else:
@@ -88,7 +96,7 @@ class CheckSerieUpdateThread(QtCore.QThread):
 
 class RefreshSeriesThread(QtCore.QThread):
     serieUpdated = QtCore.pyqtSignal(int)
-    serieUpdateStatus = QtCore.pyqtSignal(int, 'QString', int)
+    serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
     
     def __init__(self, parent=None):
         super(RefreshSeriesThread, self).__init__(parent)
@@ -96,19 +104,19 @@ class RefreshSeriesThread(QtCore.QThread):
     
     def downloadConfiguration(self, serieLocalID):
         serie = Serie.getSeries()[serieLocalID]
-        self.serieUpdateStatus.emit(serieLocalID, serie.title, 0)
+        self.serieUpdateStatus.emit(serieLocalID, 0, {'title': serie.title})
         
         tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         try:
-            tvDb.downloadFullSerie()
+            tvDb.download_serie()
         except xml.parsers.expat.ExpatError:
             print "Error download"
             return False
         
         # Info serie
-        serieInfos = tvDb.getInfosSerie()
+        serieInfos = tvDb.infos_serie()
         bannerPath = '%s%s.jpg' % (SERIES_BANNERS, serie.uuid)
-        tvDb.downloadBanner(bannerPath)
+        tvDb.download_banner(bannerPath)
         
         if serieInfos is None:
             return
@@ -117,9 +125,7 @@ class RefreshSeriesThread(QtCore.QThread):
         serie.firstAired = datetime.strptime(serieInfos['firstAired'],
                                              '%Y-%m-%d')
         serie.lastUpdated = int(serieInfos['lastUpdated'])
-        self.serieUpdateStatus.emit(serieLocalID, serie.title, 1)
-        
-        episodesDb = {e.number for e in serie.episodes}       
+        self.serieUpdateStatus.emit(serieLocalID, 1, {'title': serie.title})
         
         # Create image path
         imgDir = SERIES_IMG + serie.uuid
@@ -127,7 +133,8 @@ class RefreshSeriesThread(QtCore.QThread):
             os.mkdir(imgDir)
         
         # Info episode
-        episodeList = tvDb.getEpisodes(imgDir)
+        episodesDb = {e.number for e in serie.episodes} 
+        episodeList = list(tvDb.episodes(imgDir))
         for e in episodeList:
             if e['firstAired']:
                 firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
@@ -155,12 +162,13 @@ class RefreshSeriesThread(QtCore.QThread):
         for number in toDelete:
             season, episode = map(int, number.split('-'))
             Episode.deleteBy(serie=serie, season=season, episode=episode)
-        self.serieUpdateStatus.emit(serieLocalID, serie.title, 2)
         
         # Miniature DL
-        tvDb.downloadAllImg()
-        self.serieUpdated.emit(serieLocalID)
+        for i, nbImages in tvDb.download_miniatures():
+            self.serieUpdateStatus.emit(serieLocalID, 2,
+                {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
+        self.serieUpdated.emit(serieLocalID)
         serie.lastUpdate = datetime.now()
         serie.setLoaded(True)
 
@@ -217,8 +225,8 @@ class SearchThread(QtCore.QThread):
         listEpisodes = []
         episodes = self.parent().currentSerie.episodes
         for e in episodes:
-            score = 1000 if search(textSearch, decompose(e.title)) else 0
-            score += search2(textSearch, decompose(e.description))
+            score = 1000 if search(textSearch, split(e.title)) else 0
+            score += search2(textSearch, split(e.description))
             if score > 0:
                 listEpisodes.append((score, e))
         

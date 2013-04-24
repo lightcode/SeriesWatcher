@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui
 
 
 class Debug(object):
-    '''Class to save debug message.'''
+    """Class to save debug message."""
     
     INFO, ERROR = 0, 1
     _instance = None
@@ -20,18 +20,18 @@ class Debug(object):
     
     @classmethod
     def add(cls, level, *message):
-        '''Add a new message in the debugger.'''
+        """Add a new message in the debugger."""
         m = ' '.join(map(unicode, message))
         cls.logs.append((level, m))
     
     @classmethod
     def setEnabled(cls, booleen):
-        '''Enable or disable the debugger.'''
+        """Enable or disable the debugger."""
         cls.enable = booleen
     
     @classmethod
     def isEnabled(cls):
-        '''Return True if the debugger is enabled.'''
+        """Return True if the debugger is enabled."""
         return cls.enable
 
 
