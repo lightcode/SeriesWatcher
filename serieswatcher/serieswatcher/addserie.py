@@ -6,8 +6,25 @@ from thetvdb import TheTVDB
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QMessageBox
 from languagescodes import codeToLocal
-from .widgets.selectfolder import SelectFolder
 from .config import Config
+from .widgets.selectfolder import SelectFolder
+from .worker import Runnable
+
+
+class MakeSearch(QtCore.QObject):
+    searchFinished = QtCore.pyqtSignal(list)
+    
+    def __init__(self, userInput):
+        super(MakeSearch, self).__init__()
+        self._userInput = userInput
+    
+    def run(self):
+        bdd = TheTVDB()
+        languages = tuple(Config.config['languages'].split(','))
+        seriesFound = []
+        for lang in languages:
+            seriesFound.extend(bdd.search_serie(self._userInput, lang))
+        self.searchFinished.emit(seriesFound)
 
 
 class AddSerie(QtGui.QDialog):
@@ -20,6 +37,7 @@ class AddSerie(QtGui.QDialog):
         self.setWindowTitle(u'Ajouter une série')
         self.setMinimumSize(400, 350)
         
+        self.threadPool = QtCore.QThreadPool()
         self.seriesFound = []
         
         ######################
@@ -134,11 +152,13 @@ class AddSerie(QtGui.QDialog):
     def search(self):
         """Perform a search on the TVDB.com."""
         userInput = self.searchTitle.text()
-        bdd = TheTVDB()
-        languages = tuple(Config.config['languages'].split(','))
-        for lang in languages:
-            self.seriesFound += bdd.search_serie(userInput, lang)
-        
+        task = MakeSearch(userInput)
+        runnable = Runnable(task)
+        runnable.task.searchFinished.connect(self.searchFinished)
+        self.threadPool.tryStart(runnable)
+    
+    def searchFinished(self, seriesFound):
+        self.seriesFound = seriesFound
         self.selectSerie.clear()
         if self.seriesFound:
             series = []
@@ -151,7 +171,7 @@ class AddSerie(QtGui.QDialog):
         else:
             title = 'Erreur'
             message = u'Aucune série correspondante.'
-            QMessageBox.critical(self, title, message)
+            QMessageBox.critical(self, title, message)    
     
     def validate(self):
         """Check if the form is complete."""

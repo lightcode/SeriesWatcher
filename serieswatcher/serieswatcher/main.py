@@ -738,7 +738,6 @@ class Main(QtGui.QMainWindow):
             self.refreshFooter()
             self.refreshCount()
     
-    
     def toggleSelectionViewed(self):
         """Toggle the selection in viewed or non-viewed.
         The choice is based on the number of viewed episode.
@@ -761,7 +760,6 @@ class Main(QtGui.QMainWindow):
             self.refreshFooter()
             self.refreshCount()
     
-    
     def markAsView(self, episode):
         """Mark the episode as view."""
         for i, e in self.map.iteritems():
@@ -775,7 +773,6 @@ class Main(QtGui.QMainWindow):
                 self.refreshFooter()
                 return True
         return False
-    
     
     def showEpisode(self, episodes):
         """Display episodes in the grid."""
@@ -797,7 +794,6 @@ class Main(QtGui.QMainWindow):
         nbRows = int(math.ceil(count / float(self.episodes.nbColumn)))
         self.episodes.setRowCount(nbRows)
     
-    
     def refreshCount(self):
         """Refresh counters."""
         nbAv = self.currentSerie.nbEpisodeAvailable
@@ -818,18 +814,15 @@ class Main(QtGui.QMainWindow):
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
     
-    
-    def episodeLoaded(self, args):
+    def episodeLoaded(self, x, y, episode, image):
         """This method add the episode in the episodes grid.
         
         Triggered when an episode is loaded.
         """
-        x, y, episode, image = args
         item = VideoItem(episode)
         item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
         item.setTitle(episode.title)
-    
     
     def getEpisodes(self):
         """Return the generator of serie's episodes that filtered
@@ -847,13 +840,11 @@ class Main(QtGui.QMainWindow):
                 and (season != 0 or filterSeason == 0):
                     yield e
     
-    
     def refreshScreen(self):
         """Refresh the sreen."""
         self.searchBar.clear()
         if self.currentSerie:
             self.showEpisode(self.getEpisodes())
-    
     
     def clearSeries(self):
         """Clear all informations about the current serie."""
@@ -870,7 +861,6 @@ class Main(QtGui.QMainWindow):
         self.nbEpisodes.clear()
         
         self.filter.setCounters(0, 0, 0, 0, 0)
-    
     
     def serieLoaded(self, serie):
         """Triggered when the serie is loaded."""
@@ -910,7 +900,6 @@ class Main(QtGui.QMainWindow):
             self.filter.setSelection(self.filter.all)
         else:
             self.filter.setSelection(self.filter.dl)
-    
     
     def serieUpdated(self, serieLocalID):
         """Triggered when a serie is updated."""

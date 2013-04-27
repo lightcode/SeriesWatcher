@@ -240,7 +240,7 @@ class SearchThread(QtCore.QThread):
 
 
 class EpisodesLoaderThread(QtCore.QThread):
-    episodeLoaded = QtCore.pyqtSignal(tuple)
+    episodeLoaded = QtCore.pyqtSignal(int, int, Episode, QtGui.QImage)
     episodes = []
     lastQuery = 0
     
@@ -251,7 +251,7 @@ class EpisodesLoaderThread(QtCore.QThread):
                 image = QtGui.QImage(imgPath)
                 if image != QtGui.QImage():
                     image = image.scaled(120, 120, *param)
-                self.episodeLoaded.emit((x, y, episode, image))
+                self.episodeLoaded.emit(x, y, episode, image)
     
     def newQuery(self):
         self.lastQuery += 1
