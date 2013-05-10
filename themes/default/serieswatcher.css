@@ -1,0 +1,54 @@
+QScrollArea {
+    border:none;
+}
+QScrollArea, QLabel {
+    background-color: transparent;
+}
+
+
+#footer QPushButton:flat, #footer QPushButton:pressed {
+    text-align: left;
+    padding-left: 0;
+}
+#footer QPushButton:pressed {
+    background: none;
+    border: none;
+}
+
+
+#footer, QStatusBar {
+    border-top: 1px solid #B6B8BB;
+    background-color: #F6F7F8;
+}
+
+QTableView {
+    border: none;
+    background: transparent;
+}
+QMainWindow {
+    background: #FCFCFC;
+}
+
+#filterBar {
+    background-color: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 #F3F5F9, stop: 1 #D0D6E5);
+    border-top: 1px solid #B6B8BB;
+    border-bottom: 1px solid #B6B8BB;
+}
+
+#filterBar QLineEdit {
+    border: 1px solid #B6B8BB;
+    border-radius: 6px;
+    height: 20px;
+    padding-left: 6px;
+}
+
+QLabel[status]{
+    padding-left:1px;
+    padding-bottom:5px;
+}
+QLabel[status='available'], QLabel[status='original'] {
+    color:#777;
+}
+QLabel[status='new'] {
+    color:red;
+}
