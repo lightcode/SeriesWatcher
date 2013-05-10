@@ -95,6 +95,7 @@ class CheckSerieUpdateThread(QtCore.QThread):
 
 
 class RefreshSeriesThread(QtCore.QThread):
+    """Thread to update the serie from the online database."""
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
     
@@ -185,6 +186,7 @@ class RefreshSeriesThread(QtCore.QThread):
 
 
 class SerieLoaderThread(QtCore.QThread):
+    """Thread to load the current serie from the local database."""
     serieLoaded = QtCore.pyqtSignal(Serie)
     lastCurrentSerieId = -1
     _forceReload = False
@@ -207,6 +209,7 @@ class SerieLoaderThread(QtCore.QThread):
 
 
 class SearchThread(QtCore.QThread):
+    """Thread to search in the database."""
     searchFinished = QtCore.pyqtSignal(list)
     
     def __init__(self, parent=None):
@@ -240,6 +243,7 @@ class SearchThread(QtCore.QThread):
 
 
 class EpisodesLoaderThread(QtCore.QThread):
+    """Thread to create miniature of the episode."""
     episodeLoaded = QtCore.pyqtSignal(int, int, Episode, QtGui.QImage)
     episodes = []
     lastQuery = 0
