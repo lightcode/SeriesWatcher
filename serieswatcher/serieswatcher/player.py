@@ -8,7 +8,6 @@ from PyQt4.QtCore import Qt
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon, QPalette, QShortcut
 from .const import THEME, ICONS
-from .debug import Debug
 from .optionsplayer import OptionsPlayer
 from .widgets.videoepisode import Episode
 from .widgets.vlcwidget import VLCWidget
@@ -102,30 +101,21 @@ class Player(QtGui.QMainWindow):
     def nextEpisode(self):
         """Try to play the next episode."""
         if self.currentEpisode < len(self._playList) - 1:
-            Debug.add(Debug.INFO, 'nextEpisode(1)')
             self.currentEpisode += 1
             self.playFile()
         elif self.autoPlay.isChecked():
-            Debug.add(Debug.INFO, 'nextEpisode(2)')
             if self.parent().playFirstEpisode():
                 self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
         elif self.btnRandom.isChecked():
-            Debug.add(Debug.INFO, 'nextEpisode(3)')
             if self.parent().playRandomEpisode():
-                Debug.add(Debug.INFO, 'nextEpisode(3) : play action')
                 self.currentEpisode += 1
                 self.playFile()
             else:
                 return False
         else:
-            Debug.add(Debug.INFO, 'nextEpisode(4)')
-            Debug.add(Debug.INFO, 'nextEpisode : self._playList = %s'
-                                                    % self._playList)
-            Debug.add(Debug.INFO, 'nextEpisode : self.currentEpisode = %s'
-                                                    % self.currentEpisode)
             return False
         return True
     
@@ -263,10 +253,7 @@ class Player(QtGui.QMainWindow):
         try:
             title, path, imgPath = self._playList[self.currentEpisode]
         except IndexError:
-            Debug.add(Debug.ERROR, 'playFile : self._playList = %s'
-                                                % self._playList)
-            Debug.add(Debug.ERROR, 'playFile : self.currentEpisode = %s'
-                                                % self.currentEpisode)
+            pass
         else:
             self.showCurrentEpisode()
             self.currentEpisodeWidget.setImage(imgPath)
@@ -298,15 +285,10 @@ class Player(QtGui.QMainWindow):
         self._playList.append([fullTitle, path, imgPath])
         item = QtGui.QListWidgetItem(title)
         self.playList.addItem(item)
-        Debug.add(Debug.INFO, 'addToPlayList : self._playList =',
-                  self._playList)
-        Debug.add(Debug.INFO, 'addToPlayList : self.currentEpisode =',
-                  self.currentEpisode)
     
     def tryToPlay(self):
         """Try to play the episode."""
         if self._playerState == self.STOP:
-            Debug.add(Debug.INFO, 'tryToPlay')
             self.nextEpisode()
     
     def setBtnVolume(self, volume):
@@ -357,7 +339,6 @@ class Player(QtGui.QMainWindow):
                 if self._playerState != self.USER_STOP:
                     self.stop(self.STOP)
                 if self._playerState == self.STOP:
-                    Debug.add(Debug.INFO, 'updateUI : nextEpisode()')
                     # Video is at the end
                     if percent >= 99:
                         self.videoFinished()
@@ -429,6 +410,10 @@ class Player(QtGui.QMainWindow):
         toolRight = QtGui.QToolBar()
         self.volumeBtn = toolRight.addAction(QIcon(ICONS + 'volume-mute.png'),
                                              'Volume', self.toggleVolume)
+        tool.addSeparator()
+        
+        tool.addAction(u'Ralentir', self.speedDown)
+        tool.addAction(u'Accélérer', self.speedUp)
         tool.addSeparator()
         
         self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'),

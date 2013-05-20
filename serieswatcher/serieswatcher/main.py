@@ -21,7 +21,6 @@ from .about import About
 from .addserie import AddSerie
 from .config import Config
 from .const import *
-from .debug import Debug, DebugWindow
 from .editseries import EditSeries
 from .models import Serie, databaseConnect
 from .options import Options
@@ -53,11 +52,6 @@ class Main(QtGui.QMainWindow):
         if 'window_size' in Config.config:
             w, h = Config.config['window_size'].split('x')
             self.resize(int(w), int(h))
-        
-        # Enable debug
-        if int(Config.config['debug']):
-            Debug.setEnabled(True)
-            Debug.add(Debug.INFO, u'Debug activé')
         
         # Load the main windows
         self.createWindow()
@@ -316,9 +310,6 @@ class Main(QtGui.QMainWindow):
         SWMenu.addAction(QIcon(ICONS + 'options.png'), 'Options',
                          self.openOptions)
         SWMenu.addAction(QIcon(ICONS + 'help.png'), 'A propos', self.openAbout)
-        if Debug.isEnabled():
-            SWMenu.addSeparator()
-            SWMenu.addAction(QIcon(ICONS + 'bug.png'), 'Debug', self.openDebug)
     
     def openUpdateWindow(self):
         """Open a window that ask if the program must update the database."""
@@ -480,11 +471,6 @@ class Main(QtGui.QMainWindow):
         """Open the window Options."""
         options = Options(self)
         options.show()
-    
-    def openDebug(self):
-        """Open the window Debug."""
-        debug = DebugWindow(self)
-        debug.show()
     
     def openAddSerie(self):
         """Open the window Add Serie."""
