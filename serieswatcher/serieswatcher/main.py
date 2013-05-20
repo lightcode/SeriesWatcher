@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
 import math
 import time
 import random
@@ -39,8 +38,8 @@ class Main(QtGui.QMainWindow):
     """
     
     def __init__(self):
-        """Initialize the program."""
         self.currentSerie = None
+        self.map = {}
         
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
@@ -72,16 +71,10 @@ class Main(QtGui.QMainWindow):
             self.player = Player(self)
         except:
             self.player = None
-        self.player = Player(self)
     
     def startTheads1(self):
         """Start the first group of threads."""
         self.commandOpen = QtCore.QProcess()
-        
-        self.refreshSeries = RefreshSeriesThread(self)
-        self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
-        self.refreshSeries.serieUpdated.connect(self.serieUpdated)
-        self.refreshSeries.start()
         
         self.episodesLoader = EpisodesLoaderThread(self)
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
@@ -96,6 +89,11 @@ class Main(QtGui.QMainWindow):
     
     def startTheads2(self):
         """Start the second group of threads."""
+        self.refreshSeries = RefreshSeriesThread(self)
+        self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
+        self.refreshSeries.serieUpdated.connect(self.serieUpdated)
+        self.refreshSeries.start()
+        
         self.checkSerieUpdate = CheckSerieUpdateThread(self)
         self.checkSerieUpdate.updateRequired\
                              .connect(self.refreshSeries.addSerie)
@@ -115,7 +113,8 @@ class Main(QtGui.QMainWindow):
         """Draw the main window."""
         self.createMenu()
         
-        self.setStyleSheet(open(THEME + 'serieswatcher.css').read())
+        with open(THEME + 'serieswatcher.css') as file_:
+            self.setStyleSheet(file_.read())
         
         # Status Bar
         self.status = self.statusBar()
@@ -406,7 +405,6 @@ class Main(QtGui.QMainWindow):
         else:
             self.playEpisode(nextEpisode)
             return True
-        
         return False
     
     def playRandomEpisode(self):
@@ -519,7 +517,6 @@ class Main(QtGui.QMainWindow):
             r, c = indexes[0].row(), indexes[0].column()
             if (r, c) in self.map:
                 return self.map[r, c]
-        return False
     
     def getSelectedEpisodes(self):
         """Generator that return the list of episodes."""
@@ -593,8 +590,7 @@ class Main(QtGui.QMainWindow):
         """Reload the serie selector."""
         self.selectSerie.blockSignals(True)
         currentIndex = self.selectSerie.currentIndex()
-        if currentIndex < 0:
-            currentIndex = 0
+        currentIndex = 0 if currentIndex < 0 else currentIndex
         self.selectSerie.clear()
         Serie.deleteSeriesCache()
         for s in Serie.getSeries():
@@ -639,10 +635,10 @@ class Main(QtGui.QMainWindow):
             video = self.episodes.cellWidget(r, c)
             if video is not None:
                 if value:
-                    number = self.map[coord].setView()
+                    self.map[coord].setView()
                     video.setStatus(1)
                 else:
-                    number = self.map[coord].setNotView()
+                    self.map[coord].setNotView()
                     video.setStatus(2)
         self.refreshFooter()
         self.refreshCount()
@@ -779,7 +775,7 @@ class Main(QtGui.QMainWindow):
         self.clearSelectionInfos()
         self.episodesLoader.newQuery()
         self.episodes.clear()
-        self.map = {}
+        self.map.clear()
         imgDir = '%s%s/%%s.jpg' % (SERIES_IMG, self.currentSerie.uuid)
         nbColumn = self.episodes.nbColumn
         count = 0
@@ -833,12 +829,12 @@ class Main(QtGui.QMainWindow):
         for e in self.currentSerie.episodes:
             (status, season) = (e.status, e.season)
             if (filterSeason == -1 or filterSeason == season) \
-                and ((filterID == 0 and status in (1, 2)) \
-                  or (filterID == 1 and status == 2) \
-                  or (filterID == 2 and e.favorite) \
-                  or (filterID == 3 and status == 0) or filterID == 4) \
-                and (season != 0 or filterSeason == 0):
-                    yield e
+              and ((filterID == 0 and status in (1, 2)) \
+                or (filterID == 1 and status == 2) \
+                or (filterID == 2 and e.favorite) \
+                or (filterID == 3 and status == 0) or filterID == 4) \
+              and (season != 0 or filterSeason == 0):
+                yield e
     
     def refreshScreen(self):
         """Refresh the sreen."""
@@ -848,7 +844,7 @@ class Main(QtGui.QMainWindow):
     
     def clearSeries(self):
         """Clear all informations about the current serie."""
-        self.map = {}
+        self.map.clear()
         self.selectSeason.blockSignals(True)
         self.selectSeason.clear()
         self.selectSeason.addItem('Toutes les saisons')
@@ -865,7 +861,6 @@ class Main(QtGui.QMainWindow):
     def serieLoaded(self, serie):
         """Triggered when the serie is loaded."""
         self.currentSerie = serie
-        self.currentSerie.loadSerie()
         
         if not self.currentSerie.isLoaded():
             self.refreshSeries.addSerie(self.currentSerieId())

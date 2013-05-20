@@ -10,10 +10,9 @@ class OptionsPlayer(QtGui.QDialog):
         """Initialize the window option for the player."""
         super(OptionsPlayer, self).__init__(parent)
         self.setWindowTitle('Options')
-        self.parent = parent
         
-        audioList = parent.mediaPlayer.audio_get_track_description()
-        stList = parent.mediaPlayer.video_get_spu_description()
+        audioList = self.parent().mediaPlayer.audio_get_track_description()
+        stList = self.parent().mediaPlayer.video_get_spu_description()
         
         self.st = QtGui.QComboBox()
         for id, text in stList:
@@ -22,7 +21,7 @@ class OptionsPlayer(QtGui.QDialog):
             self.st.setDisabled(False)
         else:
             self.st.setDisabled(True)
-        self.st.setCurrentIndex(self.parent.mediaPlayer.video_get_spu())
+        self.st.setCurrentIndex(self.parent().mediaPlayer.video_get_spu())
         self.st.currentIndexChanged.connect(self.changeST)
         
         self.audio = QtGui.QComboBox()
@@ -32,7 +31,7 @@ class OptionsPlayer(QtGui.QDialog):
             self.audio.setDisabled(False)
         else:
             self.audio.setDisabled(True)
-        self.audio.setCurrentIndex(self.parent.mediaPlayer.audio_get_track())
+        self.audio.setCurrentIndex(self.parent().mediaPlayer.audio_get_track())
         self.audio.currentIndexChanged.connect(self.changeAudio)
         
         layout = QtGui.QFormLayout()
@@ -42,8 +41,8 @@ class OptionsPlayer(QtGui.QDialog):
     
     def changeST(self, new):
         """Triggered when the user select the subtitle."""
-        self.parent.mediaPlayer.video_set_spu(new)
+        self.parent().mediaPlayer.video_set_spu(new)
     
     def changeAudio(self, new):
         """Triggered when the user select the audio track."""
-        self.parent.mediaPlayer.audio_set_track(new)
+        self.parent().mediaPlayer.audio_set_track(new)

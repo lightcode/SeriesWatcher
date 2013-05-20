@@ -11,7 +11,7 @@ import os.path
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.4'
+TEXT_VERSION = u'1.4.1'
 VERSION = '1.4.0'
 RELEASE_DATE = u'Mai 2013'
 
