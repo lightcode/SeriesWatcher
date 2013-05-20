@@ -378,14 +378,6 @@ class Player(QtGui.QMainWindow):
         self.options = OptionsPlayer(self)
         self.options.show()
     
-    def speedUp(self):
-        speed = self.mediaPlayer.get_rate()
-        self.mediaPlayer.set_rate(speed + 0.5)
-    
-    def speedDown(self):
-        speed = self.mediaPlayer.get_rate()
-        self.mediaPlayer.set_rate(speed - 0.5)
-    
     def createUI(self):
         """Make the window interface."""
         self.videoFrame = VLCWidget()
