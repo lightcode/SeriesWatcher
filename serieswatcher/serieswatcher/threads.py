@@ -166,8 +166,9 @@ class RefreshSeriesThread(QtCore.QThread):
             Episode.deleteBy(serie=serie, season=season, episode=episode)
         
         # Miniature DL
+        self.serieUpdateStatus.emit(serieLocalID, 2, {'title': serie.title})
         for i, nbImages in tvDb.download_miniatures():
-            self.serieUpdateStatus.emit(serieLocalID, 2,
+            self.serieUpdateStatus.emit(serieLocalID, 3,
                 {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
         self.serieUpdated.emit(serieLocalID)

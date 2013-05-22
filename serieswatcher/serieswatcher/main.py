@@ -453,11 +453,12 @@ class Main(QtGui.QMainWindow):
         messages = [
             u'%(title)s : téléchargement des informations sur la série...',
             u'%(title)s : téléchargement des informations sur les épisodes...',
+            u'%(title)s : téléchargement des miniatures...',
             u'%(title)s : téléchargement des miniatures (%(nb)d/%(nbImages)d)...'
         ]
         message = messages[status] % args
         self.status.showMessage(message)
-        if self.currentSerieId() == serieLocalID and status != 2:
+        if self.currentSerieId() == serieLocalID and status != 3:
             self.serieLoaderThread.forceReload()
     
     def openEditSerie(self):

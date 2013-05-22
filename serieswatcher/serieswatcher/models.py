@@ -94,6 +94,7 @@ class Serie(SQLObject):
     
     def loadEpisodes(self):
         """Load episodes from the database and cache them."""
+        self._cacheEpisodes = None
         nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = 0
         nbFavorites = nbNotView = nbView = 0
         nbSeason = 0
