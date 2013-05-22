@@ -21,10 +21,41 @@ except:
     vlc = None
 os.chdir(path)
 
+def _timeToText(time):
+    """Format the time."""
+    time = int(time)
+    s = time % 60
+    m = (time // 60) % 60
+    h = time // 3600
+    if h < 1:
+        return '%02d:%02d' % (m, s)
+    else:
+        return '%02d:%02d:%02d' % (h, m, s)
+
+class Slider(QtGui.QSlider):
+    def __init__(self, parent=None):
+        super(Slider, self).__init__(parent)
+        self.setMouseTracking(True)
+        self._duration = 0
+    
+    def mouseMoveEvent(self, event):
+        k = event.x() / float(self.width())
+        self.setToolTip(_timeToText(self._duration * k))
+        super(Slider, self).mouseMoveEvent(event)
+    
+    def mousePressEvent(self, event):
+        k = event.x() / float(self.width())
+        a = k * self.maximum()
+        self.setValue(a)
+        self.sliderMoved.emit(self.value())
+        super(Slider, self).mousePressEvent(event)
+    
+    def setDuration(self, duration):
+        self._duration = duration / 1000.
+
 
 class Player(QtGui.QMainWindow):
     """Class to handle the window player."""
-    
     VLCLoaded = False
     TIME_HIDE_BAR = 2000
     PLAY, PAUSE, STOP, USER_STOP = 0, 1, 2, 3
@@ -257,8 +288,9 @@ class Player(QtGui.QMainWindow):
         if time < 0:
             self.currentTime.setText('--:--')
         else:
-            textTime = self._timeToText(time // 1000)
+            textTime = _timeToText(time // 1000)
             self.totalTime.setText(textTime)
+            self.positionSlider.setDuration(time)
     
     def addToPlayList(self, number, title, path, imgPath):
         """Add the episode in the playlist."""
@@ -303,17 +335,6 @@ class Player(QtGui.QMainWindow):
         """Set the current position in the video."""
         self.mediaPlayer.set_position(position / 1000.0)
     
-    def _timeToText(self, time):
-        """Format the time."""
-        time = int(time)
-        s = time % 60
-        m = (time // 60) % 60
-        h = time // 3600
-        if h < 1:
-            return '%02d:%02d' % (m, s)
-        else:
-            return '%02d:%02d:%02d' % (h, m, s)
-    
     def updateUI(self):
         """Refresh the user interface."""
         percent = self.mediaPlayer.get_position() * 1000
@@ -322,7 +343,7 @@ class Player(QtGui.QMainWindow):
         time = int(self.mediaPlayer.get_time())
         if time > 0:
             time //= 1000
-            textTime = self._timeToText(time)
+            textTime = _timeToText(time)
             self.currentTime.setText(textTime)
         else:
             self.currentTime.setText('--:--')
@@ -364,7 +385,7 @@ class Player(QtGui.QMainWindow):
         
         self.currentTime = QtGui.QLabel('--:--')
         
-        self.positionSlider = QtGui.QSlider(Qt.Horizontal)
+        self.positionSlider = Slider(Qt.Horizontal)
         self.positionSlider.setToolTip("Position")
         self.positionSlider.setMaximum(1000)
         self.positionSlider.sliderMoved.connect(self.setPosition)
@@ -404,8 +425,8 @@ class Player(QtGui.QMainWindow):
         
         self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'),
                                         u"Plein écran", self.fullScreen)
-        tool.addAction(QIcon(ICONS + 'options.png'), 'Options',
-                       self.showOptions)
+        # Fix me :
+        #tool.addAction(QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)

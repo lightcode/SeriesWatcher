@@ -10,6 +10,7 @@ import os.path
 from PyQt4.QtCore import Qt
 from datetime import datetime
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import qDebug
 from sqlobject.sqlbuilder import AND
 from sqlobject.dberrors import OperationalError
 from .const import *
@@ -43,13 +44,13 @@ class SyncDBThead(QtCore.QThread):
                 try:
                     s.syncUpdate()
                 except OperationalError as msg:
-                    print 'SQLObject Error : %s' % msg
+                    qDebug('SQLObject Error : %s' % msg)
             try:
                 for e in self.parent().currentSerie.episodes:
                     try:
                         e.syncUpdate()
                     except sqlobject.dberrors.OperationalError as msg:
-                        print 'SQLObject Error : %s' % msg
+                        qDebug('SQLObject Error : %s' % msg)
             except AttributeError:
                 pass
             self.msleep(500)
@@ -87,7 +88,7 @@ class CheckSerieUpdateThread(QtCore.QThread):
                 try:
                     remoteTime = datetime.fromtimestamp(tvDb.last_update())
                 except TypeError:
-                    print 'Get last update failed.'
+                    qDebug('Get last update failed.')
                 else:
                     if not localTime or localTime < remoteTime:
                         self.updateRequired.emit(localeID)
@@ -111,7 +112,7 @@ class RefreshSeriesThread(QtCore.QThread):
         try:
             tvDb.download_serie()
         except xml.parsers.expat.ExpatError:
-            print "Error download"
+            qDebug("Error download")
             return False
         
         # Info serie
@@ -165,8 +166,9 @@ class RefreshSeriesThread(QtCore.QThread):
             Episode.deleteBy(serie=serie, season=season, episode=episode)
         
         # Miniature DL
+        self.serieUpdateStatus.emit(serieLocalID, 2, {'title': serie.title})
         for i, nbImages in tvDb.download_miniatures():
-            self.serieUpdateStatus.emit(serieLocalID, 2,
+            self.serieUpdateStatus.emit(serieLocalID, 3,
                 {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
         self.serieUpdated.emit(serieLocalID)
@@ -200,6 +202,7 @@ class SerieLoaderThread(QtCore.QThread):
             if currentSerieId != self.lastCurrentSerieId or self._forceReload:
                 try:
                     serie = Serie.getSeries()[currentSerieId]
+                    serie.loadSerie()
                     self.serieLoaded.emit(serie)
                 except IndexError:
                     pass
@@ -250,12 +253,16 @@ class EpisodesLoaderThread(QtCore.QThread):
     
     def run(self):
         param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
-        for qId, x, y, episode, imgPath in self.episodes:
+        def map_(episode):
+            qId, x, y, episode, imgPath = episode
             if qId == self.lastQuery:
                 image = QtGui.QImage(imgPath)
-                if image != QtGui.QImage():
+                try:
                     image = image.scaled(120, 120, *param)
+                except:
+                    pass
                 self.episodeLoaded.emit(x, y, episode, image)
+        map(map_, self.episodes)
     
     def newQuery(self):
         self.lastQuery += 1

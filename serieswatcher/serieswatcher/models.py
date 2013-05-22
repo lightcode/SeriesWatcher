@@ -39,7 +39,7 @@ class Serie(SQLObject):
     nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = 0
     nbFavorites = nbNotView = nbView = 0
     _seriesCache = None
-    _episodesCache = None
+    _cacheEpisodes = None
     episodesAvailable = {}
     
     class sqlmeta:
@@ -72,7 +72,7 @@ class Serie(SQLObject):
         """Load the serie's episodes in the path
         registred in the database.
         """
-        self.episodesAvailable = {}
+        self.episodesAvailable.clear()
         
         if not self.path and not os.path.isdir(self.path):
             return
@@ -80,9 +80,11 @@ class Serie(SQLObject):
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
             if os.path.splitext(f)[1] in EXTENSIONS:
-                numbers = re.findall(self.PATTERN_FILE, os.path.basename(f))
-                if numbers:
-                    numbers = numbers[0]
+                try:
+                    numbers = re.search(self.PATTERN_FILE, os.path.basename(f)).groups()
+                except AttributeError:
+                    continue
+                else:
                     episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
                     self.episodesAvailable[episodeID] = f
                     if numbers[2]:
@@ -96,6 +98,7 @@ class Serie(SQLObject):
         nbEpisodeTotal = nbEpisodeNotAvailable = nbEpisodeAvailable = 0
         nbFavorites = nbNotView = nbView = 0
         nbSeason = 0
+        today = date.today()
         for e in self.episodes:
             number = e.number
             nbSeason = max(nbSeason, e.season)
@@ -111,7 +114,7 @@ class Serie(SQLObject):
                     nbView += 1
             else:
                 if e.season > 0 \
-                        and e.firstAired and date.today() > e.firstAired:
+                        and e.firstAired and today > e.firstAired:
                     nbEpisodeNotAvailable += 1
             if e.favorite:
                 nbFavorites += 1
@@ -133,7 +136,6 @@ class Serie(SQLObject):
         """Returns the path to the banner image."""
         return SERIES_BANNERS + '%s.jpg' % self.uuid
     
-    _cacheEpisodes = None
     def _get_episodes(self):
         """Returns the episode list."""
         if self._cacheEpisodes is None:
@@ -152,8 +154,8 @@ class Episode(SQLObject):
     firstAired = DateCol(default=None)
     favorite = BoolCol(default=False)
     serie = ForeignKey('Serie')
-    path = None
     lastUpdate = TimestampCol()
+    path = None
     
     class sqlmeta:
         defaultOrder = ('season', 'episode')
@@ -176,12 +178,11 @@ class Episode(SQLObject):
     
     def setView(self):
         """Set the view number at 1 if the episode is not view."""
-        if self.isAvailable():
-            if self.nbView == 0:
-                self.serie.nbNotView -= 1
-                self.serie.nbView += 1
-                self.nbView = 1
-                self._setLastUpdate()
+        if self.isAvailable() and self.nbView == 0:
+            self.serie.nbNotView -= 1
+            self.serie.nbView += 1
+            self.nbView = 1
+            self._setLastUpdate()
     
     def setNotView(self):
         """Unmark the episode as view."""

@@ -24,7 +24,7 @@ def search(user, entry):
     user_words = split(user)
     for uword in user_words:
         for e in entry:
-            if e[0:len(uword)] == uword:
+            if e.startswith(uword):
                 break
         else:
             return False
