@@ -3,14 +3,7 @@
 
 import os
 import urllib
-import xml.dom.minidom
-
-def _get_data(elmt, tag_name, default=''):
-    """Shortcut to get value in a node."""
-    try:
-        return elmt.getElementsByTagName(tag_name)[0].firstChild.nodeValue
-    except AttributeError:
-        return default
+from xml.etree import cElementTree
 
 
 class TheTVDB(object):
@@ -28,30 +21,22 @@ class TheTVDB(object):
         url = self.URL_API + 'GetSeries.php?seriesname=%s&language=%s'
         url = url % (serie_name, lang_search)
         data = urllib.urlopen(url)
-        search = xml.dom.minidom.parse(data)
-        series_found = search.getElementsByTagName('Series')
-        series = []
-        for serie in series_found:
-            lang = _get_data(serie, 'language')
+        root = cElementTree.parse(data).getroot()
+        for serie in root.iter('Series'):
+            lang = serie.find('language').text
             if lang_search == 'all' or lang_search == lang:
-                serie_id = _get_data(serie, 'seriesid')
-                title = _get_data(serie, 'SeriesName')
-                series.append((serie_id, title, lang))
-        return series
+                serie_id = serie.find('seriesid').text
+                title = serie.find('SeriesName').text
+                yield (serie_id, title, lang)
     
     def get_languages(self):
         """Return the list of languages available on The TVDB."""
         language_list = []
-        xmlfile = '%s%s/languages.xml' % (self.URL_API, self.API_KEY)
-        try:
-            dom = xml.dom.minidom.parse(urllib.urlopen(xmlfile))
-        except IOError:
-            print "Can't find languages."
-        else:
-            languages = dom.getElementsByTagName('Languages')[0]
-            languages = languages.getElementsByTagName('Language')
-            for language in languages:
-                language_list.append(_get_data(language, 'abbreviation'))
+        url = '%s%s/languages.xml' % (self.URL_API, self.API_KEY)
+        data = urllib.urlopen(url)
+        root = cElementTree.parse(data).getroot()
+        for language in root.iter('Language'):
+            language_list.append(language.find('abbreviation').text)
         return language_list
 
 
@@ -61,85 +46,76 @@ class TheTVDBSerie(TheTVDB):
     def __init__(self, tvdbid, lang):
         super(TheTVDBSerie, self).__init__()
         self.tvdbid, self.lang = tvdbid, lang
-        self.miniatureToDL = []
-        self.dom = None
+        self._root = None
+        
+        xmlurl = '%s%s/all/%s.xml' % (self.URL_SERIE, self.tvdbid, self.lang)
+        xml = urllib.urlopen(xmlurl)
+        self._root = cElementTree.parse(xml).getroot()
     
-    def download_serie(self):
-        """Download the full serie in this object."""
-        xmlfile = '%s%s/all/%s.xml' % (self.URL_SERIE, self.tvdbid, self.lang)
-        try:
-            self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlfile))
-        except IOError:
-            print 'Download serie informations error.'
-    
-    def last_update(self):
-        """Return the timestamp of the last updated."""
-        xmlfile = '%s%s/%s.xml' % (self.URL_SERIE, self.tvdbid, self.lang)
-        try:
-            self.dom = xml.dom.minidom.parse(urllib.urlopen(xmlfile))
-        except IOError:
-            print 'Download serie informations error.'
-        else:
-            series = self.dom.getElementsByTagName('Series')[0]
-            return int(_get_data(series, 'lastupdated'))
+    def episodes(self):
+        """Return the episodes list."""
+        for episode in self._root.iter('Episode'):
+            entry = {}
+            entry['season'] = int(episode.find('SeasonNumber').text)
+            entry['episode'] = int(episode.find('EpisodeNumber').text)
+            entry['title'] = unicode(episode.find('EpisodeName').text)
+            if entry['title'] == '':
+                continue
+            entry['description'] = unicode(episode.find('Overview').text)
+            entry['firstAired'] = episode.find('FirstAired').text
+            yield entry
     
     def infos_serie(self):
         """Return the serie informations."""
-        if self.dom is None:
+        if self._root is None:
             return
+        
         infos = {}
-        series = self.dom.getElementsByTagName('Series')[0]
-        infos['firstAired'] = _get_data(series, 'FirstAired')
-        infos['description'] = _get_data(series, 'Overview')
-        infos['lastUpdated'] = int(_get_data(series, 'lastupdated'))
+        serie = self._root.find('Series')
+        infos['firstAired'] = serie.find('FirstAired').text
+        infos['description'] = unicode(serie.find('Overview').text)
+        infos['lastUpdated'] = int(serie.find('lastupdated').text)
         return infos
+    
+    def last_update(self):
+        """Return the timestamp of the last updated."""
+        serie = self._root.find('Series')
+        return int(serie.find('lastupdated').text)
     
     def download_banner(self, banner_path):
         """Download the banner in the hard drive."""
-        series = self.dom.getElementsByTagName('Series')[0]
-        banner = _get_data(series, 'banner')
+        serie = self._root.find('Series')
+        banner = unicode(serie.find('banner').text)
         if banner != '' and not os.path.isfile(banner_path):
-            try:
-                img = urllib.urlopen(self.URL_BANNER + banner).read()
-                with open(banner_path, 'wb+') as file_:
-                    file_.write(img)
-            except:
-                pass
+            urllib.urlretrieve(self.URL_BANNER + banner, banner_path)
     
-    def download_miniatures(self):
+    def download_miniatures(self, folder):
         """Downloads all images and yield a tuple with the number of
         the picture and the number of images.
         """
-        nbimages = len(self.miniatureToDL)
-        i = 0
-        for imgpath, urlmin in self.miniatureToDL:
-            if not os.path.isfile(imgpath):
-                try:
-                    img = urllib.urlopen(self.URL_BANNER + urlmin).read()
-                    with open(imgpath, 'wb+') as file_:
-                        file_.write(img)
-                except:
-                    print 'Error download episode cover.'
-            i += 1
-            yield (i, nbimages)
-    
-    def episodes(self, imgDir):
-        """Return the episodes list."""
-        self.miniatureToDL = []
-        episodes = self.dom.getElementsByTagName('Episode')
-        for e in episodes:
-            entry = {}
-            entry['season'] = int(_get_data(e, 'SeasonNumber', 0))
-            entry['episode'] = int(_get_data(e, 'EpisodeNumber', 0))
-            entry['number'] = "%02d-%02d" % (entry['season'], entry['episode'])
-            entry['title'] = _get_data(e, 'EpisodeName')
-            if entry['title'] == '':
-                continue
-            entry['desc'] = _get_data(e, 'Overview')
-            entry['firstAired'] = _get_data(e, 'FirstAired', None)
-            # Miniature
-            urlmin = _get_data(e, 'filename', None)
-            if urlmin is not None:
-                imgpath = '%s/%s.jpg' % (imgDir, entry['number'])
-                self.miniatureToDL.append((imgpath, urlmin))
-            yield entry
+        miniaturesToDownload = []
+        for episode in self._root.iter('Episode'):
+            seasonNumber = int(episode.find('SeasonNumber').text)
+            episodeNumber = int(episode.find('EpisodeNumber').text)
+            imgpath = '%s/%02d-%02d.jpg' % (folder, seasonNumber, episodeNumber)
+            urlmin = unicode(episode.find('filename').text)
+            if urlmin and not os.path.isfile(imgpath):
+                miniaturesToDownload.append((self.URL_BANNER + urlmin, imgpath))
+        
+        n = 0
+        nbMiniatures = len(miniaturesToDownload)
+        for urlmin, imgpath in miniaturesToDownload:
+            urllib.urlretrieve(urlmin, imgpath)
+            yield n, nbMiniatures
+            n += 1
+
+
+if __name__ == '__main__':
+    #tvdbSerie = TheTVDBSerie(71663, 'fr')
+    #print tvDbSerie.last_update()
+    #print tvDbSerie.infos_serie()
+    #for e in tvDbSerie.episodes(''):
+    #    print e
+    tvdb = TheTVDB()
+    #print list(tvdb.search_serie('simpson', 'fr'))
+    tvdb.get_languages()

@@ -8,9 +8,6 @@ from PyQt4 import QtCore, QtGui
 from ..const import ICONS
 
 class EpisodesViewer(QtGui.QTableWidget):
-    nbColumn = 3
-    columnWidth = 260
-    rowHeight = 100
     pressEnter = QtCore.pyqtSignal('QModelIndex')
     refreshEpisodes = QtCore.pyqtSignal()
     viewStatusChanged = QtCore.pyqtSignal(bool)
@@ -19,6 +16,11 @@ class EpisodesViewer(QtGui.QTableWidget):
     
     def __init__(self, parent = None):
         super(EpisodesViewer, self).__init__(parent)
+        
+        self.nbColumn = 3
+        self.columnWidth = 260
+        self.rowHeight = 100
+        
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.contextMenu)
@@ -30,6 +32,26 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.resizeTimer.setInterval(200)
         self.resizeTimer.timeout.connect(self.updateSize)
         self.resizeTimer.start()
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(400)
+        self.timer.timeout.connect(self.redrawImages)
+        self.timer.start()
+    
+    def redrawImages(self):
+        for r in xrange(self.rowCount()):
+            posY = self.rowViewportPosition(r)
+            for c in xrange(self.columnCount()):
+                if -self.rowHeight <= posY <= self.height():
+                    try:
+                        self.cellWidget(r, c).showImage()
+                    except AttributeError:
+                        pass
+                else:
+                    try:
+                        self.cellWidget(r, c).delImage()
+                    except AttributeError:
+                        pass
     
     def contextMenu(self, pos):
         nbEpisode = 0

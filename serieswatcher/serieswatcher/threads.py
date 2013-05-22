@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
 __all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead',
-           'RemoteSyncThead']
+           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead']
 
-import xml
 import time
 import os.path
 from PyQt4.QtCore import Qt
@@ -17,21 +15,6 @@ from .const import *
 from .models import Serie, Episode
 from .search import *
 from .thetvdb import TheTVDBSerie
-
-
-class RemoteSyncThead(QtCore.QThread):
-    """Thread to synchronize the local database to a
-    remote database.
-    """
-    def run(self):
-        # 1. Connect to the API
-        
-        # 2. Get the series summary for this user
-        
-        # 3. Update the local database
-        
-        # 4. Send to the server updates
-        pass
 
 
 class SyncDBThead(QtCore.QThread):
@@ -108,11 +91,10 @@ class RefreshSeriesThread(QtCore.QThread):
         serie = Serie.getSeries()[serieLocalID]
         self.serieUpdateStatus.emit(serieLocalID, 0, {'title': serie.title})
         
-        tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         try:
-            tvDb.download_serie()
-        except xml.parsers.expat.ExpatError:
-            qDebug("Error download")
+            tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
+        except Exception as e:
+            qDebug("Error download" + e)
             return False
         
         # Info serie
@@ -129,44 +111,45 @@ class RefreshSeriesThread(QtCore.QThread):
         serie.lastUpdated = int(serieInfos['lastUpdated'])
         self.serieUpdateStatus.emit(serieLocalID, 1, {'title': serie.title})
         
-        # Create image path
-        imgDir = SERIES_IMG + serie.uuid
-        if not os.path.isdir(imgDir):
-            os.mkdir(imgDir)
-        
         # Info episode
-        episodesDb = {e.number for e in serie.episodes} 
-        episodeList = list(tvDb.episodes(imgDir))
-        for e in episodeList:
+        episodesDb = {(e.season, e.episode) for e in serie.episodes}
+        episodeList = set()
+        for e in tvDb.episodes():
+            number = (e['season'], e['episode'])
+            episodeList.add(number)
             if e['firstAired']:
                 firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
             else:
                 firstAired = None
-            if e['number'] in episodesDb:
+            if number in episodesDb:
                 episode = list(Episode.select(
                     AND(Episode.q.season==int(e['season']),
                     Episode.q.episode==int(e['episode']),
                     Episode.q.serie==serie)))[0]
                 episode.firstAired = firstAired
                 episode.title = unicode(e['title'])
-                episode.description = unicode(e['desc'])
+                episode.description = unicode(e['description'])
             else:
                 Episode(
                     title = unicode(e['title']),
-                    description = unicode(e['desc']),
+                    description = unicode(e['description']),
                     season = int(e['season']),
                     episode = int(e['episode']),
                     firstAired = firstAired,
                     serie = serie
                 )
         
-        toDelete = episodesDb - {e['number'] for e in episodeList}
-        for number in toDelete:
-            season, episode = map(int, number.split('-'))
+        toDelete = episodesDb - episodeList
+        for season, episode in toDelete:
             Episode.deleteBy(serie=serie, season=season, episode=episode)
         
+        # Create image path
+        imgDir = SERIES_IMG + serie.uuid
+        if not os.path.isdir(imgDir):
+            os.mkdir(imgDir)
+        
         # Miniature DL
-        for i, nbImages in tvDb.download_miniatures():
+        for i, nbImages in tvDb.download_miniatures(imgDir):
             self.serieUpdateStatus.emit(serieLocalID, 2,
                 {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
@@ -201,10 +184,11 @@ class SerieLoaderThread(QtCore.QThread):
             if currentSerieId != self.lastCurrentSerieId or self._forceReload:
                 try:
                     serie = Serie.getSeries()[currentSerieId]
-                    serie.loadSerie()
-                    self.serieLoaded.emit(serie)
                 except IndexError:
                     pass
+                else:
+                    serie.loadSerie()
+                    self.serieLoaded.emit(serie)
                 self.lastCurrentSerieId = currentSerieId
                 self._forceReload = False
             self.msleep(100)
@@ -228,8 +212,7 @@ class SearchThread(QtCore.QThread):
     
     def search(self, textSearch):
         listEpisodes = []
-        episodes = self.parent().currentSerie.episodes
-        for e in episodes:
+        for e in self.parent().currentSerie.episodes:
             score = 1000 if search(textSearch, split(e.title)) else 0
             score += search2(textSearch, split(e.description))
             if score > 0:
@@ -246,25 +229,19 @@ class SearchThread(QtCore.QThread):
 
 class EpisodesLoaderThread(QtCore.QThread):
     """Thread to create miniature of the episode."""
-    episodeLoaded = QtCore.pyqtSignal(int, int, Episode, QtGui.QImage)
+    episodeLoaded = QtCore.pyqtSignal(int, int, Episode)
     episodes = []
     lastQuery = 0
     
     def run(self):
-        param = (Qt.KeepAspectRatio, Qt.SmoothTransformation)
         def map_(episode):
-            qId, x, y, episode, imgPath = episode
+            qId, x, y, episode = episode
             if qId == self.lastQuery:
-                image = QtGui.QImage(imgPath)
-                try:
-                    image = image.scaled(120, 120, *param)
-                except:
-                    pass
-                self.episodeLoaded.emit(x, y, episode, image)
+                self.episodeLoaded.emit(x, y, episode)
         map(map_, self.episodes)
     
     def newQuery(self):
         self.lastQuery += 1
     
-    def addEpisode(self, x, y, episode, imgPath):
-        self.episodes.append((self.lastQuery, x, y, episode, imgPath))
+    def addEpisode(self, x, y, episode):
+        self.episodes.append((self.lastQuery, x, y, episode))

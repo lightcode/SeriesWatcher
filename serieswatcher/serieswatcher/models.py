@@ -73,7 +73,6 @@ class Serie(SQLObject):
         registred in the database.
         """
         self.episodesAvailable.clear()
-        
         if not self.path and not os.path.isdir(self.path):
             return
         

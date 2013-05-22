@@ -13,6 +13,7 @@ class VideoItem(QtGui.QWidget):
         super(VideoItem, self).__init__()
         
         self.episode = episode
+        self._coverShown = False
         
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
@@ -36,7 +37,6 @@ class VideoItem(QtGui.QWidget):
         cell = QtGui.QHBoxLayout()
         cell.addWidget(self.img)
         cell.addLayout(text)
-        
         self.setLayout(cell)
         
         # Set params :
@@ -47,6 +47,18 @@ class VideoItem(QtGui.QWidget):
         episode = self.episode
         self.setStatus(episode.status)
         self.setFavorite(episode.favorite)
+    
+    def delImage(self):
+        if self._coverShown:
+            self.img.clear()
+            self._coverShown = False
+    
+    def showImage(self):
+        if not self._coverShown:
+            image = QtGui.QImage(self.episode.cover)
+            image = image.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self.setImage(image)
+            self._coverShown = True
     
     def setImage(self, image):
         pixmap = QtGui.QPixmap()

@@ -95,9 +95,6 @@ class Main(QtGui.QMainWindow):
         
         self.syncDBThead = SyncDBThead(self)
         self.syncDBThead.start()
-        
-        #self.remoteSyncThead = RemoteSyncThead(self)
-        #self.remoteSyncThead.start()
     
     def currentSerieId(self):
         """Return the current serie ID."""
@@ -492,9 +489,10 @@ class Main(QtGui.QMainWindow):
         items = self.episodes.selectedIndexes()
         for item in items:
             r, c = item.row(), item.column()
-            widget = self.episodes.cellWidget(r, c)
-            if widget:
-                widget.refresh()
+            try:
+                self.episodes.cellWidget(r, c).refresh()
+            except AttributeError:
+                pass
     
     def getSelectedEpisode(self):
         """Return the selected episode."""
@@ -767,9 +765,8 @@ class Main(QtGui.QMainWindow):
         count = 0
         for i, e in enumerate(episodes):
             (x, y) = (i // nbColumn, i % nbColumn)
-            imgPath = imgDir % e.number
             self.map[x, y] = e
-            self.episodesLoader.addEpisode(x, y, e, imgPath)
+            self.episodesLoader.addEpisode(x, y, e)
             count += 1
         self.episodesLoader.start()
         self.refreshCount()
@@ -796,13 +793,12 @@ class Main(QtGui.QMainWindow):
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
     
-    def episodeLoaded(self, x, y, episode, image):
+    def episodeLoaded(self, x, y, episode):
         """This method add the episode in the episodes grid.
         
         Triggered when an episode is loaded.
         """
         item = VideoItem(episode)
-        item.setImage(image)
         self.episodes.setCellWidget(x, y, item)
         item.setTitle(episode.title)
     
