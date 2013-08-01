@@ -94,6 +94,8 @@ class Player(QtGui.QMainWindow):
         QShortcut(Qt.CTRL + Qt.Key_Right, self).activated.connect(self.nextEpisode)
         QShortcut(Qt.Key_Left, self).activated.connect(self.speedDown)
         QShortcut(Qt.Key_Right, self).activated.connect(self.speedUp)
+        QShortcut(Qt.Key_B, self).activated.connect(self.showOptions)
+        QShortcut(Qt.Key_V, self).activated.connect(self.showOptions)
     
     def showBar(self):
         """Show the player bar."""
