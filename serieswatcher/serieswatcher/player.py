@@ -79,6 +79,21 @@ class Player(QtGui.QMainWindow):
         
         with open(THEME + 'seriesplayer.css') as style:
             self.setStyleSheet(style.read())
+        
+        self.timer = QtCore.QTimer(self)
+        self.timer.setInterval(200)
+        self.timer.timeout.connect(self.updateUI)
+        
+        QShortcut(Qt.Key_Escape, self).activated.connect(self.fullScreen)
+        QShortcut(Qt.Key_Space, self).activated.connect(self.playPause)
+        QShortcut(Qt.Key_MediaPlay, self).activated.connect(self.playPause)
+        QShortcut(Qt.Key_MediaStop, self).activated.connect(self.stop)
+        QShortcut(Qt.Key_Plus, self).activated.connect(self.volumeUp)
+        QShortcut(Qt.Key_Minus, self).activated.connect(self.volumeDown)
+        QShortcut(Qt.CTRL + Qt.Key_Left, self).activated.connect(self.previousEpisode)
+        QShortcut(Qt.CTRL + Qt.Key_Right, self).activated.connect(self.nextEpisode)
+        QShortcut(Qt.Key_Left, self).activated.connect(self.speedDown)
+        QShortcut(Qt.Key_Right, self).activated.connect(self.speedUp)
     
     def showBar(self):
         """Show the player bar."""
@@ -418,8 +433,7 @@ class Player(QtGui.QMainWindow):
         
         self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'),
                                         u"Plein écran", self.fullScreen)
-        # Fix me :
-        #tool.addAction(QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
+        tool.addAction(QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)
@@ -467,15 +481,6 @@ class Player(QtGui.QMainWindow):
         self.bar.setParent(widget)
         self.playList.setParent(widget)
         self.currentEpisodeWidget.setParent(widget)
-        
-        self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(200)
-        self.timer.timeout.connect(self.updateUI)
-        
-        QShortcut(Qt.Key_Escape, self).activated.connect(self.fullScreen)
-        QShortcut(Qt.Key_Space, self).activated.connect(self.playPause)
-        QShortcut(Qt.Key_MediaPlay, self).activated.connect(self.playPause)
-        QShortcut(Qt.Key_MediaStop, self).activated.connect(self.stop)
         
         if sys.platform == "linux2":   # For Linux
             self.mediaPlayer.set_xwindow(self.videoFrame.winId())
