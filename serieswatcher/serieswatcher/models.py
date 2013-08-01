@@ -129,6 +129,9 @@ class Serie(SQLObject):
         """Load available episodes list and load episodes."""
         self.loadAvailableList()
         self.loadEpisodes()
+
+    def clearEpisodeCache(self):
+        self._cacheEpisodes = None
     
     def _get_bannerPath(self):
         """Returns the path to the banner image."""

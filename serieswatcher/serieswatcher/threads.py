@@ -187,6 +187,7 @@ class SerieLoaderThread(QtCore.QThread):
                 except IndexError:
                     pass
                 else:
+                    serie.clearEpisodeCache()
                     serie.loadSerie()
                     self.serieLoaded.emit(serie)
                 self.lastCurrentSerieId = currentSerieId
