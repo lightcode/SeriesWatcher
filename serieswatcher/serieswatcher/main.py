@@ -294,8 +294,8 @@ class Main(QtGui.QMainWindow):
         episodesMenu.addAction(QIcon(ICONS + 'reload.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
         episodesMenu.addAction(QIcon(ICONS + 'check.png'),
-                               u'Marquer comme vue', self.viewSelectEpisodeMenu
-                               ).setShortcut('Ctrl+K')
+                               u'Marquer comme vue',
+                               self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
         episodesMenu.addAction(QIcon(ICONS + 'uncheck.png'),
                                u'Marquer comme non vue',
                                self.notViewSelectEpisodeMenu)
@@ -400,6 +400,7 @@ class Main(QtGui.QMainWindow):
         episodesLongTime = []
         otherEpisodes = []
         
+        limitDate = datetime.now()
         rd = int(Config.config['random_duration'])
         if rd is not None:
             limitDate = datetime.fromtimestamp(time.time() - rd)
@@ -413,13 +414,14 @@ class Main(QtGui.QMainWindow):
                     otherEpisodes.append(e)
         
         if episodesLongTime:
-            self.playEpisode(random.choice(episodesLongTime))
+            episode = random.choice(episodesLongTime)
         elif otherEpisodes:
-            episodes = sorted(otherEpisodes, key=lambda o: o.lastView)[:10]
-            self.playEpisode(random.choice(episodes))
+            episodes = sorted(otherEpisodes, key=lambda e: e.lastView)[-15:]
+            episode = random.choice(episodes)
         else:
             return False
         
+        self.playEpisode(episode)
         self.player.btnRandom.setChecked(True)
         return True
     
