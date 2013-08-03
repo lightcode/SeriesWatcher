@@ -57,8 +57,7 @@ class Main(QtGui.QMainWindow):
         
         # Load the main windows
         self.createWindow()
-        self.startTheads1()
-        QtCore.QTimer.singleShot(1000, self.startTheads2)
+        self.startThreads()
         if not Serie.getSeries():
             self.openAddSerie()
         
@@ -68,8 +67,8 @@ class Main(QtGui.QMainWindow):
         except:
             self.player = None
     
-    def startTheads1(self):
-        """Start the first group of threads."""
+    def startThreads(self):
+        """Start all threads."""
         self.commandOpen = QtCore.QProcess()
         
         self.episodesLoader = EpisodesLoaderThread(self)
@@ -81,8 +80,6 @@ class Main(QtGui.QMainWindow):
         self.searchWorker = SearchWorker(self)
         self.searchWorker.searchFinished.connect(self.searchFinished)
     
-    def startTheads2(self):
-        """Start the second group of threads."""
         self.refreshSeries = RefreshSeriesWorker(self)
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)

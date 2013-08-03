@@ -377,13 +377,19 @@ class Player(QtGui.QMainWindow):
         self.options.show()
     
     def speedUp(self):
-        speed = self.mediaPlayer.get_rate()
-        self.mediaPlayer.set_rate(speed + 0.5)
+        speed = self.mediaPlayer.get_rate() * 1.25
+        self.mediaPlayer.set_rate(speed)
+        self.toolButton.setToolTip('Vitesse (x%.2f)' % speed)
     
     def speedDown(self):
-        speed = self.mediaPlayer.get_rate()
-        self.mediaPlayer.set_rate(speed - 0.5)
-    
+        speed = self.mediaPlayer.get_rate() * .8
+        self.mediaPlayer.set_rate(speed)
+        self.toolButton.setToolTip('Vitesse (x%.2f)' % speed)
+
+    def normalSpeed(self):
+        self.mediaPlayer.set_rate(1)
+        self.toolButton.setToolTip('Vitesse (x%.2f)' % 1)
+
     def createUI(self):
         """Make the window interface."""
         self.videoFrame = VLCWidget()
@@ -414,34 +420,43 @@ class Player(QtGui.QMainWindow):
         tool.addSeparator()
         
         self.playListBtn = tool.addAction(QIcon(ICONS + 'playlist.png'),
-                                          "Playlist", self.showPlayList)
+                                          'Playlist', self.showPlayList)
         self.playListBtn.setCheckable(True)
         self.autoPlay = tool.addAction(QIcon(ICONS + 'reload.png'),
-                                       "Activer la lecture automatique")
+                                       'Activer la lecture automatique')
         self.autoPlay.setCheckable(True)
         
         self.btnRandom = tool.addAction(QIcon(ICONS + 'random.png'),
-                                        u"Jouer aléatoirement un autre épisode")
+                                        u'Jouer aléatoirement un autre épisode')
         self.btnRandom.setCheckable(True)
         
         toolRight = QtGui.QToolBar()
         self.volumeBtn = toolRight.addAction(QIcon(ICONS + 'volume-mute.png'),
                                              'Volume', self.toggleVolume)
+
+        menu = QtGui.QMenu()
+        menu.addAction('Ralentir', self.speedDown)
+        menu.addAction('Vitesse normale', self.normalSpeed)
+        menu.addAction(u'Accélérer', self.speedUp)
+
+        self.toolButton = QtGui.QToolButton()
+        self.toolButton.setIcon(QIcon(ICONS + 'speed.png'))
+        self.toolButton.setToolTip('Vitesse (x%.2f)' % 1)
+        self.toolButton.setMenu(menu)
+        self.toolButton.setPopupMode(QtGui.QToolButton.InstantPopup)
+        tool.addWidget(self.toolButton)
+
         tool.addSeparator()
         
-        tool.addAction(u'Ralentir', self.speedDown)
-        tool.addAction(u'Accélérer', self.speedUp)
-        tool.addSeparator()
-        
-        self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'),
-                                        u"Plein écran", self.fullScreen)
+        self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'), 
+                                        u'Plein écran', self.fullScreen)
         tool.addAction(QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)
         self.volumeSlider.setMaximum(100)
         self.volumeSlider.setValue(volume)
-        self.volumeSlider.setToolTip("Volume")
+        self.volumeSlider.setToolTip('Volume')
         self.volumeSlider.valueChanged.connect(self.setVolume)
         self.setBtnVolume(volume)
         
@@ -459,10 +474,10 @@ class Player(QtGui.QMainWindow):
         self.playList.currentRowChanged.connect(self.changeEpisode)
         self.playList.hide()
         
-        self.currentEpisodeWidget = Episode()
-        self.currentEpisodeWidget.setObjectName('currentEpisode')
         palette = QPalette()
         palette.setColor(QPalette.Window, palette.color(QPalette.Window))
+        self.currentEpisodeWidget = Episode()
+        self.currentEpisodeWidget.setObjectName('currentEpisode')
         self.currentEpisodeWidget.setPalette(palette)
         self.currentEpisodeWidget.setAutoFillBackground(True)
         self.currentEpisodeWidget.hide()

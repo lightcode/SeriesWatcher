@@ -29,14 +29,12 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.setShowGrid(False)
         
         self.resizeTimer = QtCore.QTimer(self)
-        self.resizeTimer.setInterval(200)
         self.resizeTimer.timeout.connect(self.updateSize)
-        self.resizeTimer.start()
+        self.resizeTimer.start(250)
         
-        self.timer = QtCore.QTimer(self)
-        self.timer.setInterval(400)
-        self.timer.timeout.connect(self.redrawImages)
-        self.timer.start()
+        self.imageTimer = QtCore.QTimer(self)
+        self.imageTimer.timeout.connect(self.redrawImages)
+        self.imageTimer.start(250)
     
     def redrawImages(self):
         for r in xrange(self.rowCount()):
