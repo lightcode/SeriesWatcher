@@ -29,6 +29,8 @@ from .threads import *
 from .widgets.videoitem import VideoItem
 from .widgets.filtermenu import FilterMenu
 from .widgets.episodesviewer import EpisodesViewer
+from .worker import Runnable
+from .tasks.checkserieupdate import CheckSerieUpdateTask
 
 
 class Main(QtGui.QMainWindow):
@@ -73,28 +75,25 @@ class Main(QtGui.QMainWindow):
         self.episodesLoader = EpisodesLoaderThread(self)
         self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
-        self.serieLoaderThread = SerieLoaderThread(self)
-        self.serieLoaderThread.serieLoaded.connect(self.serieLoaded)
-        self.serieLoaderThread.start()
+        self.serieLoaderWorker = SerieLoaderWorker(self)
+        self.serieLoaderWorker.serieLoaded.connect(self.serieLoaded)
         
-        self.searchThread = SearchThread(self)
-        self.searchThread.searchFinished.connect(self.searchFinished)
-        self.searchThread.start()
+        self.searchWorker = SearchWorker(self)
+        self.searchWorker.searchFinished.connect(self.searchFinished)
     
     def startTheads2(self):
         """Start the second group of threads."""
-        self.refreshSeries = RefreshSeriesThread(self)
+        self.refreshSeries = RefreshSeriesWorker(self)
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
-        self.refreshSeries.start()
         
-        self.checkSerieUpdate = CheckSerieUpdateThread(self)
-        self.checkSerieUpdate.updateRequired\
-                             .connect(self.refreshSeries.addSerie)
-        self.checkSerieUpdate.start()
+        self.threadPool = QtCore.QThreadPool()
+        task = CheckSerieUpdateTask()
+        runnable = Runnable(task)
+        runnable.task.updateRequired.connect(self.refreshSeries.addSerie)
+        self.threadPool.tryStart(runnable)
         
-        self.syncDBThead = SyncDBThead(self)
-        self.syncDBThead.start()
+        self.syncDbWorker = SyncDbWorker(self)
     
     def currentSerieId(self):
         """Return the current serie ID."""
@@ -448,7 +447,7 @@ class Main(QtGui.QMainWindow):
         message = messages[status] % args
         self.status.showMessage(message)
         if self.currentSerieId() == serieLocalID and status != 2:
-            self.serieLoaderThread.forceReload()
+            self.serieLoaderWorker.forceReload()
     
     def openEditSerie(self):
         """Open the window Edit Serie."""
@@ -459,7 +458,7 @@ class Main(QtGui.QMainWindow):
     def seriesEdited(self):
         """Triggered when a serie is edited."""
         self.reloadSelectSerie()
-        self.serieLoaderThread.forceReload()
+        self.serieLoaderWorker.forceReload()
     
     def openAbout(self):
         """Open the window About."""
@@ -640,7 +639,7 @@ class Main(QtGui.QMainWindow):
         """Triggered when the user change the text in the searchbar."""
         if self.currentSerie:
             textSearch = unicode(self.searchBar.text())
-            self.searchThread.changeText(textSearch)
+            self.searchWorker.changeText(textSearch)
     
     def searchFinished(self, listEpisodes):
         """Triggered when the search is finish."""
@@ -884,4 +883,4 @@ class Main(QtGui.QMainWindow):
         """Triggered when a serie is updated."""
         self.status.showMessage('')
         if self.currentSerieId() == serieLocalID:
-            self.serieLoaderThread.forceReload()
+            self.serieLoaderWorker.forceReload()

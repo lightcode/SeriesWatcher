@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-__all__ = ['EpisodesLoaderThread', 'SearchThread', 'RefreshSeriesThread',
-           'CheckSerieUpdateThread', 'SerieLoaderThread', 'SyncDBThead']
+__all__ = ['EpisodesLoaderThread', 'SearchWorker', 'RefreshSeriesWorker',
+           'SerieLoaderWorker', 'SyncDbWorker']
 
 import time
 import os.path
@@ -17,28 +17,32 @@ from .search import *
 from .thetvdb import TheTVDBSerie
 
 
-class SyncDBThead(QtCore.QThread):
-    """Thread to commit changes in a serie to the
+class SyncDbWorker(QtCore.QObject):
+    """Worker to commit changes in a serie to the
     local database.
     """
+    def __init__(self, parent=None):
+        super(SyncDbWorker, self).__init__(parent)
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.run)
+        self._timer.start(500)
+
     def run(self):
-        while True:
-            for s in Serie.getSeries():
-                try:
-                    s.syncUpdate()
-                except OperationalError as msg:
-                    qDebug('SQLObject Error : %s' % msg)
+        for s in Serie.getSeries():
             try:
-                for e in self.parent().currentSerie.episodes:
-                    try:
-                        e.syncUpdate()
-                    except sqlobject.dberrors.OperationalError as msg:
-                        qDebug('SQLObject Error : %s' % msg)
-            except AttributeError:
-                pass
-            self.msleep(500)
+                s.syncUpdate()
+            except OperationalError as msg:
+                qDebug('SQLObject Error : %s' % msg)
+        try:
+            for e in self.parent().currentSerie.episodes:
+                try:
+                    e.syncUpdate()
+                except sqlobject.dberrors.OperationalError as msg:
+                    qDebug('SQLObject Error : %s' % msg)
+        except AttributeError:
+            pass
 
-
+'''
 class CheckSerieUpdateThread(QtCore.QThread):
     """Thread to check updates on the series database and
     synchronize with the local database.
@@ -48,19 +52,6 @@ class CheckSerieUpdateThread(QtCore.QThread):
     
     def __init__(self, parent=None):
         super(CheckSerieUpdateThread, self).__init__(parent)
-    
-    def getLastVerification(self):
-        try:
-            with open(LAST_VERIF_PATH, 'r') as f:
-                return int(''.join(f.readlines()).strip())
-        except IOError:
-            return 0
-        except ValueError:
-            return 0
-    
-    def updateLastVerif(self):
-        with open(LAST_VERIF_PATH, 'w+') as f:
-            f.write("%d" % time.time())
     
     def run(self):
         lastVerification = self.getLastVerification()
@@ -77,16 +68,37 @@ class CheckSerieUpdateThread(QtCore.QThread):
                         self.updateRequired.emit(localeID)
             self.updateLastVerif()
 
+    def getLastVerification(self):
+        try:
+            with open(LAST_VERIF_PATH, 'r') as f:
+                return int(''.join(f.readlines()).strip())
+        except IOError:
+            return 0
+        except ValueError:
+            return 0
+    
+    def updateLastVerif(self):
+        with open(LAST_VERIF_PATH, 'w+') as f:
+            f.write("%d" % time.time())
+'''
 
-class RefreshSeriesThread(QtCore.QThread):
-    """Thread to update the serie from the online database."""
+class RefreshSeriesWorker(QtCore.QObject):
+    """Worker to update the serie from the online database."""
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
-    
+
     def __init__(self, parent=None):
-        super(RefreshSeriesThread, self).__init__(parent)
+        super(RefreshSeriesWorker, self).__init__(parent)
         self.toRefresh = []
-    
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.run)
+        self._timer.start(500)
+
+    def run(self):
+        for serieLocalID in self.toRefresh[:]:
+            self.downloadConfiguration(serieLocalID)
+            del self.toRefresh[0]
+
     def downloadConfiguration(self, serieLocalID):
         serie = Serie.getSeries()[serieLocalID]
         self.serieUpdateStatus.emit(serieLocalID, 0, {'title': serie.title})
@@ -160,56 +172,54 @@ class RefreshSeriesThread(QtCore.QThread):
     def addSerie(self, serieLocalID):
         if serieLocalID not in self.toRefresh:
             self.toRefresh.append(serieLocalID)
-    
-    def run(self):
-        while True:
-            for serieLocalID in self.toRefresh[:]:
-                self.downloadConfiguration(serieLocalID)
-                del self.toRefresh[0]
-            self.msleep(50)
 
 
-class SerieLoaderThread(QtCore.QThread):
+class SerieLoaderWorker(QtCore.QObject):
     """Thread to load the current serie from the local database."""
     serieLoaded = QtCore.pyqtSignal(Serie)
     lastCurrentSerieId = -1
     _forceReload = False
     
+    def __init__(self, parent=None):
+        super(SerieLoaderWorker, self).__init__(parent)
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.run)
+        self._timer.start(100)
+
+    def run(self):
+        currentSerieId = self.parent().currentSerieId()
+        if currentSerieId != self.lastCurrentSerieId or self._forceReload:
+            try:
+                serie = Serie.getSeries()[currentSerieId]
+            except IndexError:
+                pass
+            else:
+                serie.clearEpisodeCache()
+                serie.loadSerie()
+                self.serieLoaded.emit(serie)
+            self.lastCurrentSerieId = currentSerieId
+            self._forceReload = False
+    
     def forceReload(self):
         self._forceReload = True
-    
-    def run(self):
-        while True:
-            currentSerieId = self.parent().currentSerieId()
-            if currentSerieId != self.lastCurrentSerieId or self._forceReload:
-                try:
-                    serie = Serie.getSeries()[currentSerieId]
-                except IndexError:
-                    pass
-                else:
-                    serie.clearEpisodeCache()
-                    serie.loadSerie()
-                    self.serieLoaded.emit(serie)
-                self.lastCurrentSerieId = currentSerieId
-                self._forceReload = False
-            self.msleep(100)
 
 
-class SearchThread(QtCore.QThread):
+class SearchWorker(QtCore.QObject):
     """Thread to search in the database."""
     searchFinished = QtCore.pyqtSignal(list)
-    
+
     def __init__(self, parent=None):
-        super(SearchThread, self).__init__(parent)
+        super(SearchWorker, self).__init__(parent)
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.run)
+        self._timer.start(100)
         self.textSearch = ''
-    
+        self.lastTextSearch = ''
+
     def run(self):
-        textSearch = ''
-        while True:
-            if textSearch != self.textSearch:
-                textSearch = self.textSearch
-                self.search(textSearch)
-            self.msleep(100)
+        if self.lastTextSearch != self.textSearch:
+            self.lastTextSearch = self.textSearch
+            self.search(self.lastTextSearch)
     
     def search(self, textSearch):
         listEpisodes = []
