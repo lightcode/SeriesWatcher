@@ -15,54 +15,20 @@ from .const import *
 from .models import Serie, Episode
 from .search import *
 from .thetvdb import TheTVDBSerie
+from .worker import Runnable
 
 
-class SyncDbWorker(QtCore.QObject):
-    """Worker to commit changes in a serie to the
-    local database.
-    """
-    def __init__(self, parent=None):
-        super(SyncDbWorker, self).__init__(parent)
-        self._timer = QtCore.QTimer(self)
-        self._timer.timeout.connect(self.run)
-        self._timer.start(500)
-
-    def run(self):
-        for s in Serie.getSeries():
-            try:
-                s.syncUpdate()
-            except OperationalError as msg:
-                qDebug('SQLObject Error : %s' % msg)
-        try:
-            for e in self.parent().currentSerie.episodes:
-                try:
-                    e.syncUpdate()
-                except sqlobject.dberrors.OperationalError as msg:
-                    qDebug('SQLObject Error : %s' % msg)
-        except AttributeError:
-            pass
-
-
-class RefreshSeriesWorker(QtCore.QObject):
-    """Worker to update the serie from the online database."""
+class DownloadSerieTask(QtCore.QObject):
     serieUpdated = QtCore.pyqtSignal(int)
     serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
 
-    def __init__(self, parent=None):
-        super(RefreshSeriesWorker, self).__init__(parent)
-        self.toRefresh = []
-        self._timer = QtCore.QTimer(self)
-        self._timer.timeout.connect(self.run)
-        self._timer.start(500)
+    def __init__(self, serieLocalID, parent=None):
+        super(DownloadSerieTask, self).__init__(parent)
+        self.serieLocalID = serieLocalID
 
     def run(self):
-        for serieLocalID in self.toRefresh[:]:
-            self.downloadConfiguration(serieLocalID)
-            del self.toRefresh[0]
-
-    def downloadConfiguration(self, serieLocalID):
-        serie = Serie.getSeries()[serieLocalID]
-        self.serieUpdateStatus.emit(serieLocalID, 0, {'title': serie.title})
+        serie = Serie.getSeries()[self.serieLocalID]
+        self.serieUpdateStatus.emit(self.serieLocalID, 0, {'title': serie.title})
         
         try:
             tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
@@ -82,7 +48,7 @@ class RefreshSeriesWorker(QtCore.QObject):
         serie.firstAired = datetime.strptime(serieInfos['firstAired'],
                                              '%Y-%m-%d')
         serie.lastUpdated = int(serieInfos['lastUpdated'])
-        self.serieUpdateStatus.emit(serieLocalID, 1, {'title': serie.title})
+        self.serieUpdateStatus.emit(self.serieLocalID, 1, {'title': serie.title})
         
         # Info episode
         episodesDb = {(e.season, e.episode) for e in serie.episodes}
@@ -123,12 +89,57 @@ class RefreshSeriesWorker(QtCore.QObject):
         
         # Miniature DL
         for i, nbImages in tvDb.download_miniatures(imgDir):
-            self.serieUpdateStatus.emit(serieLocalID, 2,
+            self.serieUpdateStatus.emit(self.serieLocalID, 2,
                 {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
-        self.serieUpdated.emit(serieLocalID)
+        self.serieUpdated.emit(self.serieLocalID)
         serie.lastUpdate = datetime.now()
         serie.setLoaded(True)
+
+
+class SyncDbWorker(QtCore.QObject):
+    """Worker to commit changes in a serie to the
+    local database.
+    """
+    def __init__(self, parent=None):
+        super(SyncDbWorker, self).__init__(parent)
+        self.run()
+
+    def run(self):
+        for serie in Serie.getSeries():
+            try:
+                serie.syncUpdate()
+            except OperationalError as msg:
+                qDebug('SQLObject Error : %s' % msg)
+        for episode in Episode.select():
+            try:
+                episode.syncUpdate()
+            except OperationalError as msg:
+                qDebug('SQLObject Error : %s' % msg)
+        QtCore.QTimer.singleShot(500, self.run)
+
+
+class RefreshSeriesWorker(QtCore.QObject):
+    """Worker to update the serie from the online database."""
+    serieUpdated = QtCore.pyqtSignal(int)
+    serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
+
+    def __init__(self, parent=None):
+        super(RefreshSeriesWorker, self).__init__(parent)
+        self.toRefresh = []
+        self.threadPool = QtCore.QThreadPool()
+        self._timer = QtCore.QTimer(self)
+        self._timer.timeout.connect(self.run)
+        self._timer.start(500)
+
+    def run(self):
+        for serieLocalID in self.toRefresh[:]:
+            task = DownloadSerieTask(serieLocalID)
+            runnable = Runnable(task)
+            runnable.task.serieUpdated.connect(self.serieUpdated)
+            runnable.task.serieUpdateStatus.connect(self.serieUpdateStatus)
+            self.threadPool.tryStart(runnable)
+            del self.toRefresh[0]
 
     def addSerie(self, serieLocalID):
         if serieLocalID not in self.toRefresh:

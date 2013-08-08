@@ -90,7 +90,9 @@ class Main(QtGui.QMainWindow):
         runnable.task.updateRequired.connect(self.refreshSeries.addSerie)
         self.threadPool.tryStart(runnable)
         
-        self.syncDbWorker = SyncDbWorker(self)
+        self._thread = QtCore.QThread()
+        self.syncDbWorker = SyncDbWorker()
+        self.syncDbWorker.moveToThread(self._thread)
     
     def currentSerieId(self):
         """Return the current serie ID."""
@@ -571,10 +573,11 @@ class Main(QtGui.QMainWindow):
     def reloadSelectSerie(self):
         """Reload the serie selector."""
         self.selectSerie.blockSignals(True)
+        Serie.deleteSeriesCache()
         currentIndex = self.selectSerie.currentIndex()
         currentIndex = 0 if currentIndex < 0 else currentIndex
+        currentIndex = len(Serie.getSeries())-1 if currentIndex >= len(Serie.getSeries()) else currentIndex
         self.selectSerie.clear()
-        Serie.deleteSeriesCache()
         for s in Serie.getSeries():
             self.selectSerie.addItem(s.title)
         self.selectSerie.setCurrentIndex(currentIndex)

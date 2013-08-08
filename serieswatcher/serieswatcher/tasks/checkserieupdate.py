@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import time
+from datetime import datetime
 from PyQt4 import QtCore
 from ..const import *
+from ..models import Serie
+from ..thetvdb import TheTVDBSerie
 
-class CheckSerieUpdateTask(QtCore.QThread):
-    """Thread to check updates on the series database and
+class CheckSerieUpdateTask(QtCore.QObject):
+    """Task to check updates on the series database and
     synchronize with the local database.
     """
     TIME_BETWEEN_UPDATE = 86400 # a day
