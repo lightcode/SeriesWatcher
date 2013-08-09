@@ -41,6 +41,7 @@ class Main(QtGui.QMainWindow):
     def __init__(self):
         self.currentSerie = None
         self.map = {}
+        self.threadPool = QtCore.QThreadPool()
         
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
@@ -61,12 +62,14 @@ class Main(QtGui.QMainWindow):
         if not Serie.getSeries():
             self.openAddSerie()
         
+        QtCore.QTimer.singleShot(5000, self.checkSerieUpdate)
+
         # Load the player
         try:
             self.player = Player(self)
         except:
             self.player = None
-    
+
     def startThreads(self):
         """Start all threads."""
         self.commandOpen = QtCore.QProcess()
@@ -84,16 +87,17 @@ class Main(QtGui.QMainWindow):
         self.refreshSeries.serieUpdateStatus.connect(self.serieUpdateStatus)
         self.refreshSeries.serieUpdated.connect(self.serieUpdated)
         
-        self.threadPool = QtCore.QThreadPool()
+        self._thread = QtCore.QThread()
+        self.syncDbWorker = SyncDbWorker()
+        self.syncDbWorker.moveToThread(self._thread)
+        self._thread.start()
+    
+    def checkSerieUpdate(self):
         task = CheckSerieUpdateTask()
         runnable = Runnable(task)
         runnable.task.updateRequired.connect(self.refreshSeries.addSerie)
         self.threadPool.tryStart(runnable)
-        
-        self._thread = QtCore.QThread()
-        self.syncDbWorker = SyncDbWorker()
-        self.syncDbWorker.moveToThread(self._thread)
-    
+
     def currentSerieId(self):
         """Return the current serie ID."""
         return self.selectSerie.currentIndex()
@@ -354,8 +358,8 @@ class Main(QtGui.QMainWindow):
         self.viewStatusChanged(False)
     
     def clearSelectionInfos(self):
-        self.selectionTitle.setText("")
-        self.selectionDescription.setText("")
+        self.selectionTitle.setText('')
+        self.selectionDescription.setText('')
         self.footer.hide()
     
     def playFirstEpisode(self):
@@ -445,7 +449,7 @@ class Main(QtGui.QMainWindow):
         ]
         message = messages[status] % args
         self.status.showMessage(message)
-        if self.currentSerieId() == serieLocalID and status != 2:
+        if self.currentSerieId() == serieLocalID and status not in (0, 2):
             self.serieLoaderWorker.forceReload()
     
     def openEditSerie(self):
@@ -589,6 +593,10 @@ class Main(QtGui.QMainWindow):
             Config.config['window_size'] = '%dx%d' % (self.width(),
                                                       self.height())
             Config.save()
+
+        self._thread.quit()
+        self._thread.wait()
+
         QtGui.QMainWindow.closeEvent(self, e)
     
     def favoriteChanged(self, value):
@@ -840,7 +848,7 @@ class Main(QtGui.QMainWindow):
         self.nbEpisodes.clear()
         
         self.filter.setCounters(0, 0, 0, 0, 0)
-    
+
     def serieLoaded(self, serie):
         """Triggered when the serie is loaded."""
         self.currentSerie = serie
@@ -857,7 +865,7 @@ class Main(QtGui.QMainWindow):
         # Show infos about the serie
         image = QtGui.QPixmap(self.currentSerie.bannerPath)
         self.imageSerie.setPixmap(image)
-        desc = self.currentSerie.description.replace("\n", '<br/>')
+        desc = self.currentSerie.description.replace('\n', '<br/>')
         firstAired = self.currentSerie.firstAired
         if firstAired:
             firstAired = firstAired.strftime('%d/%m/%Y')
@@ -870,15 +878,17 @@ class Main(QtGui.QMainWindow):
         listSeasons = ['Saison %d' % x for x in range(1, nbSeasons + 1)]
         self.selectSeason.addItems(listSeasons)
         self.selectSeason.setCurrentIndex(0)
-        
         self.selectSeason.blockSignals(False)
+
+        self.filter.blockSignals(True)
+        if self.currentSerie.path:
+            self.filter.setSelection(self.filter.dl)
+        else:
+            self.filter.setSelection(self.filter.all)
+        self.filter.blockSignals(False)
+
         self.refreshScreen()
         
-        if not self.currentSerie.path:
-            self.filter.setSelection(self.filter.all)
-        else:
-            self.filter.setSelection(self.filter.dl)
-    
     def serieUpdated(self, serieLocalID):
         """Triggered when a serie is updated."""
         self.status.showMessage('')

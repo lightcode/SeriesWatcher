@@ -184,7 +184,7 @@ class SearchWorker(QtCore.QObject):
         super(SearchWorker, self).__init__(parent)
         self._timer = QtCore.QTimer(self)
         self._timer.timeout.connect(self.run)
-        self._timer.start(100)
+        self._timer.start(500)
         self.textSearch = ''
         self.lastTextSearch = ''
 
@@ -201,9 +201,8 @@ class SearchWorker(QtCore.QObject):
             if score > 0:
                 listEpisodes.append((score, e))
         
-        func = lambda x: x[0]
-        listEpisodes = sorted(listEpisodes, key=func, reverse=True)
-        listEpisodes = [e for t, e in listEpisodes]
+        listEpisodes.sort(key=lambda e: e[0], reverse=True)
+        listEpisodes = [e for score, e in listEpisodes]
         self.searchFinished.emit(listEpisodes)
 
     def changeText(self, search):
@@ -222,6 +221,7 @@ class EpisodesLoaderThread(QtCore.QThread):
             if qId == self.lastQuery:
                 self.episodeLoaded.emit(x, y, episode)
         map(map_, self.episodes)
+        self.episodes = []
     
     def newQuery(self):
         self.lastQuery += 1
