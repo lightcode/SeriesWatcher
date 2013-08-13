@@ -33,7 +33,7 @@ class DownloadSerieTask(QtCore.QObject):
         try:
             tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         except Exception as e:
-            qDebug("Error download" + e)
+            qDebug("Error download" + str(e))
             return False
         
         # Info serie
@@ -176,6 +176,27 @@ class SerieLoaderWorker(QtCore.QObject):
         self._forceReload = True
 
 
+class SearchTask(QtCore.QObject):
+    searchFinished = QtCore.pyqtSignal(list)
+
+    def __init__(self, textSearch, parent=None):
+        super(SearchTask, self).__init__(parent)
+        self.textSearch = textSearch
+
+    def run(self):
+        textSearch = self.textSearch
+        listEpisodes = []
+        for e in self.episodes:
+            score = 1000 if search(textSearch, split(e.title)) else 0
+            score += search2(textSearch, split(e.description))
+            if score > 0:
+                listEpisodes.append((score, e))
+        
+        listEpisodes.sort(key=lambda e: e[0], reverse=True)
+        listEpisodes = [e for score, e in listEpisodes]
+        self.searchFinished.emit(listEpisodes)
+
+
 class SearchWorker(QtCore.QObject):
     """Thread to search in the database."""
     searchFinished = QtCore.pyqtSignal(list)
@@ -187,23 +208,17 @@ class SearchWorker(QtCore.QObject):
         self._timer.start(500)
         self.textSearch = ''
         self.lastTextSearch = ''
+        self.threadPool = QtCore.QThreadPool()
 
     def run(self):
         if self.lastTextSearch != self.textSearch:
             self.lastTextSearch = self.textSearch
-            self.search(self.lastTextSearch)
-    
-    def search(self, textSearch):
-        listEpisodes = []
-        for e in self.parent().currentSerie.episodes:
-            score = 1000 if search(textSearch, split(e.title)) else 0
-            score += search2(textSearch, split(e.description))
-            if score > 0:
-                listEpisodes.append((score, e))
-        
-        listEpisodes.sort(key=lambda e: e[0], reverse=True)
-        listEpisodes = [e for score, e in listEpisodes]
-        self.searchFinished.emit(listEpisodes)
+
+            task = SearchTask(self.lastTextSearch)
+            runnable = Runnable(task)
+            runnable.task.searchFinished.connect(self.searchFinished)
+            runnable.task.episodes = self.parent().currentSerie.episodes
+            self.threadPool.tryStart(runnable)
 
     def changeText(self, search):
         self.textSearch = search

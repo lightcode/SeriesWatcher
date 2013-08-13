@@ -90,7 +90,7 @@ class EpisodesViewer(QtGui.QTableWidget):
         indexes = self.selectedIndexes()
         if len(indexes) == 1:
             r, c = indexes[0].row(), indexes[0].column()
-            title = self.cellWidget(r, c).title.text()[17:]
+            title = self.cellWidget(r, c).episode.title
             self.pressPaper.setText(title)
     
     def markAsView(self):
@@ -119,7 +119,7 @@ class EpisodesViewer(QtGui.QTableWidget):
         if oldNbColumn != self.nbColumn:
             self.refreshEpisodes.emit()
     
-    def resizeEvent(self, size):
-        QtGui.QTableWidget.resizeEvent(self, size)
-        self.nbColumn = size.size().width() // 260
-        self.columnWidth = size.size().width() // self.nbColumn
+    def resizeEvent(self, event):
+        QtGui.QTableWidget.resizeEvent(self, event)
+        self.nbColumn = event.size().width() // 260
+        self.columnWidth = event.size().width() // self.nbColumn

@@ -11,9 +11,9 @@ import os.path
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.5 dev'
+TEXT_VERSION = u'1.5 bêta'
 VERSION = '1.4.0'
-RELEASE_DATE = u'Mai 2013'
+RELEASE_DATE = u'Août 2013'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'

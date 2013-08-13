@@ -65,12 +65,32 @@ class VideoItem(QtGui.QWidget):
         pixmap.convertFromImage(image)
         self.img.setPixmap(pixmap)
     
+    def resizeEvent(self, event):
+        super(VideoItem, self).resizeEvent(event)
+        self.setTitle(self.episode.title)
+
     def setTitle(self, titleStr):
-        maxWidth = self.title.width() * 1.5
+        lines = []
+        currentSize = []
         font = self.title.font()
         fontm = QtGui.QFontMetricsF(font)
-        titleStr = fontm.elidedText(titleStr, Qt.ElideRight, maxWidth)
-        self.title.setText(titleStr)
+        maxWidth = self.title.width()
+        words = titleStr.split(' ')
+        
+        for i in range(2):
+            lines.append('')
+            currentSize.append(0)
+            for word in words[:]:
+                newSize = currentSize[i] + fontm.width(word) + fontm.width(' ')
+                if newSize < maxWidth:
+                    del words[0]
+                    lines[i] += word + ' '
+                    currentSize[i] = newSize
+                else:
+                    break
+
+        title = '\n'.join(lines) + ('...' if words else '')
+        self.title.setText(title)
     
     def setFavorite(self, value):
         if value:

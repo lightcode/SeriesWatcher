@@ -158,7 +158,7 @@ class Main(QtGui.QMainWindow):
         
         btnRand = QtGui.QPushButton(QIcon(ICONS + 'random.png'), '')
         btnRand.setFlat(True)
-        btnRand.setToolTip(u"Jouer un épisode au hasard")
+        btnRand.setToolTip(u'Jouer un épisode au hasard')
         btnRand.clicked.connect(self.playRandomEpisode)
         
         self.searchBar = QtGui.QLineEdit()
@@ -267,15 +267,15 @@ class Main(QtGui.QMainWindow):
         self.setCentralWidget(win)
         
         # Shortcuts
-        shortSearch = QtGui.QShortcut('Ctrl+F', self)
-        shortSearch.activated.connect(self.searchBar.setFocus)
-        
-        QtGui.QShortcut('F', self).activated\
-                                    .connect(self.toggleSelectionFavorite)
-        QtGui.QShortcut('V', self).activated\
-                                    .connect(self.toggleSelectionViewed)
-        QtGui.QShortcut('P', self).activated.connect(self.playClicked)
-    
+        sortcuts = [
+            ('Ctrl+F', self.searchBar.setFocus),
+            ('F', self.toggleSelectionFavorite),
+            ('V', self.toggleSelectionViewed),
+            ('P', self.playClicked)
+        ]
+        for key, action in sortcuts:
+            QtGui.QShortcut(key, self).activated.connect(action)
+
     def createMenu(self):
         """Add menu bar in the window."""
         self.menubar = self.menuBar()
@@ -431,12 +431,12 @@ class Main(QtGui.QMainWindow):
         """Mark all episode as 'view'."""
         for e in self.currentSerie.episodes:
             e.setView()
-        self.refreshScreen()
+        self.refreshEpisodes()
     
     def reloadMenu(self):
         """Reload the window."""
         self.currentSerie.loadSerie()
-        self.refreshScreen()
+        self.refreshEpisodes()
     
     def serieUpdateStatus(self, serieLocalID, status, args):
         """Update the satus in satus bar when the program perform
@@ -652,7 +652,7 @@ class Main(QtGui.QMainWindow):
     def searchFinished(self, listEpisodes):
         """Triggered when the search is finish."""
         if self.searchBar.text() == '':
-            self.refreshScreen()
+            self.refreshEpisodes()
         else:
             self.showEpisode(listEpisodes)
     
@@ -764,15 +764,18 @@ class Main(QtGui.QMainWindow):
         return False
     
     def showEpisode(self, episodes):
+        self._episodesOnScreen = list(episodes)
+        self.refreshScreen()
+
+    def refreshScreen(self):
         """Display episodes in the grid."""
         self.clearSelectionInfos()
         self.episodesLoader.newQuery()
         self.episodes.clear()
         self.map.clear()
-        imgDir = '%s%s/%%s.jpg' % (SERIES_IMG, self.currentSerie.uuid)
         nbColumn = self.episodes.nbColumn
         count = 0
-        for i, e in enumerate(episodes):
+        for i, e in enumerate(self._episodesOnScreen):
             (x, y) = (i // nbColumn, i % nbColumn)
             self.map[x, y] = e
             self.episodesLoader.addEpisode(x, y, e)
@@ -827,7 +830,7 @@ class Main(QtGui.QMainWindow):
               and (season != 0 or filterSeason == 0):
                 yield e
     
-    def refreshScreen(self):
+    def refreshEpisodes(self):
         """Refresh the sreen."""
         self.searchBar.clear()
         if self.currentSerie:
@@ -887,7 +890,7 @@ class Main(QtGui.QMainWindow):
             self.filter.setSelection(self.filter.all)
         self.filter.blockSignals(False)
 
-        self.refreshScreen()
+        self.refreshEpisodes()
         
     def serieUpdated(self, serieLocalID):
         """Triggered when a serie is updated."""

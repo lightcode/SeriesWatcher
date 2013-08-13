@@ -83,19 +83,25 @@ class Player(QtGui.QMainWindow):
         self.timer = QtCore.QTimer(self)
         self.timer.setInterval(200)
         self.timer.timeout.connect(self.updateUI)
+
+        shortcuts = [
+            (Qt.Key_Escape, self.fullScreen),
+            (Qt.Key_Space, self.playPause),
+            (Qt.Key_MediaPlay, self.playPause),
+            (Qt.Key_MediaStop, self.stop),
+            (Qt.Key_Plus, self.volumeUp),
+            (Qt.Key_Minus, self.volumeDown),
+            (Qt.CTRL + Qt.Key_Left, self.previousEpisode),
+            (Qt.CTRL + Qt.Key_Right, self.nextEpisode),
+            (Qt.Key_Left, self.speedDown),
+            (Qt.Key_Right, self.speedUp),
+            (Qt.Key_B, self.showOptions),
+            (Qt.Key_V, self.showOptions),
+            (Qt.Key_I, self.showBar)
+        ]
         
-        QShortcut(Qt.Key_Escape, self).activated.connect(self.fullScreen)
-        QShortcut(Qt.Key_Space, self).activated.connect(self.playPause)
-        QShortcut(Qt.Key_MediaPlay, self).activated.connect(self.playPause)
-        QShortcut(Qt.Key_MediaStop, self).activated.connect(self.stop)
-        QShortcut(Qt.Key_Plus, self).activated.connect(self.volumeUp)
-        QShortcut(Qt.Key_Minus, self).activated.connect(self.volumeDown)
-        QShortcut(Qt.CTRL + Qt.Key_Left, self).activated.connect(self.previousEpisode)
-        QShortcut(Qt.CTRL + Qt.Key_Right, self).activated.connect(self.nextEpisode)
-        QShortcut(Qt.Key_Left, self).activated.connect(self.speedDown)
-        QShortcut(Qt.Key_Right, self).activated.connect(self.speedUp)
-        QShortcut(Qt.Key_B, self).activated.connect(self.showOptions)
-        QShortcut(Qt.Key_V, self).activated.connect(self.showOptions)
+        for key, action in shortcuts:
+            QShortcut(key, self).activated.connect(action)
     
     def showBar(self):
         """Show the player bar."""
