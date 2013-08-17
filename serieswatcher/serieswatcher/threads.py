@@ -29,7 +29,7 @@ class DownloadSerieTask(QtCore.QObject):
     def run(self):
         serie = Serie.getSeries()[self.serieLocalID]
         self.serieUpdateStatus.emit(self.serieLocalID, 0, {'title': serie.title})
-        
+
         try:
             tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
         except Exception as e:
@@ -106,17 +106,12 @@ class SyncDbWorker(QtCore.QObject):
         self.run()
 
     def run(self):
-        for serie in Serie.getSeries():
-            try:
-                serie.syncUpdate()
-            except OperationalError as msg:
-                qDebug('SQLObject Error : %s' % msg)
         for episode in Episode.select():
             try:
                 episode.syncUpdate()
             except OperationalError as msg:
                 qDebug('SQLObject Error : %s' % msg)
-        QtCore.QTimer.singleShot(500, self.run)
+        QtCore.QTimer.singleShot(2000, self.run)
 
 
 class RefreshSeriesWorker(QtCore.QObject):
@@ -126,24 +121,32 @@ class RefreshSeriesWorker(QtCore.QObject):
 
     def __init__(self, parent=None):
         super(RefreshSeriesWorker, self).__init__(parent)
-        self.toRefresh = []
+        self.toRefresh = set()
+        self.updateInProgress = set()
         self.threadPool = QtCore.QThreadPool()
         self._timer = QtCore.QTimer(self)
         self._timer.timeout.connect(self.run)
         self._timer.start(500)
 
     def run(self):
-        for serieLocalID in self.toRefresh[:]:
+        for serieLocalID in self.toRefresh.copy():
+            if serieLocalID in self.updateInProgress:
+                continue
             task = DownloadSerieTask(serieLocalID)
             runnable = Runnable(task)
-            runnable.task.serieUpdated.connect(self.serieUpdated)
+            runnable.task.serieUpdated.connect(self._serieUpdated)
             runnable.task.serieUpdateStatus.connect(self.serieUpdateStatus)
             self.threadPool.tryStart(runnable)
-            del self.toRefresh[0]
+            self.toRefresh.discard(serieLocalID)
+            self.updateInProgress.add(serieLocalID)
+    
+    def _serieUpdated(self, serieLocalID):
+        self.updateInProgress.discard(serieLocalID)
+        self.serieUpdated.emit(serieLocalID)
 
     def addSerie(self, serieLocalID):
-        if serieLocalID not in self.toRefresh:
-            self.toRefresh.append(serieLocalID)
+        if serieLocalID not in self.updateInProgress:
+            self.toRefresh.add(serieLocalID)
 
 
 class SerieLoaderWorker(QtCore.QObject):

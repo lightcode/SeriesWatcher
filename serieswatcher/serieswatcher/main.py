@@ -166,11 +166,11 @@ class Main(QtGui.QMainWindow):
         self.searchBar.textChanged.connect(self.searchChanged)
         
         self.selectSeason = QtGui.QComboBox()
-        self.selectSeason.currentIndexChanged.connect(self.refreshScreen)
+        self.selectSeason.currentIndexChanged.connect(self.refreshEpisodes)
         self.selectSeason.setMinimumContentsLength(18)
         
         self.filter = FilterMenu()
-        self.filter.filterChanged.connect(self.refreshScreen)
+        self.filter.filterChanged.connect(self.refreshEpisodes)
         
         filterBar = QtGui.QHBoxLayout()
         filterBar.addWidget(btnPlay)

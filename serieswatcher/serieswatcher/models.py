@@ -44,7 +44,7 @@ class Serie(SQLObject):
     
     class sqlmeta:
         defaultOrder = 'pos'
-        lazyUpdate = True
+        #lazyUpdate = True
     
     def isLoaded(self):
         """Return True if the serie is completly

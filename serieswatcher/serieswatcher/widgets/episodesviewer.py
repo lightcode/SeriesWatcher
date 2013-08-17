@@ -39,13 +39,14 @@ class EpisodesViewer(QtGui.QTableWidget):
     def redrawImages(self):
         for r in xrange(self.rowCount()):
             posY = self.rowViewportPosition(r)
-            for c in xrange(self.columnCount()):
-                if -self.rowHeight <= posY <= self.height():
+            if -self.rowHeight <= posY <= self.height():
+                for c in xrange(self.columnCount()):
                     try:
                         self.cellWidget(r, c).showImage()
                     except AttributeError:
                         pass
-                else:
+            else:
+                for c in xrange(self.columnCount()):
                     try:
                         self.cellWidget(r, c).delImage()
                     except AttributeError:
