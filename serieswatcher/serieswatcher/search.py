@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 __all__ = ['split', 'search', 'search2']
 

@@ -1,100 +1,23 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 __all__ = ['EpisodesLoaderThread', 'SearchWorker', 'RefreshSeriesWorker',
            'SerieLoaderWorker', 'SyncDbWorker']
 
 import time
 import os.path
-from PyQt4.QtCore import Qt
-from datetime import datetime
 from PyQt4 import QtCore, QtGui
+from PyQt4.QtCore import Qt
 from PyQt4.QtCore import qDebug
-from sqlobject.sqlbuilder import AND
 from sqlobject.dberrors import OperationalError
-from .const import *
-from .models import Serie, Episode
-from .search import *
-from .thetvdb import TheTVDBSerie
-from .worker import Runnable
-
-
-class DownloadSerieTask(QtCore.QObject):
-    serieUpdated = QtCore.pyqtSignal(int)
-    serieUpdateStatus = QtCore.pyqtSignal(int, int, dict)
-
-    def __init__(self, serieLocalID, parent=None):
-        super(DownloadSerieTask, self).__init__(parent)
-        self.serieLocalID = serieLocalID
-
-    def run(self):
-        serie = Serie.getSeries()[self.serieLocalID]
-        self.serieUpdateStatus.emit(self.serieLocalID, 0, {'title': serie.title})
-
-        try:
-            tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
-        except Exception as e:
-            qDebug("Error download" + str(e))
-            return False
-        
-        # Info serie
-        serieInfos = tvDb.infos_serie()
-        bannerPath = '%s%s.jpg' % (SERIES_BANNERS, serie.uuid)
-        tvDb.download_banner(bannerPath)
-        
-        if serieInfos is None:
-            return
-        
-        serie.description = serieInfos['description']
-        serie.firstAired = datetime.strptime(serieInfos['firstAired'],
-                                             '%Y-%m-%d')
-        serie.lastUpdated = int(serieInfos['lastUpdated'])
-        self.serieUpdateStatus.emit(self.serieLocalID, 1, {'title': serie.title})
-        
-        # Info episode
-        episodesDb = {(e.season, e.episode) for e in serie.episodes}
-        episodeList = set()
-        for e in tvDb.episodes():
-            number = (e['season'], e['episode'])
-            episodeList.add(number)
-            if e['firstAired']:
-                firstAired = datetime.strptime(e['firstAired'], '%Y-%m-%d')
-            else:
-                firstAired = None
-            if number in episodesDb:
-                episode = list(Episode.select(
-                    AND(Episode.q.season==int(e['season']),
-                    Episode.q.episode==int(e['episode']),
-                    Episode.q.serie==serie)))[0]
-                episode.firstAired = firstAired
-                episode.title = unicode(e['title'])
-                episode.description = unicode(e['description'])
-            else:
-                Episode(
-                    title = unicode(e['title']),
-                    description = unicode(e['description']),
-                    season = int(e['season']),
-                    episode = int(e['episode']),
-                    firstAired = firstAired,
-                    serie = serie
-                )
-        
-        toDelete = episodesDb - episodeList
-        for season, episode in toDelete:
-            Episode.deleteBy(serie=serie, season=season, episode=episode)
-        
-        # Create image path
-        imgDir = SERIES_IMG + serie.uuid
-        if not os.path.isdir(imgDir):
-            os.mkdir(imgDir)
-        
-        # Miniature DL
-        for i, nbImages in tvDb.download_miniatures(imgDir):
-            self.serieUpdateStatus.emit(self.serieLocalID, 2,
-                {'title': serie.title, 'nb': i, 'nbImages': nbImages})
-        
-        self.serieUpdated.emit(self.serieLocalID)
-        serie.lastUpdate = datetime.now()
-        serie.setLoaded(True)
+from serieswatcher.const import *
+from serieswatcher.models import Serie, Episode
+from serieswatcher.search import *
+from serieswatcher.worker import Runnable
+from serieswatcher.tasks.downloadserie import DownloadSerieTask
 
 
 class SyncDbWorker(QtCore.QObject):

@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
-from ..const import ICONS
+from serieswatcher.const import ICONS
 
 class EpisodesViewer(QtGui.QTableWidget):
     pressEnter = QtCore.pyqtSignal('QModelIndex')
@@ -35,6 +38,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.imageTimer = QtCore.QTimer(self)
         self.imageTimer.timeout.connect(self.redrawImages)
         self.imageTimer.start(250)
+    
+    def resizeEvent(self, event):
+        QtGui.QTableWidget.resizeEvent(self, event)
+        self.nbColumn = event.size().width() // 260
+        self.columnWidth = event.size().width() // self.nbColumn
     
     def redrawImages(self):
         for r in xrange(self.rowCount()):
@@ -69,14 +77,24 @@ class EpisodesViewer(QtGui.QTableWidget):
         
         menu = QtGui.QMenu()
         if btnMarkAsView or nbEpisode > 1:
-            menu.addAction(QIcon(ICONS + 'check.png'), 'Marquer comme vu', self.markAsView)
+            menu.addAction(
+                QIcon(ICONS + 'check.png'), 'Marquer comme vu', 
+                self.markAsView
+            )
         if not btnMarkAsView or nbEpisode > 1:
-            menu.addAction(QIcon(ICONS + 'uncheck.png'), 'Marquer comme non vu', self.markAsNotView)
-        menu.addAction(QIcon(ICONS + 'play.png'), 'Play', self.playClicked)
+            menu.addAction(
+                QIcon(ICONS + 'uncheck.png'), 'Marquer comme non vu', 
+                self.markAsNotView
+            )
+
+        menu.addAction(QIcon(ICONS + 'play.png'), 'Play',
+                       self.playClicked)
         if btnFavorite or nbEpisode > 1:
-            menu.addAction(QIcon(ICONS + 'star.png'), 'Ajouter aux favoris', self.favorite)
+            menu.addAction(QIcon(ICONS + 'star.png'), 'Ajouter aux favoris', 
+                           self.favorite)
         if not btnFavorite or nbEpisode > 1:
-            menu.addAction(QIcon(ICONS + 'unstar.png'), 'Enlever des favoris', self.unfavorite)
+            menu.addAction(QIcon(ICONS + 'unstar.png'), 'Enlever des favoris',
+                           self.unfavorite)
         menu.addAction('Copier le titre', self.copyTitle)
         menu.exec_(self.mapToGlobal(pos))
     
@@ -119,8 +137,3 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.setColumnCount(self.nbColumn)
         if oldNbColumn != self.nbColumn:
             self.refreshEpisodes.emit()
-    
-    def resizeEvent(self, event):
-        QtGui.QTableWidget.resizeEvent(self, event)
-        self.nbColumn = event.size().width() // 260
-        self.columnWidth = event.size().width() // self.nbColumn

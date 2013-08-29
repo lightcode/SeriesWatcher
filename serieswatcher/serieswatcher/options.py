@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from config import Config
-#from hashlib import sha512
 from PyQt4 import QtCore, QtGui
-from .widgets.selectfile import SelectFile
+from serieswatcher.widgets.selectfile import SelectFile
 
 
 RANDOM_TIMES = [(u'Désactiver', 0),

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 __all__ = ['VERSION', 'TEXT_VERSION', 'EXTENSIONS',
            'VERSION_FILE', 'ERROR_PLAYER_LOAD',
            'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
@@ -11,7 +14,7 @@ import os.path
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.5 bêta'
+TEXT_VERSION = u'1.5 bêta 2'
 VERSION = '1.4.0'
 RELEASE_DATE = u'Août 2013'
 

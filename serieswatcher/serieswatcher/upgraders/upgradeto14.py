@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import sys
 import os
@@ -6,8 +10,8 @@ import os
 sys.path.insert(0, os.path.abspath('../..'))
 from sqlobject import *
 
-from ..models import Serie, Episode
-from ..const import VERSION_FILE, SERIES_DATABASE
+from serieswatcher.models import Serie, Episode
+from serieswatcher.const import VERSION_FILE, SERIES_DATABASE
 
 sqlhub.processConnection = connectionForURI('sqlite:///' + SERIES_DATABASE)
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import os
 import shutil
-from .compatserie import Config as OldConfig
-from .compatserie import Serie as OldSerie
-from ..models import Serie, Episode
-from ..const import VERSION_FILE
+from upgraders.compatserie import Config as OldConfig
+from upgraders.compatserie import Serie as OldSerie
+from serieswatcher.models import Serie, Episode
+from serieswatcher.const import VERSION_FILE
 
 # 1.2 to 1.3 upgrader
 

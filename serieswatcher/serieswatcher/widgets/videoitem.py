@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
-from ..const import ICONS
-from ..worker import Runnable
+from serieswatcher.const import ICONS
+from serieswatcher.worker import Runnable
 
 
 class GetCover(QtCore.QObject):
@@ -18,7 +21,8 @@ class GetCover(QtCore.QObject):
     
     def run(self):
         image = QtGui.QImage(self._coverPath)
-        image = image.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        image = image.scaled(120, 120, Qt.KeepAspectRatio, 
+                             Qt.SmoothTransformation)
         self.coverLoaded.emit(image)
 
 
@@ -58,6 +62,14 @@ class VideoItem(QtGui.QWidget):
         # Set params :
         self.setStatus(episode.status)
         self.setFavorite(episode.favorite)
+
+    def showImage(self):
+        if not self._coverShown:
+            task = GetCover(self.episode.cover)
+            runnable = Runnable(task)
+            runnable.task.coverLoaded.connect(self.setImage)
+            self.threadPool.tryStart(runnable)
+            self._coverShown = True
     
     def refresh(self):
         self.setStatus(self.episode.status)
@@ -67,14 +79,6 @@ class VideoItem(QtGui.QWidget):
         if self._coverShown:
             self.img.clear()
             self._coverShown = False
-    
-    def showImage(self):
-        if not self._coverShown:
-            task = GetCover(self.episode.cover)
-            runnable = Runnable(task)
-            runnable.task.coverLoaded.connect(self.setImage)
-            self.threadPool.tryStart(runnable)
-            self._coverShown = True
     
     def setImage(self, image):
         pixmap = QtGui.QPixmap()
@@ -110,7 +114,8 @@ class VideoItem(QtGui.QWidget):
     
     def setFavorite(self, value):
         if value:
-            head = '<b>%s <img src="%sstar.min.png"/></b>' % (self.episode.number, ICONS)
+            head = '<b>%s <img src="%sstar.min.png"/></b>' % \
+                                        (self.episode.number, ICONS)
         else:
             head = '<b>%s</b>' % (self.episode.number)
         self.head.setText(head)

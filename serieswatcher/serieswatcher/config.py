@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import codecs
 import os.path
 from configparser import SafeConfigParser
-from .const import *
+from serieswatcher.const import *
 
 
 class Config(object):

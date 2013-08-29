@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import re
 import sys
 import os.path
@@ -8,7 +11,7 @@ from glob import iglob
 from uuid import uuid1
 from itertools import chain
 from datetime import datetime, date
-from .const import *
+from serieswatcher.const import *
 
 sys.path.insert(0, os.path.abspath('..'))
 from sqlobject import *
@@ -79,16 +82,18 @@ class Serie(SQLObject):
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
             if os.path.splitext(f)[1] in EXTENSIONS:
+                search = re.search(self.PATTERN_FILE, os.path.basename(f))
                 try:
-                    numbers = re.search(self.PATTERN_FILE, os.path.basename(f)).groups()
+                    numbers = search.groups()
                 except AttributeError:
                     continue
                 else:
-                    episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
+                    episodeID = '%02d-%02d' % \
+                                            (int(numbers[0]), int(numbers[1]))
                     self.episodesAvailable[episodeID] = f
                     if numbers[2]:
                         episodeID = '%02d-%02d' % \
-                                    (int(numbers[0]), int(numbers[2]))
+                                            (int(numbers[0]), int(numbers[2]))
                         self.episodesAvailable[episodeID] = f    
     
     def loadEpisodes(self):
@@ -140,7 +145,8 @@ class Serie(SQLObject):
     def _get_episodes(self):
         """Returns the episode list."""
         if self._cacheEpisodes is None:
-            self._cacheEpisodes = list(Episode.select(Episode.q.serieID==self.id))
+            cursor = Episode.select(Episode.q.serieID==self.id)
+            self._cacheEpisodes = list(cursor)
         return self._cacheEpisodes
 
 

@@ -1,14 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from models import Serie
 from thetvdb import TheTVDB
 from PyQt4 import QtCore, QtGui
-from PyQt4.QtGui import QMessageBox
+from PyQt4.QtGui import QMessageBox, QDialogButtonBox
 from languagescodes import codeToLocal
-from .config import Config
-from .widgets.selectfolder import SelectFolder
-from .worker import Runnable
+from serieswatcher.config import Config
+from serieswatcher.widgets.selectfolder import SelectFolder
+from serieswatcher.worker import Runnable
 
 
 class MakeSearch(QtCore.QObject):
@@ -66,10 +69,10 @@ class AddSerie(QtGui.QDialog):
         groupSelect.setLayout(selectLayout)
         
         # Button box
-        buttonBox = QtGui.QDialogButtonBox()
-        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
-        self.forwardBtn = buttonBox.addButton('Suivant',
-                                              QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox = QDialogButtonBox()
+        buttonBox.addButton('Annuler', QDialogButtonBox.RejectRole)
+        self.forwardBtn = buttonBox.addButton('Suivant', 
+                                              QDialogButtonBox.AcceptRole)
         self.forwardBtn.clicked.connect(self.goSecondPane)
         self.forwardBtn.setDisabled(True)
         buttonBox.rejected.connect(self.close)
@@ -102,11 +105,11 @@ class AddSerie(QtGui.QDialog):
         groupDirectory.setLayout(layoutDir)
         
         # Button box
-        buttonBox = QtGui.QDialogButtonBox()
-        firstLayoutBtn = buttonBox.addButton(u'Précédent',
-                                             QtGui.QDialogButtonBox.ActionRole)
-        buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
-        buttonBox.addButton(u'Terminé', QtGui.QDialogButtonBox.AcceptRole)
+        buttonBox = QDialogButtonBox()
+        firstLayoutBtn = buttonBox.addButton(u'Précédent', 
+                                             QDialogButtonBox.ActionRole)
+        buttonBox.addButton('Annuler', QDialogButtonBox.RejectRole)
+        buttonBox.addButton(u'Terminé', QDialogButtonBox.AcceptRole)
         firstLayoutBtn.clicked.connect(self.goFirstPane)
         buttonBox.rejected.connect(self.close)
         buttonBox.accepted.connect(self.validate)

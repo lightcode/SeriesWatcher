@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import os
 import urllib
 from xml.etree import cElementTree
@@ -111,11 +114,5 @@ class TheTVDBSerie(TheTVDB):
 
 
 if __name__ == '__main__':
-    #tvdbSerie = TheTVDBSerie(71663, 'fr')
-    #print tvDbSerie.last_update()
-    #print tvDbSerie.infos_serie()
-    #for e in tvDbSerie.episodes(''):
-    #    print e
     tvdb = TheTVDB()
-    #print list(tvdb.search_serie('simpson', 'fr'))
     tvdb.get_languages()

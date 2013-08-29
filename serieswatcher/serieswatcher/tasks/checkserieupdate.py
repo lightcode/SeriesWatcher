@@ -1,11 +1,15 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import time
 from datetime import datetime
 from PyQt4 import QtCore
-from ..const import *
-from ..models import Serie
-from ..thetvdb import TheTVDBSerie
+from serieswatcher.const import *
+from serieswatcher.models import Serie
+from serieswatcher.thetvdb import TheTVDBSerie
 
 class CheckSerieUpdateTask(QtCore.QObject):
     """Task to check updates on the series database and

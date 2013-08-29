@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import math
 import time
 import random
@@ -10,27 +13,27 @@ from datetime import datetime
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QMessageBox, QIcon
-from .const import USER
+from serieswatcher.const import USER
 
 USER_DIR_FOUND = False
 if os.path.isdir(USER):
     USER_DIR_FOUND = True
 
 import desktop
-from .about import About
-from .addserie import AddSerie
-from .config import Config
-from .const import *
-from .editseries import EditSeries
-from .models import Serie, databaseConnect
-from .options import Options
-from .player import Player
-from .threads import *
-from .widgets.videoitem import VideoItem
-from .widgets.filtermenu import FilterMenu
-from .widgets.episodesviewer import EpisodesViewer
-from .worker import Runnable
-from .tasks.checkserieupdate import CheckSerieUpdateTask
+from serieswatcher.about import About
+from serieswatcher.addserie import AddSerie
+from serieswatcher.config import Config
+from serieswatcher.const import *
+from serieswatcher.editseries import EditSeries
+from serieswatcher.models import Serie, databaseConnect
+from serieswatcher.options import Options
+from serieswatcher.player import Player
+from serieswatcher.threads import *
+from serieswatcher.widgets.videoitem import VideoItem
+from serieswatcher.widgets.filtermenu import FilterMenu
+from serieswatcher.widgets.episodesviewer import EpisodesViewer
+from serieswatcher.worker import Runnable
+from serieswatcher.tasks.checkserieupdate import CheckSerieUpdateTask
 
 
 class Main(QtGui.QMainWindow):
@@ -298,8 +301,8 @@ class Main(QtGui.QMainWindow):
         episodesMenu.addAction(QIcon(ICONS + 'reload.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
         episodesMenu.addAction(QIcon(ICONS + 'check.png'),
-                               u'Marquer comme vue',
-                               self.viewSelectEpisodeMenu).setShortcut('Ctrl+K')
+            u'Marquer comme vue', self.viewSelectEpisodeMenu
+        ).setShortcut('Ctrl+K')
         episodesMenu.addAction(QIcon(ICONS + 'uncheck.png'),
                                u'Marquer comme non vue',
                                self.notViewSelectEpisodeMenu)
@@ -313,7 +316,9 @@ class Main(QtGui.QMainWindow):
         SWMenu.addAction(QIcon(ICONS + 'help.png'), 'A propos', self.openAbout)
     
     def openUpdateWindow(self):
-        """Open a window that ask if the program must update the database."""
+        """Open a window that ask if the program must update the
+        database.
+        """
         r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
                              u"trouvé une ancienne base de données. "
                              u"Voulez-vous l'importer dans la nouvelle "
@@ -524,8 +529,8 @@ class Main(QtGui.QMainWindow):
         self.hideAnimation.setDuration(150)
         self.footer.endGeometry = QtCore.QRect(pos)
         self.footer.startGeometry = QtCore.QRect(pos.x(),
-                                        self.geometry().height(),
-                                        self.footer.geometry().width(), 0)
+            self.geometry().height(), self.footer.geometry().width(), 0
+        )
         self.hideAnimation.setStartValue(self.footer.startGeometry)
         self.hideAnimation.setEndValue(self.footer.endGeometry)
         self.hideAnimation.start()
@@ -582,7 +587,8 @@ class Main(QtGui.QMainWindow):
         Serie.deleteSeriesCache()
         currentIndex = self.selectSerie.currentIndex()
         currentIndex = 0 if currentIndex < 0 else currentIndex
-        currentIndex = len(Serie.getSeries())-1 if currentIndex >= len(Serie.getSeries()) else currentIndex
+        if currentIndex >= len(Serie.getSeries()) :
+            currentIndex = len(Serie.getSeries())-1
         self.selectSerie.clear()
         for s in Serie.getSeries():
             self.selectSerie.addItem(s.title)
