@@ -6,11 +6,27 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
 from ..const import ICONS
+from ..worker import Runnable
+
+
+class GetCover(QtCore.QObject):
+    coverLoaded = QtCore.pyqtSignal(QtGui.QImage)
+    
+    def __init__(self, coverPath):
+        super(GetCover, self).__init__()
+        self._coverPath = coverPath
+    
+    def run(self):
+        image = QtGui.QImage(self._coverPath)
+        image = image.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        self.coverLoaded.emit(image)
 
 
 class VideoItem(QtGui.QWidget):
     def __init__(self, episode):
         super(VideoItem, self).__init__()
+
+        self.threadPool = QtCore.QThreadPool()
         
         self.episode = episode
         self._coverShown = False
@@ -44,9 +60,8 @@ class VideoItem(QtGui.QWidget):
         self.setFavorite(episode.favorite)
     
     def refresh(self):
-        episode = self.episode
-        self.setStatus(episode.status)
-        self.setFavorite(episode.favorite)
+        self.setStatus(self.episode.status)
+        self.setFavorite(self.episode.favorite)
     
     def delImage(self):
         if self._coverShown:
@@ -55,9 +70,10 @@ class VideoItem(QtGui.QWidget):
     
     def showImage(self):
         if not self._coverShown:
-            image = QtGui.QImage(self.episode.cover)
-            image = image.scaled(120, 120, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            self.setImage(image)
+            task = GetCover(self.episode.cover)
+            runnable = Runnable(task)
+            runnable.task.coverLoaded.connect(self.setImage)
+            self.threadPool.tryStart(runnable)
             self._coverShown = True
     
     def setImage(self, image):

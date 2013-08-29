@@ -42,6 +42,7 @@ class Main(QtGui.QMainWindow):
         self.currentSerie = None
         self.map = {}
         self.threadPool = QtCore.QThreadPool()
+        self.firstRefresh = True
         
         super(Main, self).__init__()
         self.setWindowTitle('Series Watcher %s' % TEXT_VERSION)
@@ -67,8 +68,9 @@ class Main(QtGui.QMainWindow):
         # Load the player
         try:
             self.player = Player(self)
-        except:
+        except Exception as e:
             self.player = None
+            print e
 
     def startThreads(self):
         """Start all threads."""
@@ -769,6 +771,10 @@ class Main(QtGui.QMainWindow):
 
     def refreshScreen(self):
         """Display episodes in the grid."""
+        # Don't refresh the screen the first time
+        if self.firstRefresh:
+            self.firstRefresh = False
+            return
         self.clearSelectionInfos()
         self.episodesLoader.newQuery()
         self.episodes.clear()

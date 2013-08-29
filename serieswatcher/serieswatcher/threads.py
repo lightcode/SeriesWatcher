@@ -234,11 +234,11 @@ class EpisodesLoaderThread(QtCore.QThread):
     lastQuery = 0
     
     def run(self):
-        def map_(episode):
+        for episode in self.episodes:
             qId, x, y, episode = episode
             if qId == self.lastQuery:
                 self.episodeLoaded.emit(x, y, episode)
-        map(map_, self.episodes)
+                self.msleep(15)
         self.episodes = []
     
     def newQuery(self):
