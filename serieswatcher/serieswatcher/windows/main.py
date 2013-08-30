@@ -20,15 +20,18 @@ if os.path.isdir(USER):
     USER_DIR_FOUND = True
 
 import desktop
-from serieswatcher.about import About
-from serieswatcher.addserie import AddSerie
+from serieswatcher.windows.about import About
+from serieswatcher.windows.addserie import AddSerie
 from serieswatcher.config import Config
 from serieswatcher.const import *
-from serieswatcher.editseries import EditSeries
+from serieswatcher.windows.editseries import EditSeries
 from serieswatcher.models import Serie, databaseConnect
-from serieswatcher.options import Options
-from serieswatcher.player import Player
-from serieswatcher.threads import *
+from serieswatcher.windows.options import Options
+from serieswatcher.windows.player import Player
+from serieswatcher.workers.refreshseries import RefreshSeriesWorker
+from serieswatcher.workers.syncdb import SyncDbWorker
+from serieswatcher.workers.search import SearchWorker
+from serieswatcher.workers.serieloader import SerieLoaderWorker
 from serieswatcher.widgets.videoitem import VideoItem
 from serieswatcher.widgets.filtermenu import FilterMenu
 from serieswatcher.widgets.episodesviewer import EpisodesViewer
@@ -75,12 +78,21 @@ class Main(QtGui.QMainWindow):
             self.player = None
             print e
 
+    def closeEvent(self, e):
+        """Triggered before the window is close."""
+        if not self.isMaximized():
+            Config.config['window_size'] = '%dx%d' % (self.width(),
+                                                      self.height())
+            Config.save()
+
+        self._thread.quit()
+        self._thread.wait()
+
+        QtGui.QMainWindow.closeEvent(self, e)
+
     def startThreads(self):
         """Start all threads."""
         self.commandOpen = QtCore.QProcess()
-        
-        self.episodesLoader = EpisodesLoaderThread(self)
-        self.episodesLoader.episodeLoaded.connect(self.episodeLoaded)
         
         self.serieLoaderWorker = SerieLoaderWorker(self)
         self.serieLoaderWorker.serieLoaded.connect(self.serieLoaded)
@@ -319,11 +331,11 @@ class Main(QtGui.QMainWindow):
         """Open a window that ask if the program must update the
         database.
         """
-        r = QMessageBox.question(self, u'Mise à jour', u"Series Watcher a "
-                             u"trouvé une ancienne base de données. "
-                             u"Voulez-vous l'importer dans la nouvelle "
-                             u"version ?",
-                             QMessageBox.Yes | QMessageBox.No)
+        r = QMessageBox.question(
+            self, u'Mise à jour', u"Series Watcher a trouvé une ancienne "
+                                  u"base de données. Voulez-vous l'importer "
+                                  u"dans la nouvelle version ?",
+            QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
             import upgrader
         elif r == QMessageBox.No:
@@ -371,10 +383,13 @@ class Main(QtGui.QMainWindow):
     
     def playFirstEpisode(self):
         """Play the first episode."""
+        def getNumber(episode):
+            return episode.number
+
         # Try to watch the first not viewed episode
         newEpisodes = (e for e in self.map.itervalues() if e.status == 2)
         try:
-            firstNewEpisode = min(newEpisodes, key=lambda e: e.number)
+            firstNewEpisode = min(newEpisodes, key=getNumber)
         except ValueError:
             pass
         else:
@@ -387,7 +402,7 @@ class Main(QtGui.QMainWindow):
             lastEpisode = max(episodes, key=lambda e: e.lastView).number
             nextEpisodes = \
                 (e for e in self.map.itervalues() if e.number > lastEpisode)
-            nextEpisode = min(nextEpisodes, key=lambda e: e.number)
+            nextEpisode = min(nextEpisodes, key=getNumber)
         except ValueError:
             pass
         else:
@@ -396,7 +411,7 @@ class Main(QtGui.QMainWindow):
         
         episodes = (e for e in self.map.itervalues())
         try:
-            nextEpisode = min(episodes, key=lambda e: e.number)
+            nextEpisode = min(episodes, key=getNumber)
         except ValueError:
             pass
         else:
@@ -407,6 +422,7 @@ class Main(QtGui.QMainWindow):
     def playRandomEpisode(self):
         """Play a random episode."""
         episodesLongTime = []
+        neverViewEpisodes = []
         otherEpisodes = []
         
         limitDate = datetime.now()
@@ -417,16 +433,21 @@ class Main(QtGui.QMainWindow):
         # Search if there are long time viewed episode
         for e in self.map.itervalues():
             if e.status in (1, 2):
-                if e.lastView is None or e.lastView <= limitDate:
+                # Play episodes view but with none last viewed date
+                if e.lastView is None and e.status == 1:
+                    neverViewEpisodes.append(e)
+                elif e.lastView is None or e.lastView <= limitDate:
                     episodesLongTime.append(e)
                 else:
                     otherEpisodes.append(e)
         
-        if episodesLongTime:
+        if neverViewEpisodes:
+            episode = random.choice(neverViewEpisodes)
+        elif episodesLongTime:
             episode = random.choice(episodesLongTime)
         elif otherEpisodes:
-            episodes = sorted(otherEpisodes, key=lambda e: e.lastView)[-15:]
-            episode = random.choice(episodes)
+            otherEpisodes.sort(key=lambda e: e.lastView)
+            episode = random.choice(otherEpisodes[-15:])
         else:
             return False
         
@@ -528,9 +549,9 @@ class Main(QtGui.QMainWindow):
         self.hideAnimation = QtCore.QPropertyAnimation(self.footer, "geometry")
         self.hideAnimation.setDuration(150)
         self.footer.endGeometry = QtCore.QRect(pos)
-        self.footer.startGeometry = QtCore.QRect(pos.x(),
-            self.geometry().height(), self.footer.geometry().width(), 0
-        )
+        self.footer.startGeometry = QtCore.QRect(
+            pos.x(),self.geometry().height(), 
+            self.footer.geometry().width(), 0)
         self.hideAnimation.setStartValue(self.footer.startGeometry)
         self.hideAnimation.setEndValue(self.footer.endGeometry)
         self.hideAnimation.start()
@@ -595,18 +616,6 @@ class Main(QtGui.QMainWindow):
         self.selectSerie.setCurrentIndex(currentIndex)
         self.selectSerie.blockSignals(False)
     
-    def closeEvent(self, e):
-        """Triggered before the window is close."""
-        if not self.isMaximized():
-            Config.config['window_size'] = '%dx%d' % (self.width(),
-                                                      self.height())
-            Config.save()
-
-        self._thread.quit()
-        self._thread.wait()
-
-        QtGui.QMainWindow.closeEvent(self, e)
-    
     def favoriteChanged(self, value):
         """Triggered when an episode is mark or unmark
         as favorite. This method save in database and refresh
@@ -662,7 +671,7 @@ class Main(QtGui.QMainWindow):
         if self.searchBar.text() == '':
             self.refreshEpisodes()
         else:
-            self.showEpisode(listEpisodes)
+            self.showEpisodes(listEpisodes)
     
     def playClicked(self):
         """Triggered when the user click on play in the
@@ -771,7 +780,7 @@ class Main(QtGui.QMainWindow):
                 return True
         return False
     
-    def showEpisode(self, episodes):
+    def showEpisodes(self, episodes):
         self._episodesOnScreen = list(episodes)
         self.refreshScreen()
 
@@ -782,20 +791,17 @@ class Main(QtGui.QMainWindow):
             self.firstRefresh = False
             return
         self.clearSelectionInfos()
-        self.episodesLoader.newQuery()
         self.episodes.clear()
         self.map.clear()
         nbColumn = self.episodes.nbColumn
-        count = 0
+        nbRows = int(math.ceil(len(self._episodesOnScreen) / float(nbColumn)))
+        self.episodes.setRowCount(nbRows)
+        self.refreshCount()
         for i, e in enumerate(self._episodesOnScreen):
             (x, y) = (i // nbColumn, i % nbColumn)
             self.map[x, y] = e
-            self.episodesLoader.addEpisode(x, y, e)
-            count += 1
-        self.episodesLoader.start()
-        self.refreshCount()
-        nbRows = int(math.ceil(count / float(self.episodes.nbColumn)))
-        self.episodes.setRowCount(nbRows)
+            self.drawEpisode(x, y, e)
+            QtCore.QCoreApplication.processEvents()
     
     def refreshCount(self):
         """Refresh counters."""
@@ -803,9 +809,9 @@ class Main(QtGui.QMainWindow):
         nbNotView = self.currentSerie.nbNotView
         nbEpisodeTotal = self.currentSerie.nbEpisodeTotal
         nbView = self.currentSerie.nbView
-        self.filter.setCounters(nbEpisodeTotal,
-                               self.currentSerie.nbEpisodeNotAvailable,
-                               nbAv, nbNotView, self.currentSerie.nbFavorites)
+        self.filter.setCounters(
+            nbEpisodeTotal, self.currentSerie.nbEpisodeNotAvailable,
+            nbAv, nbNotView, self.currentSerie.nbFavorites)
         
         if nbEpisodeTotal > 0:
             percentageDL = (nbAv/float(nbEpisodeTotal)) * 100
@@ -817,7 +823,7 @@ class Main(QtGui.QMainWindow):
                 % (percentageView, percentageDL)
         self.nbEpisodes.setText(c)
     
-    def episodeLoaded(self, x, y, episode):
+    def drawEpisode(self, x, y, episode):
         """This method add the episode in the episodes grid.
         
         Triggered when an episode is loaded.
@@ -825,7 +831,7 @@ class Main(QtGui.QMainWindow):
         item = VideoItem(episode)
         self.episodes.setCellWidget(x, y, item)
         item.setTitle(episode.title)
-    
+
     def getEpisodes(self):
         """Return the generator of serie's episodes that filtered
         by current filters parameters.
@@ -846,7 +852,7 @@ class Main(QtGui.QMainWindow):
         """Refresh the sreen."""
         self.searchBar.clear()
         if self.currentSerie:
-            self.showEpisode(self.getEpisodes())
+            self.showEpisodes(self.getEpisodes())
     
     def clearSeries(self):
         """Clear all informations about the current serie."""
@@ -884,8 +890,8 @@ class Main(QtGui.QMainWindow):
         firstAired = self.currentSerie.firstAired
         if firstAired:
             firstAired = firstAired.strftime('%d/%m/%Y')
-            self.description.setText(u'%s<hr/>Date de création : %s' \
-                                                    % (desc, firstAired))
+            self.description.setText(
+                u'%s<hr/>Date de création : %s' % (desc, firstAired))
         else:
             self.description.setText(desc)
         

@@ -4,8 +4,8 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-from config import Config
 from PyQt4 import QtCore, QtGui
+from serieswatcher.config import Config
 from serieswatcher.widgets.selectfile import SelectFile
 
 

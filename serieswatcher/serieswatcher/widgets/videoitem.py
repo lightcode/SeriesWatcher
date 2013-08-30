@@ -4,36 +4,17 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-import os.path
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 from serieswatcher.const import ICONS
-from serieswatcher.worker import Runnable
-
-
-class GetCover(QtCore.QObject):
-    coverLoaded = QtCore.pyqtSignal(QtGui.QImage)
-    
-    def __init__(self, coverPath):
-        super(GetCover, self).__init__()
-        self._coverPath = coverPath
-    
-    def run(self):
-        image = QtGui.QImage(self._coverPath)
-        image = image.scaled(120, 120, Qt.KeepAspectRatio, 
-                             Qt.SmoothTransformation)
-        self.coverLoaded.emit(image)
 
 
 class VideoItem(QtGui.QWidget):
     def __init__(self, episode):
         super(VideoItem, self).__init__()
 
-        self.threadPool = QtCore.QThreadPool()
-        
         self.episode = episode
-        self._coverShown = False
+        self.coverShown = False
         
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
@@ -59,35 +40,21 @@ class VideoItem(QtGui.QWidget):
         cell.addLayout(text)
         self.setLayout(cell)
         
-        # Set params :
-        self.setStatus(episode.status)
-        self.setFavorite(episode.favorite)
+        self.refresh()
 
-    def showImage(self):
-        if not self._coverShown:
-            task = GetCover(self.episode.cover)
-            runnable = Runnable(task)
-            runnable.task.coverLoaded.connect(self.setImage)
-            self.threadPool.tryStart(runnable)
-            self._coverShown = True
+    
+    def resizeEvent(self, event):
+        super(VideoItem, self).resizeEvent(event)
+        self.setTitle(self.episode.title)
     
     def refresh(self):
         self.setStatus(self.episode.status)
         self.setFavorite(self.episode.favorite)
     
-    def delImage(self):
-        if self._coverShown:
-            self.img.clear()
-            self._coverShown = False
-    
     def setImage(self, image):
         pixmap = QtGui.QPixmap()
         pixmap.convertFromImage(image)
         self.img.setPixmap(pixmap)
-    
-    def resizeEvent(self, event):
-        super(VideoItem, self).resizeEvent(event)
-        self.setTitle(self.episode.title)
 
     def setTitle(self, titleStr):
         lines = []

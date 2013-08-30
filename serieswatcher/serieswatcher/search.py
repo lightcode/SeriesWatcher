@@ -9,15 +9,20 @@ __all__ = ['split', 'search', 'search2']
 import re
 import unicodedata
 
+
+PATTERN = re.compile(r"(\w{2,})")
+
+
 def remove_accents(input_str):
     nkfd_form = unicodedata.normalize('NFKD', unicode(input_str))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
-PATTERN = re.compile(r"(\w{2,})")
+
 def split(string):
     """Split and remove accent in a string."""
     words = remove_accents(string).lower()
     return re.findall(PATTERN, words)
+
 
 def search(user, entry):
     """Return True if the string user match entry.
@@ -33,6 +38,7 @@ def search(user, entry):
         else:
             return False
     return True
+
 
 def search2(user, entry):
     user = split(user)

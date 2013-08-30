@@ -4,12 +4,12 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-from models import Serie
-from thetvdb import TheTVDB
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QMessageBox, QDialogButtonBox
 from languagescodes import codeToLocal
 from serieswatcher.config import Config
+from serieswatcher.models import Serie
+from serieswatcher.thetvdb import TheTVDB
 from serieswatcher.widgets.selectfolder import SelectFolder
 from serieswatcher.worker import Runnable
 

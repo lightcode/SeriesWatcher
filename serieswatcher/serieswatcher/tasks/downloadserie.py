@@ -6,10 +6,9 @@ __author__ = 'Matthieu <http://lightcode.fr>'
 
 import os.path
 from datetime import datetime
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtCore
 from PyQt4.QtCore import qDebug
 from sqlobject.sqlbuilder import AND
-from sqlobject.dberrors import OperationalError
 from serieswatcher.const import *
 from serieswatcher.models import Serie, Episode
 from serieswatcher.thetvdb import TheTVDBSerie

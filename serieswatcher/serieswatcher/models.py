@@ -224,7 +224,8 @@ class Episode(SQLObject):
     
     def _get_status(self):
         """Return the status of episode.
-                1 -> Not in the hard drive
+                0 -> Not in the hard drive
+                1 -> In the hard drive and view
                 2 -> In the hard drive but not view
                 3 -> First aired date in the future
         """
@@ -253,6 +254,7 @@ def databaseConnect():
     if not os.path.isfile(SERIES_DATABASE):
         Serie.createTable()
         Episode.createTable()
-    
+
+
 #Serie._connection.debug = True
 #Episode._connection.debug = True

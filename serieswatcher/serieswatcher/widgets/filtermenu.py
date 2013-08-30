@@ -4,9 +4,6 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-import os.path
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
 
 class FilterMenu(QtGui.QPushButton):

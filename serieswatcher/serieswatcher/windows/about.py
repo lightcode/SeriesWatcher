@@ -4,7 +4,7 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 from serieswatcher.const import TEXT_VERSION, RELEASE_DATE
 
 

@@ -4,11 +4,26 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-import os.path
 from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
 from serieswatcher.const import ICONS
+from serieswatcher.worker import Runnable
+
+
+class GetCover(QtCore.QObject):
+    coverLoaded = QtCore.pyqtSignal(QtGui.QImage)
+    
+    def __init__(self, coverPath):
+        super(GetCover, self).__init__()
+        self._coverPath = coverPath
+    
+    def run(self):
+        image = QtGui.QImage(self._coverPath)
+        image = image.scaled(120, 120, Qt.KeepAspectRatio, 
+                             Qt.SmoothTransformation)
+        self.coverLoaded.emit(image)
+
 
 class EpisodesViewer(QtGui.QTableWidget):
     pressEnter = QtCore.pyqtSignal('QModelIndex')
@@ -23,6 +38,9 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.nbColumn = 3
         self.columnWidth = 260
         self.rowHeight = 100
+
+        self.clipboard = QtGui.QApplication.clipboard()
+        self.threadPool = QtCore.QThreadPool()
         
         self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -45,21 +63,28 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.columnWidth = event.size().width() // self.nbColumn
     
     def redrawImages(self):
+        columnCount = self.columnCount()
+        height = self.height()
         for r in xrange(self.rowCount()):
             posY = self.rowViewportPosition(r)
-            if -self.rowHeight <= posY <= self.height():
-                for c in xrange(self.columnCount()):
-                    try:
-                        self.cellWidget(r, c).showImage()
-                    except AttributeError:
-                        pass
-            else:
-                for c in xrange(self.columnCount()):
-                    try:
-                        self.cellWidget(r, c).delImage()
-                    except AttributeError:
-                        pass
-    
+            showRow = -self.rowHeight <= posY <= height
+            
+            for c in xrange(columnCount):
+                videoItem = self.cellWidget(r, c)
+                if not videoItem:
+                    continue
+                if showRow:
+                    if not videoItem.coverShown:
+                        task = GetCover(videoItem.episode.cover)
+                        runnable = Runnable(task)
+                        runnable.task.coverLoaded.connect(videoItem.setImage)
+                        self.threadPool.start(runnable)
+                        videoItem.coverShown = True
+                else:
+                    if videoItem.coverShown:
+                        videoItem.img.clear()
+                        videoItem.coverShown = False
+
     def contextMenu(self, pos):
         nbEpisode = 0
         for item in self.selectedIndexes():
@@ -79,13 +104,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         if btnMarkAsView or nbEpisode > 1:
             menu.addAction(
                 QIcon(ICONS + 'check.png'), 'Marquer comme vu', 
-                self.markAsView
-            )
+                self.markAsView)
         if not btnMarkAsView or nbEpisode > 1:
             menu.addAction(
                 QIcon(ICONS + 'uncheck.png'), 'Marquer comme non vu', 
-                self.markAsNotView
-            )
+                self.markAsNotView)
 
         menu.addAction(QIcon(ICONS + 'play.png'), 'Play',
                        self.playClicked)
@@ -105,12 +128,11 @@ class EpisodesViewer(QtGui.QTableWidget):
         self.favoriteChanged.emit(False)
     
     def copyTitle(self):
-        self.pressPaper = QtGui.QApplication.clipboard()
         indexes = self.selectedIndexes()
         if len(indexes) == 1:
             r, c = indexes[0].row(), indexes[0].column()
             title = self.cellWidget(r, c).episode.title
-            self.pressPaper.setText(title)
+            self.clipboard.setText(title)
     
     def markAsView(self):
         self.viewStatusChanged.emit(True)

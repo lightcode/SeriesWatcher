@@ -4,10 +4,7 @@
 __author__ = 'Matthieu <http://lightcode.fr>'
 
 
-import os.path
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 
 
 class SelectFolder(QtGui.QWidget):

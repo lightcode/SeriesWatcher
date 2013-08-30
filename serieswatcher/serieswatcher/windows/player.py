@@ -11,9 +11,11 @@ from PyQt4.QtCore import Qt
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon, QPalette, QShortcut
 from serieswatcher.const import THEME, ICONS
-from serieswatcher.optionsplayer import OptionsPlayer
+from serieswatcher.windows.optionsplayer import OptionsPlayer
 from serieswatcher.widgets.videoepisode import Episode
 from serieswatcher.widgets.vlcwidget import VLCWidget
+from serieswatcher.widgets.slider import Slider, timeToText
+
 
 # Import VLC
 path = os.getcwd()
@@ -22,38 +24,6 @@ try:
 except:
     vlc = None
 os.chdir(path)
-
-def _timeToText(time):
-    """Format the time."""
-    time = int(time)
-    s = time % 60
-    m = (time // 60) % 60
-    h = time // 3600
-    if h < 1:
-        return '%02d:%02d' % (m, s)
-    else:
-        return '%02d:%02d:%02d' % (h, m, s)
-
-class Slider(QtGui.QSlider):
-    def __init__(self, parent=None):
-        super(Slider, self).__init__(parent)
-        self.setMouseTracking(True)
-        self._duration = 0
-    
-    def mouseMoveEvent(self, event):
-        k = event.x() / float(self.width())
-        self.setToolTip(_timeToText(self._duration * k))
-        super(Slider, self).mouseMoveEvent(event)
-    
-    def mousePressEvent(self, event):
-        k = event.x() / float(self.width())
-        a = k * self.maximum()
-        self.setValue(a)
-        self.sliderMoved.emit(self.value())
-        super(Slider, self).mousePressEvent(event)
-    
-    def setDuration(self, duration):
-        self._duration = duration / 1000.
 
 
 class Player(QtGui.QMainWindow):
@@ -83,18 +53,14 @@ class Player(QtGui.QMainWindow):
         self.mediaPlayer.video_set_mouse_input(False)
         self.mediaPlayer.video_set_key_input(False)
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.Enable, 1
-        )
+            vlc.VideoMarqueeOption.Enable, 1)
         self.mediaPlayer.video_set_marquee_int(vlc.VideoMarqueeOption.Size, 24)
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.Position, vlc.Position.TopRight
-        )
+            vlc.VideoMarqueeOption.Position, vlc.Position.TopRight)
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.marquee_X, 30
-        )
+            vlc.VideoMarqueeOption.marquee_X, 30)
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.marquee_Y, 140
-        )
+            vlc.VideoMarqueeOption.marquee_Y, 140)
 
         self.createUI()
         
@@ -158,17 +124,13 @@ class Player(QtGui.QMainWindow):
 
     def showText(self, text):
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.Timeout, 0
-        )
+            vlc.VideoMarqueeOption.Timeout, 0)
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.Refresh, 100
-        )
+            vlc.VideoMarqueeOption.Refresh, 100)
         self.mediaPlayer.video_set_marquee_string(
-            vlc.VideoMarqueeOption.Text, vlc.str_to_bytes(text)
-        )
+            vlc.VideoMarqueeOption.Text, vlc.str_to_bytes(text))
         self.mediaPlayer.video_set_marquee_int(
-            vlc.VideoMarqueeOption.Timeout, 2000
-        )
+            vlc.VideoMarqueeOption.Timeout, 2000)
 
     def showBar(self):
         """Show the player bar."""
@@ -223,24 +185,26 @@ class Player(QtGui.QMainWindow):
             self.playList.show()
             pos = self.playList.geometry()
             self.hideAnimation = QtCore.QPropertyAnimation(
-                self.playList, 'geometry'
-            )
+                self.playList, 'geometry')
             self.hideAnimation.setDuration(60)
             self.playList.endGeometry = QtCore.QRect(pos)
             self.playList.startGeometry = QtCore.QRect(
-                -60, pos.y(), pos.width(), pos.height()
-            )
+                -60, pos.y(), pos.width(), pos.height())
             self.hideAnimation.setStartValue(self.playList.startGeometry)
             self.hideAnimation.setEndValue(self.playList.endGeometry)
             self.hideAnimation.start()
         else:
             self.playList.hide()
     
+    def hideCurrentEpisode(self):
+        if self._currentEpisodeTime >= self.TIME_HIDE_BAR:
+            self.currentEpisodeWidget.hide()
+
     def showCurrentEpisode(self):
         """Show the current episode bar."""
+        self._currentEpisodeTime = time.time()
         self.currentEpisodeWidget.show()
-        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR,
-                                 self.currentEpisodeWidget.hide)
+        QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, self.hideCurrentEpisode)
     
     def drawBar(self):
         """Draw the bar on the window."""
@@ -338,7 +302,7 @@ class Player(QtGui.QMainWindow):
         if time < 0:
             self.currentTime.setText('--:--')
         else:
-            textTime = _timeToText(time // 1000)
+            textTime = timeToText(time // 1000)
             self.totalTime.setText(textTime)
             self.positionSlider.setDuration(time)
     
@@ -388,7 +352,7 @@ class Player(QtGui.QMainWindow):
         time = int(self.mediaPlayer.get_time())
         if time > 0:
             time //= 1000
-            textTime = _timeToText(time)
+            textTime = timeToText(time)
             self.currentTime.setText(textTime)
         else:
             self.currentTime.setText('--:--')
@@ -445,7 +409,7 @@ class Player(QtGui.QMainWindow):
         self.currentTime = QtGui.QLabel('--:--')
         
         self.positionSlider = Slider(Qt.Horizontal)
-        self.positionSlider.setToolTip("Position")
+        self.positionSlider.setToolTip('Position')
         self.positionSlider.setMaximum(1000)
         self.positionSlider.sliderMoved.connect(self.setPosition)
         
@@ -457,17 +421,17 @@ class Player(QtGui.QMainWindow):
         timeLayout.addWidget(self.totalTime)
         
         tool = QtGui.QToolBar()
-        self.playButton = tool.addAction(QIcon(ICONS + 'play.png'),
-                                         'Play', self.playPause)
-        tool.addAction(QIcon(ICONS + 'backward.png'), u'Précédent',
-                       self.previousEpisode)
+        self.playButton = tool.addAction(
+            QIcon(ICONS + 'play.png'), 'Play', self.playPause)
+        tool.addAction(
+            QIcon(ICONS + 'backward.png'), u'Précédent', self.previousEpisode)
         tool.addAction(QIcon(ICONS + 'stop.png'), 'Stop', self.stop)
-        tool.addAction(QIcon(ICONS + 'forward.png'), 'Suivant',
-                       self.nextEpisode)
+        tool.addAction(
+            QIcon(ICONS + 'forward.png'), 'Suivant', self.nextEpisode)
         tool.addSeparator()
         
-        self.playListBtn = tool.addAction(QIcon(ICONS + 'playlist.png'),
-                                          'Playlist', self.showPlayList)
+        self.playListBtn = tool.addAction(
+            QIcon(ICONS + 'playlist.png'), 'Playlist', self.showPlayList)
         self.playListBtn.setCheckable(True)
         self.autoPlay = tool.addAction(
             QIcon(ICONS + 'reload.png'), 'Activer la lecture automatique')
@@ -479,8 +443,8 @@ class Player(QtGui.QMainWindow):
         self.btnRandom.setCheckable(True)
         
         toolRight = QtGui.QToolBar()
-        self.volumeBtn = toolRight.addAction(QIcon(ICONS + 'volume-mute.png'), 
-                                             'Volume', self.toggleVolume)
+        self.volumeBtn = toolRight.addAction(
+            QIcon(ICONS + 'volume-mute.png'), 'Volume', self.toggleVolume)
 
         menu = QtGui.QMenu()
         menu.addAction('Ralentir', self.speedDown)
@@ -496,10 +460,10 @@ class Player(QtGui.QMainWindow):
 
         tool.addSeparator()
         
-        self.screenBtn = tool.addAction(QIcon(ICONS + 'fullscreen.png'),
-                                        u'Plein écran', self.fullScreen)
-        tool.addAction(QIcon(ICONS + 'options.png'), 'Options',
-                       self.showOptions)
+        self.screenBtn = tool.addAction(
+            QIcon(ICONS + 'fullscreen.png'), u'Plein écran', self.fullScreen)
+        tool.addAction(
+            QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)
