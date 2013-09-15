@@ -110,6 +110,7 @@ class Main(QtGui.QMainWindow):
         self._thread.start()
     
     def checkSerieUpdate(self):
+        """Run the check serie update worker."""
         task = CheckSerieUpdateTask()
         runnable = Runnable(task)
         runnable.task.updateRequired.connect(self.refreshSeries.addSerie)
@@ -285,10 +286,12 @@ class Main(QtGui.QMainWindow):
         
         # Shortcuts
         sortcuts = [
-            ('Ctrl+F', self.searchBar.setFocus),
-            ('F', self.toggleSelectionFavorite),
-            ('V', self.toggleSelectionViewed),
-            ('P', self.playClicked)
+            (Qt.CTRL + Qt.Key_F, self.searchBar.setFocus),
+            (Qt.Key_R, self.playRandomEpisode),
+            (Qt.CTRL + Qt.Key_Enter, self.playFirstEpisode),
+            (Qt.Key_F, self.toggleSelectionFavorite),
+            (Qt.Key_V, self.toggleSelectionViewed),
+            (Qt.Key_P, self.playClicked)
         ]
         for key, action in sortcuts:
             QtGui.QShortcut(key, self).activated.connect(action)
@@ -312,14 +315,15 @@ class Main(QtGui.QMainWindow):
         episodesMenu = self.menubar.addMenu('Episodes')
         episodesMenu.addAction(QIcon(ICONS + 'reload.png'), u'Recharger',
                                self.reloadMenu).setShortcut('Ctrl+R')
-        episodesMenu.addAction(QIcon(ICONS + 'check.png'),
-            u'Marquer comme vue', self.viewSelectEpisodeMenu
+        episodesMenu.addAction(
+            QIcon(ICONS + 'check.png'), u'Marquer comme vue',
+            self.viewSelectEpisodeMenu
         ).setShortcut('Ctrl+K')
-        episodesMenu.addAction(QIcon(ICONS + 'uncheck.png'),
-                               u'Marquer comme non vue',
-                               self.notViewSelectEpisodeMenu)
-        episodesMenu.addAction(u'Marquer la série comme vue',
-                               self.allEpisodeView)
+        episodesMenu.addAction(
+            QIcon(ICONS + 'uncheck.png'), u'Marquer comme non vu',
+            self.notViewSelectEpisodeMenu)
+        episodesMenu.addAction(
+            u'Marquer la série comme vu', self.allEpisodeView)
         
         # Menu "Series Watcher"
         SWMenu = self.menubar.addMenu('Series Watcher')
@@ -332,9 +336,9 @@ class Main(QtGui.QMainWindow):
         database.
         """
         r = QMessageBox.question(
-            self, u'Mise à jour', u"Series Watcher a trouvé une ancienne "
-                                  u"base de données. Voulez-vous l'importer "
-                                  u"dans la nouvelle version ?",
+            self, u'Mise à jour', 
+            u"Series Watcher a trouvé une ancienne base de données. "
+            u"Voulez-vous l'importer dans la nouvelle version ?",
             QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
             import upgrader
@@ -377,6 +381,7 @@ class Main(QtGui.QMainWindow):
         self.viewStatusChanged(False)
     
     def clearSelectionInfos(self):
+        """Remove informations in the footer and hide it."""
         self.selectionTitle.setText('')
         self.selectionDescription.setText('')
         self.footer.hide()
@@ -471,13 +476,14 @@ class Main(QtGui.QMainWindow):
         an update.
         """
         messages = [
-            u'%(title)s : téléchargement des informations sur la série...',
-            u'%(title)s : téléchargement des informations sur les épisodes...',
-            u'%(title)s : téléchargement des miniatures (%(nb)d/%(nbImages)d)...'
+            u'téléchargement des informations sur la série...',
+            u'téléchargement des informations sur les épisodes...',
+            u'téléchargement des miniatures...',
+            u'téléchargement des miniatures (%(nb)d/%(nbImages)d)...'
         ]
         message = messages[status] % args
-        self.status.showMessage(message)
-        if self.currentSerieId() == serieLocalID and status not in (0, 2):
+        self.status.showMessage('%(title)s : ' % args + message)
+        if self.currentSerieId() == serieLocalID and status not in (0, 3):
             self.serieLoaderWorker.forceReload()
     
     def openEditSerie(self):
@@ -609,7 +615,7 @@ class Main(QtGui.QMainWindow):
         currentIndex = self.selectSerie.currentIndex()
         currentIndex = 0 if currentIndex < 0 else currentIndex
         if currentIndex >= len(Serie.getSeries()) :
-            currentIndex = len(Serie.getSeries())-1
+            currentIndex = len(Serie.getSeries()) - 1
         self.selectSerie.clear()
         for s in Serie.getSeries():
             self.selectSerie.addItem(s.title)
@@ -781,6 +787,7 @@ class Main(QtGui.QMainWindow):
         return False
     
     def showEpisodes(self, episodes):
+        """Send episode to the grid after cache them."""
         self._episodesOnScreen = list(episodes)
         self.refreshScreen()
 

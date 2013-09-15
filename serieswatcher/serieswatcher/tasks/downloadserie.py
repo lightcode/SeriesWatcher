@@ -13,6 +13,7 @@ from serieswatcher.const import *
 from serieswatcher.models import Serie, Episode
 from serieswatcher.thetvdb import TheTVDBSerie
 
+
 class DownloadSerieTask(QtCore.QObject):
     """Task to update serie from the online database."""
     serieUpdated = QtCore.pyqtSignal(int)
@@ -86,8 +87,12 @@ class DownloadSerieTask(QtCore.QObject):
             os.mkdir(imgDir)
         
         # Miniature DL
+        self.serieUpdateStatus.emit(
+            self.serieLocalID, 2, {'title': serie.title})
+
         for i, nbImages in tvDb.download_miniatures(imgDir):
-            self.serieUpdateStatus.emit(self.serieLocalID, 2,
+            self.serieUpdateStatus.emit(
+                self.serieLocalID, 3,
                 {'title': serie.title, 'nb': i, 'nbImages': nbImages})
         
         self.serieUpdated.emit(self.serieLocalID)

@@ -7,27 +7,10 @@ __author__ = 'Matthieu <http://lightcode.fr>'
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QMessageBox, QDialogButtonBox
 from languagescodes import codeToLocal
-from serieswatcher.config import Config
 from serieswatcher.models import Serie
-from serieswatcher.thetvdb import TheTVDB
 from serieswatcher.widgets.selectfolder import SelectFolder
 from serieswatcher.worker import Runnable
-
-
-class MakeSearch(QtCore.QObject):
-    searchFinished = QtCore.pyqtSignal(list)
-    
-    def __init__(self, userInput):
-        super(MakeSearch, self).__init__()
-        self._userInput = userInput
-    
-    def run(self):
-        bdd = TheTVDB()
-        languages = tuple(Config.config['languages'].split(','))
-        seriesFound = []
-        for lang in languages:
-            seriesFound.extend(bdd.search_serie(self._userInput, lang))
-        self.searchFinished.emit(seriesFound)
+from serieswatcher.tasks.makesearch import MakeSearch
 
 
 class AddSerie(QtGui.QDialog):
@@ -104,21 +87,25 @@ class AddSerie(QtGui.QDialog):
         groupDirectory = QtGui.QGroupBox(u'Répertoire')
         groupDirectory.setLayout(layoutDir)
         
-        # Button box
-        buttonBox = QDialogButtonBox()
-        firstLayoutBtn = buttonBox.addButton(u'Précédent', 
-                                             QDialogButtonBox.ActionRole)
-        buttonBox.addButton('Annuler', QDialogButtonBox.RejectRole)
-        buttonBox.addButton(u'Terminé', QDialogButtonBox.AcceptRole)
+        # Buttons
+        firstLayoutBtn = QtGui.QPushButton(u'Précédent')
         firstLayoutBtn.clicked.connect(self.goFirstPane)
+
+        buttonBox = QDialogButtonBox()
+        buttonBox.addButton('Annuler', QDialogButtonBox.RejectRole)
+        buttonBox.addButton(u'Terminer', QDialogButtonBox.AcceptRole)
         buttonBox.rejected.connect(self.close)
         buttonBox.accepted.connect(self.validate)
+
+        buttonLayout = QtGui.QHBoxLayout()
+        buttonLayout.addWidget(firstLayoutBtn)
+        buttonLayout.addWidget(buttonBox)
         
         # Layouts
         secondPaneLayout = QtGui.QVBoxLayout()
         secondPaneLayout.addWidget(groupSerie)
         secondPaneLayout.addWidget(groupDirectory)
-        secondPaneLayout.addWidget(buttonBox)
+        secondPaneLayout.addLayout(buttonLayout)
         secondPane = QtGui.QWidget()
         secondPane.setLayout(secondPaneLayout)
         

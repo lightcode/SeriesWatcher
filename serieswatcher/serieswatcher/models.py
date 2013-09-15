@@ -16,6 +16,7 @@ from serieswatcher.const import *
 sys.path.insert(0, os.path.abspath('..'))
 from sqlobject import *
 
+
 if not os.path.isdir(USER):
     os.mkdir(USER)
 if not os.path.isdir(SERIES):

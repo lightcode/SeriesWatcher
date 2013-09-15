@@ -7,6 +7,7 @@ __author__ = 'Matthieu <http://lightcode.fr>'
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QColor, QPalette
 
+
 class VLCWidget(QtGui.QFrame):
     mouseMoved = QtCore.pyqtSignal()
     

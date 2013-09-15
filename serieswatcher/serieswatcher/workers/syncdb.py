@@ -10,9 +10,7 @@ from serieswatcher.models import Episode
 
 
 class SyncDbWorker(QtCore.QObject):
-    """Worker to commit changes in a serie to the
-    local database.
-    """
+    """Worker to commit changes in a serie to the local database."""
     def __init__(self, parent=None):
         super(SyncDbWorker, self).__init__(parent)
         self.run()

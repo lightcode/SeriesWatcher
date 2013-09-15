@@ -10,7 +10,7 @@ from serieswatcher.worker import Runnable
 
 
 class SearchWorker(QtCore.QObject):
-    """Thread to search in the database."""
+    """Worker to search in the database."""
     searchFinished = QtCore.pyqtSignal(list)
 
     def __init__(self, parent=None):

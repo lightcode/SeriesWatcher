@@ -9,20 +9,7 @@ from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
 from serieswatcher.const import ICONS
 from serieswatcher.worker import Runnable
-
-
-class GetCover(QtCore.QObject):
-    coverLoaded = QtCore.pyqtSignal(QtGui.QImage)
-    
-    def __init__(self, coverPath):
-        super(GetCover, self).__init__()
-        self._coverPath = coverPath
-    
-    def run(self):
-        image = QtGui.QImage(self._coverPath)
-        image = image.scaled(120, 120, Qt.KeepAspectRatio, 
-                             Qt.SmoothTransformation)
-        self.coverLoaded.emit(image)
+from serieswatcher.tasks.getcover import GetCoverTask
 
 
 class EpisodesViewer(QtGui.QTableWidget):
@@ -75,7 +62,7 @@ class EpisodesViewer(QtGui.QTableWidget):
                     continue
                 if showRow:
                     if not videoItem.coverShown:
-                        task = GetCover(videoItem.episode.cover)
+                        task = GetCoverTask(videoItem.episode.cover)
                         runnable = Runnable(task)
                         runnable.task.coverLoaded.connect(videoItem.setImage)
                         self.threadPool.start(runnable)

@@ -11,6 +11,7 @@ from serieswatcher.const import *
 from serieswatcher.models import Serie
 from serieswatcher.thetvdb import TheTVDBSerie
 
+
 class CheckSerieUpdateTask(QtCore.QObject):
     """Task to check updates on the series database and
     synchronize with the local database.

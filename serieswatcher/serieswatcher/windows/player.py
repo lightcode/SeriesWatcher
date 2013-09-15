@@ -86,7 +86,8 @@ class Player(QtGui.QMainWindow):
             (Qt.Key_D, self.speedUp),
             (Qt.Key_B, self.showOptions),
             (Qt.Key_V, self.showOptions),
-            (Qt.Key_I, self.showBar)
+            (Qt.Key_I, self.showBar),
+            (Qt.Key_R, self.toggleRandom)
         ]
         
         for key, action in shortcuts:
@@ -149,6 +150,10 @@ class Player(QtGui.QMainWindow):
             self.videoFrame.setCursor(Qt.BlankCursor)
         else:
             QtCore.QTimer.singleShot(self.TIME_HIDE_BAR, self.tryHide)
+
+    def toggleRandom(self):
+        """Toggle the button random."""
+        self.btnRandom.setChecked(not self.btnRandom.isChecked())
     
     def nextEpisode(self):
         """Try to play the next episode."""
@@ -197,6 +202,7 @@ class Player(QtGui.QMainWindow):
             self.playList.hide()
     
     def hideCurrentEpisode(self):
+        """Hide the current episode widget from the screen."""
         if self._currentEpisodeTime >= self.TIME_HIDE_BAR:
             self.currentEpisodeWidget.hide()
 
@@ -336,7 +342,7 @@ class Player(QtGui.QMainWindow):
             self.volumeSlider.setDisabled(False)
     
     def setVolume(self, volume):
-        """Set volume."""
+        """Set volume of the player."""
         self.mediaPlayer.audio_set_volume(volume)
         self.setBtnVolume(volume)
     
@@ -387,17 +393,21 @@ class Player(QtGui.QMainWindow):
         self.options.show()
     
     def speedUp(self):
+        """Increase lecture speed by 1.25."""
         speed = self.mediaPlayer.get_rate() * 1.25
         self.setSpeed(speed)
     
     def speedDown(self):
+        """Decrease lecture speed by 1.25."""
         speed = self.mediaPlayer.get_rate() * .8
         self.setSpeed(speed)
 
     def normalSpeed(self):
+        """Set the lecture speed at 1."""
         self.setSpeed(1)
 
     def setSpeed(self, speed):
+        """Set the lecture speed."""
         self.mediaPlayer.set_rate(speed)
         self.showText('Vitesse : x%.2f' % speed)
 
