@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os.path
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
-from PyQt4 import QtCore, QtGui
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
+from PyQt4 import QtGui
 
 
 class SelectFile(QtGui.QWidget):

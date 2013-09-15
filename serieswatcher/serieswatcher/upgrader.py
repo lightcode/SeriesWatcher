@@ -1,14 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import os
 from const import VERSION_FILE, USER
 
 
 def upgradeTo13():
-    import upgraders.upgradeto13
+    import serieswatcher.upgraders.upgradeto13
 
 def upgradeTo14():
-    import upgraders.upgradeto14
+    import serieswatcher.upgraders.upgradeto14
 
 def get_version():
     database_version = None

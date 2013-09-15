@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import sys
 import os.path
 from PyQt4 import QtCore, QtGui
 
 sys.path.insert(0, os.path.abspath('serieswatcher/'))
-from serieswatcher.main import Main
+from serieswatcher.windows.main import Main
 
 app = QtGui.QApplication(sys.argv)
 

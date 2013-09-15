@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from PyQt4 import QtCore, QtGui
-from .const import TEXT_VERSION, RELEASE_DATE
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
+from PyQt4 import QtGui
+from serieswatcher.const import TEXT_VERSION, RELEASE_DATE
 
 
 class About(QtGui.QDialog):

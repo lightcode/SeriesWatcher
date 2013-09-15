@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os.path
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
-from PyQt4 import QtCore, QtGui
-from ..const import ICONS
+from PyQt4 import QtGui
+from serieswatcher.const import ICONS
 
 
 class VideoItem(QtGui.QWidget):
     def __init__(self, episode):
         super(VideoItem, self).__init__()
-        
+
         self.episode = episode
+        self.coverShown = False
         
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
@@ -36,33 +38,51 @@ class VideoItem(QtGui.QWidget):
         cell = QtGui.QHBoxLayout()
         cell.addWidget(self.img)
         cell.addLayout(text)
-        
         self.setLayout(cell)
         
-        # Set params :
-        self.setStatus(episode.status)
-        self.setFavorite(episode.favorite)
+        self.refresh()
+
+    
+    def resizeEvent(self, event):
+        super(VideoItem, self).resizeEvent(event)
+        self.setTitle(self.episode.title)
     
     def refresh(self):
-        episode = self.episode
-        self.setStatus(episode.status)
-        self.setFavorite(episode.favorite)
+        self.setStatus(self.episode.status)
+        self.setFavorite(self.episode.favorite)
     
     def setImage(self, image):
         pixmap = QtGui.QPixmap()
         pixmap.convertFromImage(image)
         self.img.setPixmap(pixmap)
-    
+
     def setTitle(self, titleStr):
-        maxWidth = self.title.width() * 1.5
+        lines = []
+        currentSize = []
         font = self.title.font()
         fontm = QtGui.QFontMetricsF(font)
-        titleStr = fontm.elidedText(titleStr, Qt.ElideRight, maxWidth)
-        self.title.setText(titleStr)
+        maxWidth = self.title.width()
+        words = titleStr.split(' ')
+        
+        for i in range(2):
+            lines.append('')
+            currentSize.append(0)
+            for word in words[:]:
+                newSize = currentSize[i] + fontm.width(word) + fontm.width(' ')
+                if newSize < maxWidth:
+                    del words[0]
+                    lines[i] += word + ' '
+                    currentSize[i] = newSize
+                else:
+                    break
+
+        title = '\n'.join(lines) + ('...' if words else '')
+        self.title.setText(title)
     
     def setFavorite(self, value):
         if value:
-            head = '<b>%s <img src="%sstar.min.png"/></b>' % (self.episode.number, ICONS)
+            head = '<b>%s <img src="%sstar.min.png"/></b>' % \
+                                        (self.episode.number, ICONS)
         else:
             head = '<b>%s</b>' % (self.episode.number)
         self.head.setText(head)

@@ -1,9 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 import codecs
 import os.path
 from configparser import SafeConfigParser
-from .const import *
+from serieswatcher.const import *
 
 
 class Config(object):
@@ -51,9 +55,6 @@ class Config(object):
         cls.config['player'] = 2
         cls.config['debug'] = 0
         cls.config['random_duration'] = 0
-        cls.config['sync_server'] = None
-        cls.config['sync_user'] = None
-        cls.config['sync_password'] = None
         cls.config['languages'] = 'fr,en'
         
         # Load the options

@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import re
 import sys
 import os.path
@@ -8,10 +11,11 @@ from glob import iglob
 from uuid import uuid1
 from itertools import chain
 from datetime import datetime, date
-from .const import *
+from serieswatcher.const import *
 
 sys.path.insert(0, os.path.abspath('..'))
 from sqlobject import *
+
 
 if not os.path.isdir(USER):
     os.mkdir(USER)
@@ -44,7 +48,7 @@ class Serie(SQLObject):
     
     class sqlmeta:
         defaultOrder = 'pos'
-        lazyUpdate = True
+        #lazyUpdate = True
     
     def isLoaded(self):
         """Return True if the serie is completly
@@ -73,23 +77,24 @@ class Serie(SQLObject):
         registred in the database.
         """
         self.episodesAvailable.clear()
-        
         if not self.path and not os.path.isdir(self.path):
             return
         
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
             if os.path.splitext(f)[1] in EXTENSIONS:
+                search = re.search(self.PATTERN_FILE, os.path.basename(f))
                 try:
-                    numbers = re.search(self.PATTERN_FILE, os.path.basename(f)).groups()
+                    numbers = search.groups()
                 except AttributeError:
                     continue
                 else:
-                    episodeID = '%02d-%02d' % (int(numbers[0]), int(numbers[1]))
+                    episodeID = '%02d-%02d' % \
+                                            (int(numbers[0]), int(numbers[1]))
                     self.episodesAvailable[episodeID] = f
                     if numbers[2]:
                         episodeID = '%02d-%02d' % \
-                                    (int(numbers[0]), int(numbers[2]))
+                                            (int(numbers[0]), int(numbers[2]))
                         self.episodesAvailable[episodeID] = f    
     
     def loadEpisodes(self):
@@ -131,6 +136,9 @@ class Serie(SQLObject):
         """Load available episodes list and load episodes."""
         self.loadAvailableList()
         self.loadEpisodes()
+
+    def clearEpisodeCache(self):
+        self._cacheEpisodes = None
     
     def _get_bannerPath(self):
         """Returns the path to the banner image."""
@@ -139,7 +147,8 @@ class Serie(SQLObject):
     def _get_episodes(self):
         """Returns the episode list."""
         if self._cacheEpisodes is None:
-            self._cacheEpisodes = list(Episode.select(Episode.q.serieID==self.id))
+            cursor = Episode.select(Episode.q.serieID==self.id)
+            self._cacheEpisodes = list(cursor)
         return self._cacheEpisodes
 
 
@@ -217,7 +226,8 @@ class Episode(SQLObject):
     
     def _get_status(self):
         """Return the status of episode.
-                1 -> Not in the hard drive
+                0 -> Not in the hard drive
+                1 -> In the hard drive and view
                 2 -> In the hard drive but not view
                 3 -> First aired date in the future
         """
@@ -246,6 +256,7 @@ def databaseConnect():
     if not os.path.isfile(SERIES_DATABASE):
         Serie.createTable()
         Episode.createTable()
-    
+
+
 #Serie._connection.debug = True
 #Episode._connection.debug = True

@@ -1,19 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__all__ = ['VERSION', 'TEXT_VERSION', 'EXTENSIONS',
-           'VERSION_FILE', 'ERROR_PLAYER_LOAD',
-           'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 'ART',
-           'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE',
-           'THEME', 'ICONS']
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+__all__ = [
+	'VERSION', 'TEXT_VERSION', 'EXTENSIONS', 'VERSION_FILE', 
+	'ERROR_PLAYER_LOAD', 'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 
+	'ART', 'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE', 'THEME', 
+	'ICONS']
+
 
 import os.path
 
+
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.4.1'
+TEXT_VERSION = u'1.5'
 VERSION = '1.4.0'
-RELEASE_DATE = u'Mai 2013'
+RELEASE_DATE = u'Septembre 2013'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'
@@ -33,6 +37,5 @@ LAST_VERIF_PATH = SERIES + 'lastVerif.txt'
 REFRESH_FILE = SERIES + 'updates.pkl'
 VERSION_FILE = SERIES + 'VERSION'
 
-ERROR_PLAYER_LOAD = u"Le lecteur intégré ne peut pas démarrer car" \
-                  + u" la bibliothèque VLC ne s'est pas chargée" \
-                  + u" correctement."
+ERROR_PLAYER_LOAD = (u"Le lecteur intégré ne peut pas démarrer car la "
+					 u"bibliothèque VLC ne s'est pas chargée correctement.")

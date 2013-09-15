@@ -1,13 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 import os
 import shutil
 from PyQt4 import QtCore, QtGui
-from .const import SERIES_IMG, SERIES_BANNERS
-from .models import Serie, Episode
-from .widgets.listseries import ListSeries
-from .widgets.selectfolder import SelectFolder
+from serieswatcher.const import SERIES_IMG, SERIES_BANNERS
+from serieswatcher.models import Serie, Episode
+from serieswatcher.widgets.listseries import ListSeries
+from serieswatcher.widgets.selectfolder import SelectFolder
 
 
 class EditSeries(QtGui.QDialog):

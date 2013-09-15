@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
-from ..addserie import AddSerie
-from ..const import SERIES_IMG, ICONS, SERIES_BANNERS
-from ..models import Serie
+from serieswatcher.windows.addserie import AddSerie
+from serieswatcher.const import ICONS
+from serieswatcher.models import Serie
+
 
 class ListSeries(QtGui.QWidget):
     itemSelectionChanged = QtCore.pyqtSignal('QString', 'QString', 'QString')

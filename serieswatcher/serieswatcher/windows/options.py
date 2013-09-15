@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from config import Config
-#from hashlib import sha512
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from PyQt4 import QtCore, QtGui
-from .widgets.selectfile import SelectFile
+from serieswatcher.config import Config
+from serieswatcher.widgets.selectfile import SelectFile
 
 
 RANDOM_TIMES = [(u'Désactiver', 0),
@@ -61,45 +63,9 @@ class Options(QtGui.QDialog):
         groupPlayer = QtGui.QGroupBox(u'Configuration du lecteur vidéo')
         groupPlayer.setLayout(form)
         
-        
-        # Debug option
-        self.enablePlayer = QtGui.QCheckBox(u'Activer le debug')
-        if int(Config.config['debug']):
-            self.enablePlayer.setChecked(True)
-        else:
-            self.enablePlayer.setChecked(False)
-        
-        form = QtGui.QFormLayout()
-        form.addRow(self.enablePlayer)
-        
-        groupDebug = QtGui.QGroupBox(u'Debug')
-        groupDebug.setLayout(form)
-        
         layout1 = QtGui.QVBoxLayout()
         layout1.addWidget(groupSW)
         layout1.addWidget(groupPlayer)
-        layout1.addWidget(groupDebug)
-        
-        #tab1 = QtGui.QWidget()
-        #tab1.setLayout(layout1)
-        
-        # Synchronisation
-        #self.syncServer = QtGui.QLineEdit(Config.config['sync_server'])
-        #self.syncUser = QtGui.QLineEdit(Config.config['sync_user'])
-        #self.syncPassword = QtGui.QLineEdit()
-        #self.syncPassword.setEchoMode(QtGui.QLineEdit.Password)
-        #
-        #layout2 = QtGui.QFormLayout()
-        #layout2.addRow('Serveur', self.syncServer)
-        #layout2.addRow("Nom d'utilisateur", self.syncUser)
-        #layout2.addRow('Mot de passe', self.syncPassword)
-        
-        #tab2 = QtGui.QWidget()
-        #tab2.setLayout(layout2)
-        
-        #tab = QtGui.QTabWidget()
-        #tab.addTab(tab1, u'Général')
-        #tab.addTab(tab2, 'Synchronisation')
         
         buttonBox = QtGui.QDialogButtonBox()
         buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
@@ -109,7 +75,6 @@ class Options(QtGui.QDialog):
         
         layout = QtGui.QVBoxLayout()
         layout.addLayout(layout1)
-        #layout.addWidget(tab)
         layout.addWidget(buttonBox)
         
         self.setLayout(layout)
@@ -154,17 +119,6 @@ class Options(QtGui.QDialog):
         cmdOpen = str(self.cmdOpen.path())
         Config.setOption('command_open', cmdOpen)
         Config.setOption('player', self.player())
-        if self.enablePlayer.isChecked():
-            Config.setOption('debug', 1)
-        else:    
-            Config.setOption('debug', 0)
         Config.setOption('random_duration', self.getRandomValue())
-        
-        #Config.setOption('sync_server', self.syncServer.text())
-        #Config.setOption('sync_user', self.syncUser.text())
-        #if self.syncPassword.text():
-        #    Config.setOption('sync_password',
-        #                      sha512(self.syncPassword.text()).hexdigest())
-        
         Config.save()
         self.close()

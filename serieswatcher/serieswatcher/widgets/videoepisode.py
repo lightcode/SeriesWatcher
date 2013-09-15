@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'Matthieu <http://lightcode.fr>'
+
 
 from PyQt4.QtCore import Qt
 from PyQt4 import QtCore, QtGui

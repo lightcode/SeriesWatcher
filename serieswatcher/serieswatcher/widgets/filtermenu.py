@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os.path
-from PyQt4.QtCore import Qt
-from PyQt4.QtGui import QIcon
+__author__ = 'Matthieu <http://lightcode.fr>'
+
+
 from PyQt4 import QtCore, QtGui
+
 
 class FilterMenu(QtGui.QPushButton):
     filterChanged = QtCore.pyqtSignal()
