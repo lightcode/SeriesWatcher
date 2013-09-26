@@ -466,7 +466,7 @@ class Main(QtGui.QMainWindow):
         elif episodesLongTime:
             episode = random.choice(episodesLongTime)
         elif otherEpisodes:
-            otherEpisodes.sort(key=lambda e: e.lastView)
+            otherEpisodes.sort(key=lambda e: e.lastView, reverse=True)
             episode = random.choice(otherEpisodes[-15:])
         else:
             return False
@@ -567,7 +567,7 @@ class Main(QtGui.QMainWindow):
         """Show the footer."""
         self.footer.show()
         pos = self.footer.geometry()
-        self.hideAnimation = QtCore.QPropertyAnimation(self.footer, "geometry")
+        self.hideAnimation = QtCore.QPropertyAnimation(self.footer, 'geometry')
         self.hideAnimation.setDuration(150)
         self.footer.endGeometry = QtCore.QRect(pos)
         self.footer.startGeometry = QtCore.QRect(
