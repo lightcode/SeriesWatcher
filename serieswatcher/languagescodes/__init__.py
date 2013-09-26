@@ -1,10 +1,8 @@
 #!/usr/bin/env python
+
 import os.path
 import codecs
-
 from langcodes import LANGUAGES_LIST
-
-
 
 
 def codeToLocal(code):

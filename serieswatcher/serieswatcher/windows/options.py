@@ -1,7 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__author__ = 'Matthieu <http://lightcode.fr>'
+# Copyright (C) 2012-2013 Matthieu GAIGNIÈRE
+#
+# This file is part of SeriesWatcher.
+#
+# SeriesWatcher is free software: you can redistribute it and/or modify it
+# under the terms of the GNU General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option)
+# any later version.
+#
+# SeriesWatcher is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# SeriesWatcher. If not, see <http://www.gnu.org/licenses/>.
 
 
 from PyQt4 import QtCore, QtGui
@@ -9,17 +24,11 @@ from serieswatcher.config import Config
 from serieswatcher.widgets.selectfile import SelectFile
 
 
-RANDOM_TIMES = [(u'Désactiver', 0),
+RANDOM_TIMES = ((u'Désactiver', 0),
                 ('15 jours', 1296000),
                 ('1 mois', 2592000),
-                ('3 mois', 7776000)]
+                ('3 mois', 7776000))
 
-
-
-RANDOM_TIMES = [(u'Désactiver', 0),
-                ('15 jours', 1296000),
-                ('1 mois', 2592000),
-                ('3 mois', 7776000)]
 
 class Options(QtGui.QDialog):
     """Class to handle the option window."""
