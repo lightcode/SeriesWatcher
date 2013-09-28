@@ -19,6 +19,9 @@
 # SeriesWatcher. If not, see <http://www.gnu.org/licenses/>.
 
 
+__all__ = ('TheTVDB', 'TheTVDBSerie')
+
+
 import os
 import urllib
 from xml.etree import cElementTree
@@ -111,12 +114,13 @@ class TheTVDBSerie(TheTVDB):
         """Downloads all images and yield a tuple with the number of
         the picture and the number of images.
         """
+        print 'download_miniatures'
         miniaturesToDownload = []
         for episode in self._root.iter('Episode'):
             seasonNumber = int(episode.find('SeasonNumber').text)
             episodeNumber = int(episode.find('EpisodeNumber').text)
             imgpath = '%s/%02d-%02d.jpg' % (folder, seasonNumber, episodeNumber)
-            urlmin = unicode(episode.find('filename').text)
+            urlmin = episode.find('filename').text
             if urlmin and not os.path.isfile(imgpath):
                 miniaturesToDownload.append((self.URL_BANNER + urlmin, imgpath))
         

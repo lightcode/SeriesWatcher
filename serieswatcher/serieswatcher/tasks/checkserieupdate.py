@@ -22,6 +22,7 @@
 import time
 from datetime import datetime
 from PyQt4 import QtCore
+from PyQt4.QtCore import qDebug
 from serieswatcher.const import *
 from serieswatcher.models import Serie
 from serieswatcher.thetvdb import TheTVDBSerie
@@ -42,11 +43,17 @@ class CheckSerieUpdateTask(QtCore.QObject):
         if int(time.time() - lastVerification) >= self.TIME_BETWEEN_UPDATE:
             for localeID, serie in enumerate(Serie.getSeries()):
                 localTime = serie.lastUpdate
-                tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
+                try:
+                    tvDb = TheTVDBSerie(serie.tvdbID, serie.lang)
+                except IOError as e:
+                    qDebug('Cannot join TVDB server: %s' % str(e))
+                    continue
+
                 try:
                     remoteTime = datetime.fromtimestamp(tvDb.last_update())
                 except TypeError:
                     qDebug('Get last update failed.')
+                    continue
                 else:
                     if not localTime or localTime < remoteTime:
                         self.updateRequired.emit(localeID)
