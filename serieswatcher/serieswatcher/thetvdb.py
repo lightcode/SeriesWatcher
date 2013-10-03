@@ -114,7 +114,6 @@ class TheTVDBSerie(TheTVDB):
         """Downloads all images and yield a tuple with the number of
         the picture and the number of images.
         """
-        print 'download_miniatures'
         miniaturesToDownload = []
         for episode in self._root.iter('Episode'):
             seasonNumber = int(episode.find('SeasonNumber').text)

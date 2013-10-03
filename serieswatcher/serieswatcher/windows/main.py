@@ -35,23 +35,23 @@ if os.path.isdir(USER):
     USER_DIR_FOUND = True
 
 import desktop
-from serieswatcher.windows.about import About
-from serieswatcher.windows.addserie import AddSerie
 from serieswatcher.config import Config
 from serieswatcher.const import *
-from serieswatcher.windows.editseries import EditSeries
 from serieswatcher.models import Serie, databaseConnect
+from serieswatcher.tasks.checkserieupdate import CheckSerieUpdateTask
+from serieswatcher.widgets.episodesviewer import EpisodesViewer
+from serieswatcher.widgets.filtermenu import FilterMenu
+from serieswatcher.widgets.videoitem import VideoItem
+from serieswatcher.windows.about import About
+from serieswatcher.windows.addserie import AddSerie
+from serieswatcher.windows.editseries import EditSeries
 from serieswatcher.windows.options import Options
 from serieswatcher.windows.player import Player
+from serieswatcher.worker import Runnable
 from serieswatcher.workers.refreshseries import RefreshSeriesWorker
-from serieswatcher.workers.syncdb import SyncDbWorker
 from serieswatcher.workers.search import SearchWorker
 from serieswatcher.workers.serieloader import SerieLoaderWorker
-from serieswatcher.widgets.videoitem import VideoItem
-from serieswatcher.widgets.filtermenu import FilterMenu
-from serieswatcher.widgets.episodesviewer import EpisodesViewer
-from serieswatcher.worker import Runnable
-from serieswatcher.tasks.checkserieupdate import CheckSerieUpdateTask
+from serieswatcher.workers.syncdb import SyncDbWorker
 
 
 class Main(QtGui.QMainWindow):
@@ -64,6 +64,11 @@ class Main(QtGui.QMainWindow):
         self.map = {}
         self.threadPool = QtCore.QThreadPool()
         self.firstRefresh = True
+
+        self.addSerieWindow = None
+        self.editSeriesWindows = None
+        self.aboutWindow = None
+        self.optionsWindows = None
         
         super(Main, self).__init__()
         self.setWindowTitle('SeriesWatcher %s' % TEXT_VERSION)
@@ -340,8 +345,8 @@ class Main(QtGui.QMainWindow):
         episodesMenu.addAction(
             u'Marquer la série comme vu', self.allEpisodeView)
         
-        # Menu "Series Watcher"
-        SWMenu = self.menubar.addMenu('Series Watcher')
+        # Menu "SeriesWatcher"
+        SWMenu = self.menubar.addMenu('SeriesWatcher')
         SWMenu.addAction(QIcon(ICONS + 'options.png'), 'Options',
                          self.openOptions)
         SWMenu.addAction(QIcon(ICONS + 'help.png'), 'A propos', self.openAbout)
@@ -352,7 +357,7 @@ class Main(QtGui.QMainWindow):
         """
         r = QMessageBox.question(
             self, u'Mise à jour', 
-            u"Series Watcher a trouvé une ancienne base de données. "
+            u"SeriesWatcher a trouvé une ancienne base de données. "
             u"Voulez-vous l'importer dans la nouvelle version ?",
             QMessageBox.Yes | QMessageBox.No)
         if r == QMessageBox.Yes:
@@ -503,30 +508,34 @@ class Main(QtGui.QMainWindow):
     
     def openEditSerie(self):
         """Open the window Edit Serie."""
-        editSeries = EditSeries(self)
-        editSeries.edited.connect(self.seriesEdited)
-        editSeries.show()
+        if not self.editSeriesWindows:
+            self.editSeriesWindows = EditSeries(self)
+            self.editSeriesWindows.edited.connect(self.seriesEdited)
+        self.editSeriesWindows.show()
+    
+    def openAbout(self):
+        """Open the window About."""
+        if not self.aboutWindow:
+            self.aboutWindow = About(self)
+        self.aboutWindow.show()
+    
+    def openOptions(self):
+        """Open the window Options."""
+        if not self.optionsWindows:
+            self.optionsWindows = Options(self)
+        self.optionsWindows.show()
+    
+    def openAddSerie(self):
+        """Open the window Add Serie."""
+        if not self.addSerieWindow:
+            self.addSerieWindow = AddSerie(self)
+            self.addSerieWindow.serieAdded.connect(self.serieAdded)
+        self.addSerieWindow.show()
     
     def seriesEdited(self):
         """Triggered when a serie is edited."""
         self.reloadSelectSerie()
         self.serieLoaderWorker.forceReload()
-    
-    def openAbout(self):
-        """Open the window About."""
-        about = About(self)
-        about.show()
-    
-    def openOptions(self):
-        """Open the window Options."""
-        options = Options(self)
-        options.show()
-    
-    def openAddSerie(self):
-        """Open the window Add Serie."""
-        addSerie = AddSerie(self)
-        addSerie.serieAdded.connect(self.serieAdded)
-        addSerie.show()
     
     def updateSerieMenu(self):
         """Force the update of the current serie."""

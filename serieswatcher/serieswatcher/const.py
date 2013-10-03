@@ -20,10 +20,10 @@
 
 
 __all__ = (
-	'VERSION', 'TEXT_VERSION', 'EXTENSIONS', 'VERSION_FILE', 
-	'ERROR_PLAYER_LOAD', 'USER', 'SERIES', 'SERIES_IMG', 'SERIES_BANNERS', 
-	'ART', 'CONFIG_FILE', 'LAST_VERIF_PATH', 'SERIES_DATABASE', 'THEME', 
-	'ICONS'
+    'ART', 'CONFIG_FILE', 'ERROR_PLAYER_LOAD', 'EXTENSIONS', 'ICONS',
+    'LAST_VERIF_PATH', 'SERIES', 'SERIES_BANNERS', 'SERIES_DATABASE',
+    'SERIES_IMG', 'TEXT_VERSION', 'THEME', 'USER', 'VERSION',
+    'VERSION_FILE'
 )
 
 
@@ -32,9 +32,9 @@ import os.path
 
 EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
-TEXT_VERSION = u'1.5'
+TEXT_VERSION = u'1.5.1'
 VERSION = '1.4.0'
-RELEASE_DATE = u'Septembre 2013'
+RELEASE_DATE = u'Octobre 2013'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'
@@ -54,4 +54,4 @@ LAST_VERIF_PATH = SERIES + 'lastVerif.txt'
 VERSION_FILE = SERIES + 'VERSION'
 
 ERROR_PLAYER_LOAD = (u"Le lecteur intégré ne peut pas démarrer car la "
-					 u"bibliothèque VLC ne s'est pas chargée correctement.")
+                     u"bibliothèque VLC ne s'est pas chargée correctement.")

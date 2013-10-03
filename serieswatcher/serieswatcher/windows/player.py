@@ -26,10 +26,10 @@ from PyQt4.QtCore import Qt
 from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QIcon, QPalette, QShortcut
 from serieswatcher.const import THEME, ICONS
-from serieswatcher.windows.optionsplayer import OptionsPlayer
+from serieswatcher.widgets.slider import Slider, timeToText
 from serieswatcher.widgets.videoepisode import Episode
 from serieswatcher.widgets.vlcwidget import VLCWidget
-from serieswatcher.widgets.slider import Slider, timeToText
+from serieswatcher.windows.optionsplayer import OptionsPlayer
 
 
 # Import VLC
@@ -47,8 +47,8 @@ class Player(QtGui.QMainWindow):
     TIME_HIDE_BAR = 2000
     PLAY, PAUSE, STOP, USER_STOP = 0, 1, 2, 3
     VLC_PARAM = ' '.join(['-I dummy', '--ignore-config', '--video-title-show',
-                          '--video-title-timeout 1', '--sub-source marq', 
-                          '--verbose -1', '--no-plugins-cache'])
+                          '--video-title-timeout=1', '--sub-source=marq',
+                          '--verbose=-1', '--no-plugins-cache'])
 
     def __init__(self, parent=None):
         """Initialize the player video."""
@@ -56,11 +56,13 @@ class Player(QtGui.QMainWindow):
         self._playList = []
         self._playerState = self.STOP
         self.currentEpisode = -1
-        self.setWindowTitle("Series Player")
+        self.setWindowTitle('SeriesPlayer')
         self.resize(640, 480)
 
         if not vlc:
             return
+
+        self.optionsWindow = None
 
         self.VLCLoaded = True
         self.instance = vlc.Instance(self.VLC_PARAM)
@@ -99,8 +101,8 @@ class Player(QtGui.QMainWindow):
             (Qt.Key_Right, self.nextEpisode),
             (Qt.Key_S, self.speedDown),
             (Qt.Key_D, self.speedUp),
-            (Qt.Key_B, self.showOptions),
-            (Qt.Key_V, self.showOptions),
+            (Qt.Key_B, self.showOptionsWindow),
+            (Qt.Key_V, self.showOptionsWindow),
             (Qt.Key_I, self.showBar),
             (Qt.Key_R, self.toggleRandom)
         ]
@@ -276,8 +278,10 @@ class Player(QtGui.QMainWindow):
             self.playButton.setText('Play')
             self.playButton.setIcon(QIcon(ICONS + 'play.png'))
             self._playerState = self.PAUSE
+            self.showText('Pause')
         else:
             self.play()
+            self.showText('Play')
     
     def play(self):
         """Play the video."""
@@ -402,20 +406,27 @@ class Player(QtGui.QMainWindow):
         self.currentEpisode = newItem
         self.playFile()
     
-    def showOptions(self):
+    def showOptionsWindow(self):
         """Open the video window."""
-        self.options = OptionsPlayer(self)
-        self.options.show()
-    
+        if not self.optionsWindow:
+            self.optionsWindow = OptionsPlayer(self)
+
+        if self.optionsWindow.isVisible():
+            self.optionsWindow.hide()
+        else:
+            self.optionsWindow.show()
+
     def speedUp(self):
         """Increase lecture speed by 1.25."""
-        speed = self.mediaPlayer.get_rate() * 1.25
-        self.setSpeed(speed)
+        speed = self.mediaPlayer.get_rate() * 2
+        if speed <= 16:
+            self.setSpeed(speed)
     
     def speedDown(self):
         """Decrease lecture speed by 1.25."""
-        speed = self.mediaPlayer.get_rate() * .8
-        self.setSpeed(speed)
+        speed = self.mediaPlayer.get_rate() / 2
+        if speed >= 0.25:
+            self.setSpeed(speed)
 
     def normalSpeed(self):
         """Set the lecture speed at 1."""
@@ -488,7 +499,7 @@ class Player(QtGui.QMainWindow):
         self.screenBtn = tool.addAction(
             QIcon(ICONS + 'fullscreen.png'), u'Plein écran', self.fullScreen)
         tool.addAction(
-            QIcon(ICONS + 'options.png'), 'Options', self.showOptions)
+            QIcon(ICONS + 'options.png'), 'Options', self.showOptionsWindow)
         
         volume = self.mediaPlayer.audio_get_volume()
         self.volumeSlider = QtGui.QSlider(Qt.Horizontal)

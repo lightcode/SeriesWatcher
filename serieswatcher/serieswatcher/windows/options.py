@@ -40,14 +40,14 @@ class Options(QtGui.QDialog):
         self.setMinimumWidth(500)
         self.setMinimumHeight(200)
         
-        # Series Watcher options
+        # SeriesWatcher options
         self.randomDuration = QtGui.QComboBox()
         self.randomDuration.addItems([t for t, v in RANDOM_TIMES])
         self.setRandomDuration(Config.config['random_duration'])
         form = QtGui.QFormLayout()
-        form.addRow(u"Ne pas rediffuser d'épisode vu il y a moins de", \
+        form.addRow(u"Ne pas rediffuser d'épisodes vus il y a moins de",
                     self.randomDuration)
-        groupSW = QtGui.QGroupBox(u'Series Watcher')
+        groupSW = QtGui.QGroupBox(u'SeriesWatcher')
         groupSW.setLayout(form)
         
         # Player Choice
