@@ -23,9 +23,9 @@ from PyQt4 import QtCore, QtGui
 from PyQt4.QtGui import QMessageBox, QDialogButtonBox
 from languagescodes import codeToLocal
 from serieswatcher.models import Serie
+from serieswatcher.tasks.makesearch import MakeSearch
 from serieswatcher.widgets.selectfolder import SelectFolder
 from serieswatcher.worker import Runnable
-from serieswatcher.tasks.makesearch import MakeSearch
 
 
 class AddSerie(QtGui.QDialog):

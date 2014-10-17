@@ -29,6 +29,7 @@ from itertools import chain
 from datetime import datetime
 from configparser import SafeConfigParser
 
+
 ROOT = os.path.abspath('.') + '/'
 USER = ROOT + 'user.backup/'
 SERIES = USER + 'series/'

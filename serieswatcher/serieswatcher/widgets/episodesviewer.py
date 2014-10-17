@@ -23,8 +23,8 @@ from PyQt4.QtCore import Qt
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
 from serieswatcher.const import ICONS
-from serieswatcher.worker import Runnable
 from serieswatcher.tasks.getcover import GetCoverTask
+from serieswatcher.worker import Runnable
 
 
 class EpisodesViewer(QtGui.QTableWidget):

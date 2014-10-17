@@ -34,8 +34,8 @@ if os.path.splitext(sys.argv[0])[1] in ('.py', '.pyw'):
     reptrad = unicode(QtCore.QLibraryInfo.location(
         QtCore.QLibraryInfo.TranslationsPath))
 else:
-    reptrad = unicode("translations")
-translator.load(QtCore.QString("qt_") + locale, reptrad)
+    reptrad = unicode('translations')
+translator.load(QtCore.QString('qt_') + locale, reptrad)
 app.installTranslator(translator)
 
 window = Main()

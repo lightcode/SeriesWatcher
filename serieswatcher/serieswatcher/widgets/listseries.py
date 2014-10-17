@@ -21,9 +21,9 @@
 
 from PyQt4.QtGui import QIcon
 from PyQt4 import QtCore, QtGui
-from serieswatcher.windows.addserie import AddSerie
 from serieswatcher.const import ICONS
 from serieswatcher.models import Serie
+from serieswatcher.windows.addserie import AddSerie
 
 
 class ListSeries(QtGui.QWidget):

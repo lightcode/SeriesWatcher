@@ -20,9 +20,9 @@
 
 
 from PyQt4 import QtCore
-from serieswatcher.worker import Runnable
 from serieswatcher.models import Serie
 from serieswatcher.tasks.serieloader import LoadSerieTask
+from serieswatcher.worker import Runnable
 
 
 class SerieLoaderWorker(QtCore.QObject):

@@ -1,4 +1,5 @@
-Programme en version 1.5.
+Programme en version 1.5.1.
+
 
 # Qu'est-ce que SeriesWatcher ?
 

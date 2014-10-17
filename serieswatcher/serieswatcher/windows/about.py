@@ -31,16 +31,18 @@ class About(QtGui.QDialog):
         super(About, self).__init__(parent)
         self.setWindowTitle('A propos')
         
-        ABOUT = [u"SeriesWatcher %s %s<br/>" % (TEXT_VERSION, RELEASE_DATE),
-                 u'Créé par <a href="http://lightcode.fr">LightCode.fr</a> ',
-                 'sous licence Creative Commons BY-NC-SA.',
-                 "<hr/>",
-                 u'Base de donnée : '
-                 '<a href="http://thetvdb.com">TheTVDB.com</a><br/>'
-                 u"Librairie Python externe : desktop, PyQt4, ",
-                 "ConfigParser3.2, LibVLC, SQLObject<br/>"]
+        ABOUT = (
+            u'SeriesWatcher %s - %s<br/>'
+            u'Créé par Matthieu Gaignière publié sur '
+            u'<a href="http://lightcode.fr">LightCode.fr</a> sous licence GPL.'
+            u'<hr/>'
+            u'Base de donnée : '
+            u'<a href="http://thetvdb.com">TheTVDB.com</a><br/>'
+            u'Librairies Python externes : desktop, PyQt4, ConfigParser3.2, '
+            u'LibVLC, SQLObject.'
+        ) % (TEXT_VERSION, RELEASE_DATE)
                 
-        text = QtGui.QLabel(''.join(ABOUT))
+        text = QtGui.QLabel(ABOUT)
         text.setOpenExternalLinks(True)
         
         layout = QtGui.QVBoxLayout()

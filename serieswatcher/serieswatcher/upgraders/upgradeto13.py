@@ -21,10 +21,10 @@
 
 import os
 import shutil
+from serieswatcher.const import VERSION_FILE
+from serieswatcher.models import Serie, Episode
 from upgraders.compatserie import Config as OldConfig
 from upgraders.compatserie import Serie as OldSerie
-from serieswatcher.models import Serie, Episode
-from serieswatcher.const import VERSION_FILE
 
 # 1.2 to 1.3 upgrader
 

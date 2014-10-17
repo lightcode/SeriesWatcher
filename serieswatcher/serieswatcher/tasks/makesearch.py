@@ -20,8 +20,8 @@
 
 
 from PyQt4 import QtCore
-from serieswatcher.thetvdb import TheTVDB
 from serieswatcher.config import Config
+from serieswatcher.thetvdb import TheTVDB
 
 
 class MakeSearch(QtCore.QObject):
