@@ -18,8 +18,7 @@ class Options(QtGui.QDialog):
         """Initialize the option window."""
         super(Options, self).__init__(parent)
         self.setWindowTitle('Options')
-        self.setMinimumWidth(500)
-        self.setMinimumHeight(200)
+        self.setMaximumSize(500, 200)
 
         # SeriesWatcher options
         self.randomDuration = QtGui.QComboBox()

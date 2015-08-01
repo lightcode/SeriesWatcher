@@ -52,8 +52,7 @@ class Main(QtGui.QMainWindow):
         self.optionsWindows = None
 
         super(Main, self).__init__()
-        self.setWindowTitle('SeriesWatcher %s' % TEXT_VERSION)
-        self.setMinimumSize(820, 600)
+        self.setWindowTitle('SeriesWatcher')
         self.setWindowIcon(QIcon(THEME + 'sw.ico'))
 
         self.setup()
@@ -63,6 +62,8 @@ class Main(QtGui.QMainWindow):
         if 'window_size' in Config.config:
             w, h = Config.config['window_size'].split('x')
             self.resize(int(w), int(h))
+        else:
+            self.resize(820, 600)
 
         # Load the main windows
         self.createWindow()
