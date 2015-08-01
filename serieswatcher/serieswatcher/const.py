@@ -15,7 +15,7 @@ EXTENSIONS = ('.mp4', '.avi', '.wmv', '.flv', '.mkv')
 
 TEXT_VERSION = u'1.5.1'
 VERSION = '1.4.0'
-RELEASE_DATE = u'Octobre 2013'
+RELEASE_DATE = u'Juillet 2015'
 
 ROOT = os.path.abspath('.') + '/'
 ART = os.path.abspath('art/') + '/'
