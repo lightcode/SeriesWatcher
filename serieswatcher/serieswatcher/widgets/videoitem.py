@@ -30,42 +30,42 @@ class VideoItem(QtGui.QWidget):
 
         self.episode = episode
         self.coverShown = False
-        
+
         self.img = QtGui.QLabel()
         self.img.setFixedWidth(120)
-        
+
         number = '<b>%s</b>' % episode.number
         self.head = QtGui.QLabel(number)
-        
+
         self.title = QtGui.QLabel()
         self.title.setAlignment(Qt.AlignTop)
         self.title.setMaximumHeight(55)
         self.title.setWordWrap(True)
-        
+
         self.infos = QtGui.QLabel()
         self.infos.setAlignment(Qt.AlignBottom)
-        
+
         text = QtGui.QVBoxLayout()
+        text.setSpacing(0)
         text.addWidget(self.head)
         text.addWidget(self.title, 10)
         text.addWidget(self.infos)
-        
+
         cell = QtGui.QHBoxLayout()
         cell.addWidget(self.img)
         cell.addLayout(text)
         self.setLayout(cell)
-        
+
         self.refresh()
 
-    
     def resizeEvent(self, event):
         super(VideoItem, self).resizeEvent(event)
         self.setTitle(self.episode.title)
-    
+
     def refresh(self):
         self.setStatus(self.episode.status)
         self.setFavorite(self.episode.favorite)
-    
+
     def setImage(self, image):
         pixmap = QtGui.QPixmap()
         pixmap.convertFromImage(image)
@@ -78,7 +78,7 @@ class VideoItem(QtGui.QWidget):
         fontm = QtGui.QFontMetricsF(font)
         maxWidth = self.title.width()
         words = titleStr.split(' ')
-        
+
         for i in range(2):
             lines.append('')
             currentSize.append(0)
@@ -93,7 +93,7 @@ class VideoItem(QtGui.QWidget):
 
         title = '\n'.join(lines) + ('...' if words else '')
         self.title.setText(title)
-    
+
     def setFavorite(self, value):
         if value:
             head = '<b>%s <img src="%sstar.min.png"/></b>' % \
@@ -101,7 +101,7 @@ class VideoItem(QtGui.QWidget):
         else:
             head = '<b>%s</b>' % (self.episode.number)
         self.head.setText(head)
-    
+
     def setStatus(self, status):
         self.infos.setProperty('class', 'status')
         text = ''

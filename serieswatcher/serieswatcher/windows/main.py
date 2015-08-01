@@ -861,7 +861,7 @@ class Main(QtGui.QMainWindow):
         """
         item = VideoItem(episode)
         self.episodes.setCellWidget(x, y, item)
-        item.setTitle(episode.title)
+        #item.setTitle(episode.title)
 
     def getEpisodes(self):
         """Return the generator of serie's episodes that filtered
