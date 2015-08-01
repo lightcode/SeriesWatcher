@@ -1,23 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Copyright (C) 2012-2013 Matthieu GAIGNIÈRE
-#
-# This file is part of SeriesWatcher.
-#
-# SeriesWatcher is free software: you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option)
-# any later version.
-#
-# SeriesWatcher is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# SeriesWatcher. If not, see <http://www.gnu.org/licenses/>.
-
 
 import os
 import re
@@ -44,32 +25,32 @@ VERSION_FILE = USER + 'VERSION'
 
 class Config(object):
     _instance = None
-    
-    def __new__(cls): 
+
+    def __new__(cls):
         if cls._instance is None:
             cls._instance = object.__new__(cls)
-        return cls._instance    
-    
+        return cls._instance
+
     @classmethod
     def addSerie(cls, *serie):
         serie = map(unicode, serie)
         serie[0], serie[3] = str(serie[0]), str(serie[3])
         cls.series.append(serie)
         cls.save()
-    
+
     @classmethod
     def setOption(cls, key, value):
         cls.config[key] = value
-    
+
     @classmethod
     def save(cls):
         config = SafeConfigParser()
-        
+
         # Make option section
         config.add_section('options')
         for key, value in cls.config.iteritems():
             config.set('options', str(key), unicode(value))
-        
+
         # Make the series sections
         for name, title, path, TVDBID, lang in cls.series:
             name = str(name)
@@ -78,28 +59,28 @@ class Config(object):
             config.set(name, 'theTvDb', str(TVDBID))
             config.set(name, 'videos', unicode(path))
             config.set(name, 'lang', unicode(lang))
-        
+
         # Write the config
         with codecs.open(CONFIG_FILE, 'w+', encoding='utf-8') as f:
             config.write(f)
-    
+
     @classmethod
     def loadConfig(cls):
         config = SafeConfigParser()
         if os.path.isfile(CONFIG_FILE):
             config.read_file(codecs.open(CONFIG_FILE, encoding='utf-8'))
-        
+
         # The default config
         cls.config = {}
         cls.config['command_open'] = None
         cls.config['player'] = 1
         cls.config['debug'] = 0
-        
+
         # Load the options
         if config.has_section('options'):
             for key, value in config.items('options'):
                 cls.config[key] = value
-        
+
         # Load the series
         cls.series = []
         for section in config.sections():
@@ -117,19 +98,19 @@ class Serie(object):
     episodesViewed = set()
     episodes = []
     infos = {}
-    
+
     def __init__(self, param):
         self.name, self.title, self.path, self.TVDBID, self.lang = param
         self.loadDownloadedList()
         self.loadEpisodesViewed()
-    
+
     PATTERN_FILE = re.compile(r'(\d+)\D(\d+)\+?(\d+)?')
     def loadDownloadedList(self):
         self.downloadedEpisode = {}
-        
+
         if not self.path:
             return
-        
+
         self.path = unicode(self.path)
         files = chain(iglob(self.path + '/*'), iglob(self.path + '/*/*'))
         for f in files:
@@ -143,7 +124,7 @@ class Serie(object):
                         episodeID = '%02d-%02d' % \
                                     (int(numbers[0]), int(numbers[2]))
                         self.downloadedEpisode[episodeID] = f
-    
+
     def loadEpisodes(self):
         nbSeason = nbEpisodeDL = nbEpisodeNew = nbEpisodeTotal = 0
         now = datetime.now()
@@ -174,22 +155,22 @@ class Serie(object):
                 if e['number'] not in self.episodesViewed:
                     status = 2
             self.episodes[i]['status'] = status
-        
+
         nbEpisodeTotal -= nbEpisodeNew
         self.infos['nbSeason'] = nbSeason
         self.infos['nbEpisodeNotDL'] = nbEpisodeTotal - nbEpisodeDL
         self.infos['nbEpisodeDL'] = nbEpisodeDL
         self.infos['nbEpisodeTotal'] = nbEpisodeTotal
-    
+
     def loadSerie(self):
         pkl = '%s%s.pkl' % (SERIES_DB, self.name)
         if os.path.isfile(pkl):
             serie = pickle.load(open(pkl, 'rb'))
-            
+
             # Serie's episodes
             self.episodes = serie['episodes']
             self.loadEpisodes()
-            
+
             # Serie's informations
             self.infos.update(serie['serieInfos'])
             self.infos['bannerPath'] = '%s%s.jpg' % (SERIES_BANNERS, self.name)
@@ -197,13 +178,13 @@ class Serie(object):
                                         self.infos['firstAired'], '%Y-%m-%d')
         else:
             raise ValueError()
-    
+
     def __getitem__(cls, key):
         return cls.infos[key]
-    
+
     def __setitem__(cls, key, value):
         cls.infos[key] = value
-    
+
     # =========================
     #  Episode viewed manager
     # =========================
@@ -215,7 +196,7 @@ class Serie(object):
                 self.episodesViewed = set(pickle.load(pklFile))
         except IOError:
             pass
-    
+
     def episodesViewedSave(self):
         pkl = '%s/view-%s.pkl' % (SERIES_VIEW, self.name)
         try:

@@ -1,23 +1,4 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-# Copyright (C) 2012-2013 Matthieu GAIGNIÈRE
-#
-# This file is part of SeriesWatcher.
-#
-# SeriesWatcher is free software: you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the Free
-# Software Foundation, either version 3 of the License, or (at your option)
-# any later version.
-#
-# SeriesWatcher is distributed in the hope that it will be useful, but WITHOUT
-# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-# FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-# details.
-#
-# You should have received a copy of the GNU General Public License along with
-# SeriesWatcher. If not, see <http://www.gnu.org/licenses/>.
-
 
 import os
 import shutil
@@ -36,11 +17,11 @@ class EditSeries(QtGui.QDialog):
         """Create the window layout."""
         super(EditSeries, self).__init__(parent)
         self.setWindowTitle(u'Editer les séries')
-        
+
         # Select serie pannel
         self.listSeries = ListSeries()
         self.listSeries.itemSelectionChanged.connect(self.itemSelectionChanged)
-        
+
         # Edit serie pannel
         self.title = QtGui.QLineEdit()
         self.title.textChanged.connect(self.listSeries.setTitle)
@@ -48,42 +29,42 @@ class EditSeries(QtGui.QDialog):
         self.lang.textChanged.connect(self.listSeries.setLang)
         self.path = SelectFolder()
         self.path.label.textChanged.connect(self.listSeries.setPath)
-        
+
         groupSerie = QtGui.QGroupBox(u'Information de la série')
         form = QtGui.QFormLayout()
         form.addRow('Titre', self.title)
         form.addRow('Langue', self.lang)
         groupSerie.setLayout(form)
-        
+
         groupDownload = QtGui.QGroupBox(u'Répertoire')
         layoutDl = QtGui.QVBoxLayout()
         layoutDl.addWidget(self.path)
         groupDownload.setLayout(layoutDl)
-        
+
         buttonBox = QtGui.QDialogButtonBox()
         buttonBox.addButton('Sauvegarder', QtGui.QDialogButtonBox.AcceptRole)
         buttonBox.accepted.connect(self.save)
         buttonBox.addButton('Annuler', QtGui.QDialogButtonBox.RejectRole)
         buttonBox.rejected.connect(self.close)
-        
+
         editSeriePannel = QtGui.QVBoxLayout()
         editSeriePannel.addWidget(groupSerie)
         editSeriePannel.addWidget(groupDownload)
-        
+
         # Make a layout and go...
         layout = QtGui.QHBoxLayout()
         layout.addWidget(self.listSeries)
         layout.addLayout(editSeriePannel)
-        
+
         bigLayout = QtGui.QVBoxLayout()
         bigLayout.addLayout(layout)
         bigLayout.addWidget(buttonBox)
-        
+
         self.setLayout(bigLayout)
-        
+
         # Select the first serie
         self.listSeries.listWidget.setCurrentRow(0)
-    
+
     def itemSelectionChanged(self, title, path, lang):
         """Trigged when the selection change. Update informations
         in the form.
@@ -91,7 +72,7 @@ class EditSeries(QtGui.QDialog):
         self.title.setText(title)
         self.lang.setText(lang)
         self.path.setPath(path)
-    
+
     def save(self):
         """Save the modifications in the database."""
         for pos, serie in enumerate(self.listSeries.getItems()):
