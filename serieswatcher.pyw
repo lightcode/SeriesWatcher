@@ -5,6 +5,8 @@ import sys
 import os.path
 from PyQt4 import QtCore, QtGui
 
+os.chdir(os.path.dirname(__file__))
+
 sys.path.insert(0, os.path.abspath('serieswatcher/'))
 from serieswatcher.windows.main import Main
 
